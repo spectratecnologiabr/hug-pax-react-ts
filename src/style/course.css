@@ -1,0 +1,512 @@
+.course-container {
+    display: flex;
+    min-height: 100vh;
+    padding: 20px;
+    gap: 20px;
+    width: -webkit-fill-available;
+}
+
+.course-container .course-wrapper {
+    width: -webkit-fill-available;
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+    margin-left: 110px;
+}
+
+.course-container .course-wrapper .course-header {
+    display: flex;
+    justify-content: space-between;
+    width: -webkit-fill-available;
+    background-color: #F5F5F7;
+    height: 120px;
+    border-radius: 10px;
+    padding-right: 20px;
+}
+
+.course-container .course-wrapper .course-header .course-progress {
+    height: 80%;
+}
+
+.course-container .course-wrapper .course-header .course-progress .CircularProgressbar-text {
+    font-family: 'SF UI Display Medium';
+}
+
+.course-container .course-wrapper .course-header .left {
+    display: flex;
+    gap: 40px;
+}
+
+.course-container .course-wrapper .course-header .course-title {
+    display: flex;
+    flex-direction: column;
+    align-self: center;
+    gap: 10px;
+}
+
+.course-container .course-wrapper .course-header .course-title b {
+    font-family: 'SF UI Display Medium';
+    font-size: 35px;
+}
+
+.course-container .course-wrapper .course-header .course-title span {
+    font-family: 'SF UI Display Medium';
+    font-size: 20px;
+}
+
+.course-container .course-wrapper .lession-title {
+    text-align: center;
+    font-family: 'SF UI Display Semibold';
+    font-size: 16px;
+}
+
+.course-container .course-wrapper .lession-document-wrapper {
+    height: 90vh;
+    display: none;
+}
+
+
+.course-container .course-wrapper .lession-media-wrapper {
+    width: 80%;
+    align-self: center;
+    display: none;
+}
+
+.course-container .course-wrapper .lession-media-wrapper.active {
+    display: block;
+}
+
+.course-container .course-wrapper .lession-document-wrapper.active {
+    display: block;
+}
+
+.course-container .course-wrapper .lession-media-wrapper .video-player-wrapper {
+  background: #EDEDED;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  position: relative;
+}
+
+.course-container .course-wrapper .lession-media-wrapper .video-player-wrapper video {
+  width: 100%;   
+  box-shadow: 0 6px 30px rgba(0,0,0,0.15);
+  z-index: 10;
+}
+
+.course-container .course-wrapper .lession-media-wrapper .video-controls.bar {
+  position: absolute;
+  bottom: 10px;
+  width: 95%;
+  padding: 12px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  border-radius: 12px 12px;
+  z-index: 11;
+  background: rgba(0, 0, 0, 0.35);
+}
+
+.course-container .course-wrapper .lession-media-wrapper .video-controls.bar .progress-track {
+  width: 100%;
+}
+
+.course-container .course-wrapper .lession-media-wrapper .video-controls.bar input[type="range"] {
+  width: 100%;
+  -webkit-appearance: none;
+  height: 6px;
+  background: #bcbcbc;
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.course-container .course-wrapper .lession-media-wrapper .video-controls.bar input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 14px;
+  height: 14px;
+  background: #FFFFFF;
+  border-radius: 50%;
+}
+
+.course-container .course-wrapper .lession-media-wrapper .video-controls.bar .controls-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: white;
+}
+
+.course-container .course-wrapper .lession-media-wrapper .video-controls.bar .left-controls,
+.course-container .course-wrapper .lession-media-wrapper .video-controls.bar .right-controls {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.course-container .course-wrapper .lession-media-wrapper .video-controls.bar .control-btn {
+  background: transparent;
+  border: none;
+  font-size: 20px;
+  color: white;
+  cursor: pointer;
+}
+
+.course-container .course-wrapper .lession-media-wrapper .video-controls.bar .time-display {
+  font-family: 'SF UI Display Medium';
+  font-size: 14px;
+}
+
+.course-container .course-wrapper .lession-media-wrapper .video-controls.bar .controls-row .volume-slider {
+  width: 90px;
+  accent-color: #ffffff;
+  cursor: pointer;
+}
+
+.course-container .course-wrapper .lession-document-wrapper .pdf-page-wrapper {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background-color: #EDEDED;
+  padding: 20px;
+  padding-bottom: 10px;
+  position: relative;
+}
+
+.course-container .course-wrapper .lession-document-wrapper .pdf-page-wrapper canvas {
+  border-radius: 12px;
+  box-shadow: 0 6px 30px rgba(0,0,0,0.15);
+}
+
+.course-container .course-wrapper .lession-document-wrapper .pdf-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  background-color: #EDEDED;
+}
+
+.course-container .course-wrapper .lession-document-wrapper .pdf-controls .left {
+    display: flex;
+    gap: 10px;
+}
+
+.course-container .course-wrapper .lession-document-wrapper .pdf-controls button {
+  background: transparent;
+  border: none;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  font-size: 18px;
+  cursor: pointer;
+}
+
+.course-container .course-wrapper .lession-document-wrapper .pdf-controls button:disabled {
+  opacity: .3;
+  cursor: not-allowed;
+}
+
+.course-container .course-wrapper .lession-document-wrapper .pdf-controls span {
+  font-family: 'SF UI Display Medium';
+  font-size: 22px;
+}
+
+.course-container .course-wrapper .lession-document-wrapper .pdf-controls.inside-fs {
+  position: fixed;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: transparent;
+  border-radius: 12px;
+  padding: 12px 26px;
+  z-index: 2147483647;
+  pointer-events: auto;
+}
+
+.pdf-controls .page-input-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.pdf-controls .page-number-input {
+  width: 55px;
+  height: 34px;
+  border-radius: 6px;
+  border: 1px solid #AFAFAF;
+  font-size: 18px;
+  text-align: center;
+  font-family: 'SF UI Display Medium';
+}
+
+.pdf-controls .page-number-input::-webkit-inner-spin-button,
+.pdf-controls .page-number-input::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.pdf-controls .total-pages-label {
+  font-family: 'SF UI Display Medium';
+  font-size: 20px;
+}
+
+.course-container .right-container {
+    display: flex;
+    flex-direction: column;
+    min-width: 400px;
+    gap: 20px;
+}
+
+.course-container .right-container .profile-container {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 20px;
+}
+
+.course-container .right-container .profile-container .search-wrapper {
+    grid-column: span 4;
+    display: flex;
+    align-items: center;
+}
+
+.course-container .right-container .profile-container .search-wrapper .main-search {
+    width: 100%;
+    height: 100%;
+    background-color: #F5F5F7;
+    padding-left: 25px;
+    padding-right: 10px;
+    border-radius: 8px;
+}
+
+.course-container .right-container .profile-container .search-wrapper button {
+    position: absolute;
+    margin-left: 5px;
+}   
+
+.course-container .right-container .profile-container .profile-wrapper {
+    grid-column: span 2;
+    display: flex;
+    justify-content: space-between;
+}
+
+.course-container .right-container .profile-container .profile-wrapper .notitications-button {
+    padding: 5px;
+    width: 40px;
+    border-radius: 8px;
+    background-color: transparent;
+    cursor: pointer;
+    transition: ease-in-out .3s all;
+}
+
+.course-container .right-container .profile-container .profile-wrapper .notitications-button:hover {
+    background-color: #F5F5F7;
+}
+
+.course-container .right-container .profile-container .profile-wrapper .profile-button {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    background-color: transparent;
+    cursor: pointer;
+}
+
+.course-container .right-container .profile-container .profile-wrapper .profile-button img {
+    border-radius: 8px;
+}
+
+.course-container .right-container .steps-list {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+.course-container .right-container .steps-list .steps-group {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.course-container .right-container .steps-list .steps-group .step-button {
+    width: 100%;
+    display: flex;
+    height: 80px;
+    justify-content: space-between;
+    padding: 0 20px;
+    background-color: #F5F5F7;
+    border-radius: 8px;
+    cursor: pointer;
+    z-index: 10;
+    box-shadow: 0 4px 4px 2px rgba(0, 0, 0, 0.05);
+}
+
+.course-container .right-container .steps-list .steps-group .step-button .left {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.course-container .right-container .steps-list .steps-group .step-button .left .group-number {
+    font-family: 'SF UI Display Bold';
+    font-size: 50px;
+}
+
+.course-container .right-container .steps-list .steps-group .step-button .left .text {
+    display: flex;
+    flex-direction: column;
+    text-align: left;
+}
+
+.course-container .right-container .steps-list .steps-group .step-button .left .text b {
+    font-family: 'SF UI Display Medium';
+    font-size: 24px;
+}
+
+.course-container .right-container .steps-list .steps-group .step-button .left .text span {
+    font-family: 'SF UI Display Light';
+    font-size: 14px;
+}
+
+.course-container .right-container .steps-list .steps-group .step-button .right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-align: left;
+}
+
+.course-container .right-container .steps-list .steps-group .step-button .right .course-progress {
+    height: 60%;
+}
+
+.course-container .right-container .steps-list .steps-group .step-button .right .course-progress .CircularProgressbar-text {
+    font-family: 'SF UI Display Medium';
+    font-size: 24px;
+}
+
+.course-container .right-container .steps-list .steps-group .lessions-list {
+    display: none;
+    flex-direction: column;
+    margin-top: -20px;
+    z-index: 5;
+}
+
+.course-container .right-container .steps-list .steps-group .lessions-list.active {
+    display: flex;
+}
+
+.course-container .right-container .steps-list .steps-group .lessions-list .lession-item {
+    display: flex;
+    width: 95%;
+    justify-content: space-between;
+    padding: 10px;
+    border: 2px solid #D4D4D4;
+    border-top: none;
+    align-self: center;
+    background-color: #F5F5F7;
+}
+
+.course-container .right-container .steps-list .steps-group .lessions-list .lession-item:first-of-type {
+    padding-top: 20px;
+}
+
+.course-container .right-container .steps-list .steps-group .lessions-list .lession-item .left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.course-container .right-container .steps-list .steps-group .lessions-list .lession-item .left b {
+    font-family: 'SF UI Display Medium';
+    font-size: 14px;
+}
+
+.course-container .right-container .steps-list .steps-group .lessions-list .lession-item button {
+    padding: 10px 20px;
+    height: fit-content;
+    align-self: center;
+    background-color: #3696D3;
+    color: #FFFFFF;
+    border-radius: 8px;
+    font-family: 'SF UI Display Medium';
+    cursor: pointer;
+    transition: ease-in-out .2s all;
+}
+
+.course-container .right-container .steps-list .steps-group .lessions-list .lession-item button:hover {
+    background-color: #5CADE0;
+}
+
+.course-container .right-container .steps-list .steps-group .lessions-list .lession-item:last-of-type {
+    border-bottom-left-radius: 8px;
+    border-bottom-right-radius: 8px;
+}
+
+/* Avaliação da aula */
+.course-container .course-wrapper .avaliation-wrapper {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 12px;
+}
+
+.course-container .course-wrapper .avaliation-wrapper .avaliation-title {
+  font-family: 'SF UI Display Light';
+  font-size: 16px;
+  color: #444;
+}
+
+.course-container .course-wrapper .avaliation-wrapper .stars-wrapper {
+  display: flex;
+  gap: 6px;
+}
+
+.course-container .course-wrapper .avaliation-wrapper .stars-wrapper .star-btn {
+  background: transparent;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+  color: #D0D0D0;
+  transition: color 0.2s ease-in-out, transform 0.15s;
+}
+
+.course-container .course-wrapper .avaliation-wrapper .stars-wrapper .star-btn.active,
+.course-container .course-wrapper .avaliation-wrapper .stars-wrapper .star-btn:hover,
+.course-container .course-wrapper .avaliation-wrapper .stars-wrapper .star-btn.hover-preview {
+  color: #FFC72C;
+  transform: scale(1.1);
+}
+
+.course-container .course-wrapper .comments-wrapper {
+    display: flex;
+    flex-direction: column;
+}
+
+.course-container .course-wrapper .comments-wrapper .comment-form {
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+    height: 50px;
+}
+
+.course-container .course-wrapper .comments-wrapper .comment-form #commentEl {
+    width: -webkit-fill-available;
+    height: 100%;
+    background-color: #F5F5F7;
+    padding-left: 25px;
+    padding-right: 10px;
+    border-radius: 8px;
+    border: 1px solid #8E8E8E;
+}
+
+.course-container .course-wrapper .comments-wrapper .comment-form button {
+    font-family: 'SF UI Display Medium';
+    font-size: 14px;
+    background-color: #3696D3;
+    padding: 12px 20px;
+    color: #ffffff;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: ease-in-out .3s all;
+}
+
+.course-container .course-wrapper .comments-wrapper .comment-form button:hover {
+    background-color: #5CADE0;
+}

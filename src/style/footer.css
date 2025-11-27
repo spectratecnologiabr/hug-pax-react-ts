@@ -1,0 +1,16 @@
+.footer-wrapper {
+    width: 100%;
+    background-color: #FFF;
+    display: flex;
+    justify-content: center;
+    align-items: baseline;
+    padding: 10px;
+    position: sticky;
+    bottom: 0;
+}
+
+.footer-wrapper span {
+    color: #585858;
+    font-family: "SF UI Display Semibold";
+    font-size: 20px;
+}

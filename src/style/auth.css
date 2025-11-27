@@ -1,0 +1,119 @@
+.auth-container {
+    height: calc(100vh - 70px);
+    background-image: url("../img/auth-bg.jpg");
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-position: right;
+    padding: 5vw;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+}
+
+.auth-container .auth-wrapper {
+    background-color: #ffffff;
+    width: 500px;
+    padding: 30px;
+    border-radius: 25px;
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+}
+
+.auth-container .auth-wrapper .header-wrapper {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.auth-container .auth-wrapper .header-wrapper img {
+    height: 60px;
+}
+
+.auth-container .auth-wrapper .header-wrapper b {
+    font-family: "SF UI Display Bold";
+    font-size: 40px;
+    color: #2C3E50;
+}
+
+.auth-container .auth-wrapper .form-wrapper {
+    display: flex;
+    flex-direction: column;
+}
+
+.auth-container .auth-wrapper .form-wrapper .input-wrapper {
+    display: flex;
+    flex-direction: column;
+    padding-top: 20px;
+    gap: 10px;
+}
+
+.auth-container .auth-wrapper .form-wrapper .input-wrapper span {
+    color: #818181;
+    font-family: "SF UI Display Medium";
+    font-size: 18px;
+}
+
+.auth-container .auth-wrapper .form-wrapper .input-wrapper input {
+    font-size: 16px;
+    height: 40px;
+    padding-left: 10px;
+    border-radius: 11px;
+    border: 1px solid #ACACAC;
+}
+
+.auth-container .auth-wrapper .form-wrapper .input-wrapper input:focus-visible {
+    outline: 1px solid #818181;
+}
+
+.auth-container .auth-wrapper .form-wrapper .forgot-pass-wrapper {
+    padding: 10px 0;
+}
+
+.auth-container .auth-wrapper .form-wrapper .forgot-pass-wrapper a {
+    color: #3696D3;
+    font-family: "SF UI Display Light";
+    font-size: 14px;
+    text-decoration: none;
+    transition: ease-in-out .2s all;
+}
+
+.auth-container .auth-wrapper .form-wrapper .forgot-pass-wrapper a:hover {
+    font-family: "SF UI Display Medium";
+}
+
+.auth-container .auth-wrapper .form-wrapper .button-wrapper {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.auth-container .auth-wrapper .form-wrapper .button-wrapper:not(.login) {
+    padding-top: 20px;
+}
+
+.auth-container .auth-wrapper .form-wrapper .button-wrapper button {
+    padding: 10px 40px;
+    color: #FFF;
+    font-family: "SF UI Display Semibold";
+    font-size: 18px;
+    border-radius: 8px;
+    background-color: #3696D3;
+    cursor: pointer;
+    transition: ease-in-out .2s all;
+}
+
+.auth-container .auth-wrapper .form-wrapper .button-wrapper button:hover {
+    background-color: #2f7fb1;
+}
+
+.auth-container .auth-wrapper .bottom-link {
+    font-family: "SF UI Display Light";
+    text-align: end;
+    color: #3696D3;
+    font-size: 14px;
+    text-decoration: none;
+}
+
+.auth-container .auth-wrapper .bottom-link:hover {
+    font-family: "SF UI Display Medium";
+}
