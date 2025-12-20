@@ -1,4 +1,5 @@
 import React from "react";
+import { authenticateUser } from "../controllers/user/authenticate.controller";
 
 import Footer from "../components/footer";
 
@@ -7,6 +8,13 @@ import paxIconImg from "../img/pax-icon.svg";
 import "../style/auth.css";
 
 function Login() {
+    const handleLogin = async (e: React.FormEvent) => {
+        e.preventDefault();
+        const username = (document.getElementById("usernameEl") as HTMLInputElement).value;
+        const password = (document.getElementById("passwordEl") as HTMLInputElement).value;
+        await authenticateUser(username, password);
+    };
+
     return (
         <React.Fragment>
             <div className="auth-container">
@@ -15,7 +23,7 @@ function Login() {
                         <img src={paxIconImg} alt="logo pax" />
                         <b>Login</b>
                     </div>
-                    <form className="form-wrapper" onSubmit={e => e.preventDefault()}>
+                    <form className="form-wrapper" onSubmit={handleLogin}>
                         <div className="input-wrapper">
                             <span>Usuário</span>
                             <input type="text" name="username" id="usernameEl" />
