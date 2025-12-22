@@ -1,4 +1,8 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
+import { getCookies } from "../controllers/misc/cookies.controller";
+import { getOverviewData } from "../controllers/dash/overview.controller";
+import { listCourses } from "../controllers/course/listCourses.controller";
+import { listProgress } from "../controllers/user/listProgress.controller";
 
 import { CircularProgressbar, buildStyles } from 'react-circular-progressbar';
 import 'react-circular-progressbar/dist/styles.css';
@@ -18,7 +22,74 @@ import medio3img from "../img/dash/3-medio.svg";
 import "../style/dash.css";
 import Footer from "../components/footer";
 
+type TUser = {
+    id: number,
+    firstName: string,
+    lastName: string,
+    phone: string,
+    email: string,
+    language: string,
+    courses: [],
+    role: string,
+    isActive: boolean
+}
+
+type TCourse = {
+    id: number,
+    slug: string,
+    title: string,
+    cover: string,
+    subTitle: string,
+    createdAt: string,
+    updatedAt: string,
+    progressPercentage: number
+}
+
+type TOverviewData = {
+    completedCourses: number,
+    inProgressCourses: number,
+    totalHours: number
+}
+
 function Dashboard() {
+    const userData = getCookies("userData") as unknown as TUser;
+    const [courses, setCourses] = useState<TCourse[]>([]);
+    const [ overviewData, setOverviewData ] = useState<TOverviewData | null>(null);
+    const [ progress, setProgress ] = useState<number | null>(null);
+
+    useEffect(() => {
+        async function fetchOverviewData() {
+            try {
+                const overviewData = await getOverviewData();
+                setOverviewData(overviewData);
+            } catch (error) {
+                console.error("Error fetching overview data:", error);
+            }
+        }
+
+        async function fetchCourses() {
+            try {
+                const coursesList = await listCourses();
+                setCourses(coursesList);
+            } catch (error) {
+                console.error("Error fetching courses:", error);
+            }
+        }
+
+        async function fetchProgress() {
+            try {
+                const progressData = await listProgress();
+                setProgress(progressData);
+            } catch (error) {
+                console.error("Error fetching progress:", error);
+            }
+        }
+
+        fetchCourses();
+        fetchOverviewData();
+        fetchProgress();
+    }, []);
+
 
     function swipeCourses(e: React.MouseEvent<HTMLButtonElement>) {
         const direction = e.currentTarget.dataset.direction;
@@ -38,7 +109,6 @@ function Dashboard() {
                 nextShowedSlide?.classList.add("active");
             }
         }
-
     }
 
     return (
@@ -49,7 +119,7 @@ function Dashboard() {
                 <div className="main-dash-wrapper">
                     <div className="greatings-card">
                         <div className="wrapper">
-                            <b className="main-greating">Olá <span id="nomeAluno">Alessandro</span></b>
+                            <b className="main-greating">Olá <span id="nomeAluno">{userData.firstName}</span></b>
                             <span>Bom te ver de novo!</span>
                         </div>
                         <div className="wrapper">
@@ -57,7 +127,7 @@ function Dashboard() {
                         </div>
                         <div className="wrapper">
                             <span>Este é o seu engajamento no fórum!</span>
-                            <b id="percentage">30%</b>
+                            <b id="percentage">0%</b>
                         </div>
                     </div>
                     <div className="search-wrapper">
@@ -81,67 +151,37 @@ function Dashboard() {
                     </div>
 
                     <div className="finshed-courses">
-                        <b>11</b>
+                        <b>{overviewData?.completedCourses}</b>
                         <span>Formações <br />Finalizadas</span>
                     </div>
 
                     <div className="remaing-courses">
-                        <b>04</b>
+                        <b>{overviewData?.inProgressCourses}</b>
                         <span>Formações <br />Em Progresso</span>
                     </div>
 
                     <div className="last-courses" id="last-courses-swiper">
-                        <div className="course-item active">
-                            <img src={medio1img} className="course-img" />
-                            <b>1ª série do ensino médio</b>
-                            <div style={{ height: "100%", display: "flex", alignItems: "center" }}>
-                                <CircularProgressbar
-                                    styles={buildStyles({
-                                        pathColor: '#90C040',
-                                        textColor: '#000000',
-                                        trailColor: '#d7d7da',
-                                        backgroundColor: '#3e98c7'
-                                    })}
-                                    value={52}
-                                    text={"52%"}
-                                    className="course-progress"/>
-                            </div>
-                            <button className="open-course">Continue</button>
-                        </div>
-                        <div className="course-item">
-                            <img src={medio2img} className="course-img" />
-                            <b>2ª série do ensino médio</b>
-                            <div style={{ height: "100%", display: "flex", alignItems: "center" }}>
-                                <CircularProgressbar
-                                    styles={buildStyles({
-                                        pathColor: '#90C040',
-                                        textColor: '#000000',
-                                        trailColor: '#d7d7da',
-                                        backgroundColor: '#3e98c7'
-                                    })}
-                                    value={83}
-                                    text={"83%"}
-                                    className="course-progress"/>
-                            </div>
-                            <button className="open-course">Continue</button>
-                        </div>
-                        <div className="course-item">
-                            <img src={medio3img} className="course-img" />
-                            <b>3ª série do ensino médio</b>
-                            <div style={{ height: "100%", display: "flex", alignItems: "center" }}>
-                                <CircularProgressbar
-                                    styles={buildStyles({
-                                        pathColor: '#90C040',
-                                        textColor: '#000000',
-                                        trailColor: '#d7d7da',
-                                        backgroundColor: '#3e98c7'
-                                    })}
-                                    value={23}
-                                    text={"23%"}
-                                    className="course-progress"/>
-                            </div>
-                            <button className="open-course">Continue</button>
-                        </div>
+                        {
+                            courses.map((course, index) => (
+                                <div key={course.id} className={`course-item ${index === 0 ? 'active' : ''}`}>
+                                    <img src={course.cover} className="course-img" />
+                                    <b>{course.title}</b>
+                                    <div style={{ height: "100%", display: "flex", alignItems: "center" }}>
+                                        <CircularProgressbar
+                                            styles={buildStyles({
+                                                pathColor: '#90C040',
+                                                textColor: '#000000',
+                                                trailColor: '#d7d7da',
+                                                backgroundColor: '#3e98c7'
+                                            })}
+                                            value={course.progressPercentage} // Random progress for demo
+                                            text={`${course.progressPercentage}%`}
+                                            className="course-progress"/>
+                                    </div>
+                                    <button className="open-course">Continue</button>
+                                </div>
+                            ))
+                        }
                     </div>
 
                     <div className="last-courses-controls">
@@ -160,12 +200,12 @@ function Dashboard() {
                     </div>
 
                     <div className="finshed-hours">
-                        <b>30</b>
+                        <b>{overviewData?.totalHours}</b>
                         <span>Total de horas em formação</span>
                     </div>
                 </div>
                 <FastLinks />
-                <EducatorsRoom />
+                <EducatorsRoom courses={courses} />
             </div>
             <Feed/>
         </div>

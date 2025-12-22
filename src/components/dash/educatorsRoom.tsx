@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 
 import { CircularProgressbar, buildStyles } from 'react-circular-progressbar';
 import 'react-circular-progressbar/dist/styles.css';
@@ -14,52 +14,23 @@ import liga4Img from "../../img/dash/liga4.png";
 
 import "../../style/educatorsRoom.css";
 
+type TCourse = {
+    id: number,
+    slug: string,
+    title: string,
+    cover: string,
+    subTitle: string,
+    createdAt: string,
+    updatedAt: string,
+    progressPercentage: number
+}
 
-// Temporário, substituir por persistência de dados
-const courses = [
-    {
-        title: "Educação Infantil",
-        progress: 80,
-        imgSource: infantilImg
-    },
-    {
-        title: "1ª série do ensino médio",
-        progress: 40,
-        imgSource: medio1img
-    },
-    {
-        title: "2ª série do ensino médio",
-        progress: 50,
-        imgSource: medio2img
-    },
-    {
-        title: "3ª série do ensino médio",
-        progress: 70,
-        imgSource: medio3img
-    },
-    {
-        title: "Formação Inicial",
-        progress: 97,
-        imgSource: inicialImg
-    },
-    {
-        title: "Liga pela paz 2",
-        progress: 45,
-        imgSource: liga2Img
-    },
-    {
-        title: "Liga pela paz 3",
-        progress: 20,
-        imgSource: liga3Img
-    },
-    {
-        title: "Liga pela paz 4",
-        progress: 7,
-        imgSource: liga4Img
-    },
-];
+type TCourseProps = {
+    courses: Array<TCourse>
+}
 
-function EducatorsRoom() {
+function EducatorsRoom(coursesProp: TCourseProps) {
+
     return (
         <div className="educators-room-container">
             <div className="header-wrapper">
@@ -92,10 +63,10 @@ function EducatorsRoom() {
 
             <div className="grid-wrapper">
                 {
-                    courses.map(course => {
+                    coursesProp.courses.map(course => {
                         return (
                             <div className="course-item">
-                                <img src={course.imgSource} className="course-img" />
+                                <img src={course.cover} className="course-img" />
                                 <div className="description">
                                     <span>{course.title}</span>
                                     <div style={{ height: "100%", display: "flex", alignItems: "center" }}>
@@ -106,8 +77,8 @@ function EducatorsRoom() {
                                                 trailColor: '#d7d7da',
                                                 backgroundColor: '#3e98c7'
                                             })}
-                                            value={course.progress}
-                                            text={course.progress + "%"}
+                                            value={course.progressPercentage}
+                                            text={course.progressPercentage + "%"}
                                             className="course-progress"/>
                                     </div>
                                 </div>

@@ -60,3 +60,71 @@ body, * {
     font-weight: normal;
     src: url('../fonts/sf-ui-display/sf-ui-display-black-58646a6b80d5a.woff') format('woff');
 }
+
+.warning-container {
+    z-index: 1000;
+    position: fixed ;
+    bottom: -120px;
+    right: 20px;
+    padding: 20px 60px;
+    border-radius: 10px;
+    transition: ease-in-out .3s all;
+}
+
+.warning-container.open {
+    bottom: 20px;
+}
+
+.warning-container.error {
+    border: 1px solid #FFE0E1;
+    background: #FFF0F0;
+}
+
+.warning-container.success {
+    border: 1px solid #BFFCD9;
+    background: #ECFDF3;
+}
+
+.warning-container button {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 10px;
+    cursor: pointer;
+    border-radius: 20px;
+    position: absolute;
+    left: -16px;
+    top: -16px;
+}
+
+.warning-container.error button {
+    border: 1px solid #FFE0E1;
+    background: #FFF0F0;
+}
+
+.warning-container.success button {
+    border: 1px solid #BFFCD9;
+    background: #ECFDF3;
+}
+
+.warning-container span {
+    text-align: center;
+    font-family: "SF UI Display Semibold";
+    font-size: 14px;
+}
+
+.warning-container.error span {
+    color: #E60000;
+}
+
+.warning-container.error button path {
+    fill: #E60000;
+}
+
+.warning-container.success span {
+    color: #008A2E;
+}
+
+.warning-container.success button path {
+    fill: #008A2E;
+}
