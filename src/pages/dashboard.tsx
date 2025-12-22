@@ -164,7 +164,7 @@ function Dashboard() {
                         {
                             courses.map((course, index) => (
                                 <div key={course.id} className={`course-item ${index === 0 ? 'active' : ''}`}>
-                                    <img src={course.cover} className="course-img" />
+                                    <img loading="lazy" src={course.cover} className="course-img" />
                                     <b>{course.title}</b>
                                     <div style={{ height: "100%", display: "flex", alignItems: "center" }}>
                                         <CircularProgressbar
@@ -178,7 +178,7 @@ function Dashboard() {
                                             text={`${course.progressPercentage}%`}
                                             className="course-progress"/>
                                     </div>
-                                    <button className="open-course">Continue</button>
+                                    <a className="open-course" href={`/course/${course.slug}`}>Continue</a>
                                 </div>
                             ))
                         }

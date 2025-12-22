@@ -18,7 +18,7 @@ function MyRoutes() {
                 <Route path='/forgot-password' element={<ForgotPassword/>} />
                 <Route path='/reset-password' element={<ResetPassword/>} />
                 <Route path='/dashboard' element={<Dashboard/>} />
-                <Route path='/course' element={<Course />} />
+                <Route path='/course/:courseSlug' element={<Course />} />
             </Routes>
         </BrowserRouter>
     )

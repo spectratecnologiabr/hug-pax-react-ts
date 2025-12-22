@@ -66,7 +66,7 @@ function EducatorsRoom(coursesProp: TCourseProps) {
                     coursesProp.courses.map(course => {
                         return (
                             <div className="course-item">
-                                <img src={course.cover} className="course-img" />
+                                <img loading="lazy" src={course.cover} className="course-img" />
                                 <div className="description">
                                     <span>{course.title}</span>
                                     <div style={{ height: "100%", display: "flex", alignItems: "center" }}>
@@ -82,7 +82,7 @@ function EducatorsRoom(coursesProp: TCourseProps) {
                                             className="course-progress"/>
                                     </div>
                                 </div>
-                                <a href="/course">
+                                <a href={`/course/${course.slug}`}>
                                     Acessar material
                                 </a>
                             </div>

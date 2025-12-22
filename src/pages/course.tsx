@@ -1,7 +1,10 @@
-import React from "react";
+import React, { useState } from "react";
+import { useParams } from "react-router-dom";
 import { Document, Page } from 'react-pdf';
 import { pdfjs } from 'react-pdf';
 import { CircularProgressbar, buildStyles } from 'react-circular-progressbar';
+import { getCourseWithProgress } from "../controllers/course/getCourseWithProgress.controller";
+import { getCourseModules } from "../controllers/course/getCourseModules.controller";
 
 import AsideMenu from "../components/asideMenu";
 import Footer from "../components/footer";
@@ -18,7 +21,47 @@ import 'react-pdf/dist/Page/AnnotationLayer.css';
 
 pdfjs.GlobalWorkerOptions.workerSrc = `${window.location.origin}/pdf.worker.min.mjs`;
 
+type TCourseData = {
+    id: number,
+    slug: string,
+    title: string,
+    cover: string,
+    subTitle: string,
+    createdAt: string,
+    updatedAt: string,
+    progressPercentage: string
+}
+
+type TCourseModule = {
+    id: number,
+    courseId: number,
+    title: string,
+    description: string,
+    order: number,
+    lessons: Array<TLesson>,
+    createdAt: string,
+    updatedAt: string
+}
+
+type TLesson = {
+    id: number,
+    slug: string,
+    title: string,
+    subTitle: string,
+    cover: string,
+    type: string,
+    code: string,
+    extUrl: string,
+    moduleId: number,
+    isActive: boolean,
+    createdAt: string,
+    updatedAt: string
+}
+
 function Course() {
+    const { courseSlug } = useParams();
+    const [courseData, setCourseData] = useState<TCourseData | null>(null);
+    const [courseModules, setCourseModules] = useState([] as Array<TCourseModule>)
     const [numPages, setNumPages] = React.useState(0);
     const [pageNumber, setPageNumber] = React.useState(1);
     const videoRef = React.useRef<HTMLVideoElement | null>(null);
@@ -44,13 +87,31 @@ function Course() {
         }
     }, [volume]);
 
+    React.useEffect(() => {
+        async function findCourse() {
+            await getCourseWithProgress(courseSlug as string)
+                    .then(async response => {
+                        setCourseData(response[0]);
+
+                        await getCourseModules(response[0].id)
+                                .then(async response => {
+                                    setCourseModules(response);
+
+                                    
+                                })
+                    })
+        }
+
+        findCourse();
+    },[])
+
     function onDocumentLoadSuccess({ numPages }: { numPages: number }) {
         setNumPages(numPages);
     }
 
     function toggleStepGroup(e: React.MouseEvent<HTMLButtonElement>) {
         const groupId = e.currentTarget.dataset.groupId as string;
-        const actualLessionGroup = document.getElementById(groupId);
+        const actualLessionGroup = document.getElementById(groupId);        
 
         if (actualLessionGroup) {
             actualLessionGroup.classList.toggle("active");
@@ -79,10 +140,10 @@ function Course() {
                 <div className="course-wrapper">
                     <div className="course-header">
                         <div className="left">
-                            <img src={medio1img} className="course-icon" />
+                            <img src={courseData?.cover} className="course-icon" />
                             <div className="course-title">
-                                <b>1ª série do ensino médio</b>
-                                <span>Guia do Educador</span>
+                                <b>{courseData?.title}</b>
+                                <span>{courseData?.subTitle}</span>
                             </div>
                         </div>
                         <div style={{ height: "100%", display: "flex", alignItems: "center" }}>
@@ -92,9 +153,9 @@ function Course() {
                                     textColor: '#000000',
                                     trailColor: '#d7d7da',
                                     backgroundColor: '#3e98c7'
-                                })}
-                                value={52}
-                                text={"52%"}
+                                })} 
+                                value={parseInt(courseData?.progressPercentage || "0")}
+                                text={courseData?.progressPercentage + "%"}
                                 className="course-progress"/>
                         </div>
                     </div>
@@ -250,171 +311,51 @@ function Course() {
                         </div>
                     </div>
                     <div className="steps-list">
-                        <div className="steps-group">
-                            <button className="step-button" data-group-id="lession-group-1" onClick={toggleStepGroup}>
-                                <div className="left">
-                                    <b className="group-number">1</b>
-                                    <div className="text">
-                                        <b>Boas vindas</b>
-                                        <span>1 conteúdo</span>
-                                    </div>
-                                </div>
-                                <div className="right">
-                                    <div style={{ height: "100%", display: "flex", alignItems: "center" }}>
-                                        <CircularProgressbar
-                                            styles={buildStyles({
-                                                pathColor: '#90C040',
-                                                textColor: '#000000',
-                                                trailColor: '#d7d7da',
-                                                backgroundColor: '#3e98c7'
-                                            })}
-                                            value={86}
-                                            text={"86%"}
-                                            className="course-progress"/>
-                                    </div>
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="8" height="5" viewBox="0 0 8 5" fill="none">
-                                        <path d="M4.02125 4.02116L6.99829 1.04411C7.17993 0.862473 7.17993 0.567893 6.99829 0.386256C6.81662 0.204581 6.52211 0.204581 6.34044 0.386256L4.15748 2.56921C4.15748 2.56921 3.93782 2.81522 3.69409 2.81006C3.45622 2.80502 3.22716 2.56921 3.22716 2.56921L1.0442 0.38633C0.862523 0.204656 0.568018 0.204656 0.386343 0.38633C0.295581 0.47713 0.250107 0.596212 0.250107 0.715257C0.250107 0.834301 0.295581 0.953347 0.386343 1.04418L3.36339 4.02116C3.54507 4.20283 3.83957 4.20283 4.02125 4.02116Z" fill="black" stroke="black" stroke-width="0.5"/>
-                                    </svg>
-                                </div>
-                            </button>
-
-                            <div className="lessions-list" id="lession-group-1">
-                                <div className="lession-item">
-                                    <div className="left">
-                                        <img src={videoPlaceholderImg} className="lession-img" />
-                                        <b>Apresentação do Curso</b>
-                                    </div>
-
-                                    <button>
-                                        Assistir
+                        {
+                            courseModules.map(module => (
+                                <div className="steps-group">
+                                    <button className="step-button" data-group-id="lession-group-1" onClick={toggleStepGroup}>
+                                        <div className="left">
+                                            <b className="group-number">1</b>
+                                            <div className="text">
+                                                <b>{module.title}</b>
+                                                <span>1 conteúdo</span>
+                                            </div>
+                                        </div>
+                                        <div className="right">
+                                            <div style={{ height: "100%", display: "flex", alignItems: "center" }}>
+                                                <CircularProgressbar
+                                                    styles={buildStyles({
+                                                        pathColor: '#90C040',
+                                                        textColor: '#000000',
+                                                        trailColor: '#d7d7da',
+                                                        backgroundColor: '#3e98c7'
+                                                    })}
+                                                    value={86}
+                                                    text={"86%"}
+                                                    className="course-progress"/>
+                                            </div>
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="8" height="5" viewBox="0 0 8 5" fill="none">
+                                                <path d="M4.02125 4.02116L6.99829 1.04411C7.17993 0.862473 7.17993 0.567893 6.99829 0.386256C6.81662 0.204581 6.52211 0.204581 6.34044 0.386256L4.15748 2.56921C4.15748 2.56921 3.93782 2.81522 3.69409 2.81006C3.45622 2.80502 3.22716 2.56921 3.22716 2.56921L1.0442 0.38633C0.862523 0.204656 0.568018 0.204656 0.386343 0.38633C0.295581 0.47713 0.250107 0.596212 0.250107 0.715257C0.250107 0.834301 0.295581 0.953347 0.386343 1.04418L3.36339 4.02116C3.54507 4.20283 3.83957 4.20283 4.02125 4.02116Z" fill="black" stroke="black" stroke-width="0.5"/>
+                                            </svg>
+                                        </div>
                                     </button>
-                                </div>
+
+                                    <div className="lessions-list" id="lession-group-1">
+                                        <div className="lession-item">
+                                            <div className="left">
+                                                <img src={videoPlaceholderImg} className="lession-img" />
+                                                <b>Apresentação do Curso</b>
+                                            </div>
+
+                                            <button>
+                                                Assistir
+                                            </button>
+                                        </div>
+                                    </div>
                             </div>
-                        </div>
-
-                        <div className="steps-group">
-                            <button className="step-button" data-group-id="lession-group-2" onClick={toggleStepGroup}>
-                                <div className="left">
-                                    <b className="group-number">2</b>
-                                    <div className="text">
-                                        <b>Leituras</b>
-                                        <span>3 conteúdos</span>
-                                    </div>
-                                </div>
-                                <div className="right">
-                                    <div style={{ height: "100%", display: "flex", alignItems: "center" }}>
-                                        <CircularProgressbar
-                                            styles={buildStyles({
-                                                pathColor: '#90C040',
-                                                textColor: '#000000',
-                                                trailColor: '#d7d7da',
-                                                backgroundColor: '#3e98c7'
-                                            })}
-                                            value={86}
-                                            text={"86%"}
-                                            className="course-progress"/>
-                                    </div>
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="8" height="5" viewBox="0 0 8 5" fill="none">
-                                        <path d="M4.02125 4.02116L6.99829 1.04411C7.17993 0.862473 7.17993 0.567893 6.99829 0.386256C6.81662 0.204581 6.52211 0.204581 6.34044 0.386256L4.15748 2.56921C4.15748 2.56921 3.93782 2.81522 3.69409 2.81006C3.45622 2.80502 3.22716 2.56921 3.22716 2.56921L1.0442 0.38633C0.862523 0.204656 0.568018 0.204656 0.386343 0.38633C0.295581 0.47713 0.250107 0.596212 0.250107 0.715257C0.250107 0.834301 0.295581 0.953347 0.386343 1.04418L3.36339 4.02116C3.54507 4.20283 3.83957 4.20283 4.02125 4.02116Z" fill="black" stroke="black" stroke-width="0.5"/>
-                                    </svg>
-                                </div>
-                            </button>
-
-                            <div className="lessions-list" id="lession-group-2">
-                                <div className="lession-item">
-                                    <div className="left">
-                                        <img src={videoPlaceholderImg} className="lession-img" />
-                                        <b>Apresentação do Curso</b>
-                                    </div>
-
-                                    <button>
-                                        Assistir
-                                    </button>
-                                </div>
-                                <div className="lession-item">
-                                    <div className="left">
-                                        <img src={videoPlaceholderImg} className="lession-img" />
-                                        <b>Apresentação do Curso</b>
-                                    </div>
-
-                                    <button>
-                                        Assistir
-                                    </button>
-                                </div>
-                                <div className="lession-item">
-                                    <div className="left">
-                                        <img src={videoPlaceholderImg} className="lession-img" />
-                                        <b>Apresentação do Curso</b>
-                                    </div>
-
-                                    <button>
-                                        Assistir
-                                    </button>
-                                </div>  
-                            </div>
-                        </div>
-
-                        <div className="steps-group">
-                            <button className="step-button" data-group-id="lession-group-3" onClick={toggleStepGroup}>
-                                <div className="left">
-                                    <b className="group-number">3</b>
-                                    <div className="text">
-                                        <b>Vídeos</b>
-                                        <span>3 conteúdos</span>
-                                    </div>
-                                </div>
-                                <div className="right">
-                                    <div style={{ height: "100%", display: "flex", alignItems: "center" }}>
-                                        <CircularProgressbar
-                                            styles={buildStyles({
-                                                pathColor: '#90C040',
-                                                textColor: '#000000',
-                                                trailColor: '#d7d7da',
-                                                backgroundColor: '#3e98c7'
-                                            })}
-                                            value={86}
-                                            text={"86%"}
-                                            className="course-progress"/>
-                                    </div>
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="8" height="5" viewBox="0 0 8 5" fill="none">
-                                        <path d="M4.02125 4.02116L6.99829 1.04411C7.17993 0.862473 7.17993 0.567893 6.99829 0.386256C6.81662 0.204581 6.52211 0.204581 6.34044 0.386256L4.15748 2.56921C4.15748 2.56921 3.93782 2.81522 3.69409 2.81006C3.45622 2.80502 3.22716 2.56921 3.22716 2.56921L1.0442 0.38633C0.862523 0.204656 0.568018 0.204656 0.386343 0.38633C0.295581 0.47713 0.250107 0.596212 0.250107 0.715257C0.250107 0.834301 0.295581 0.953347 0.386343 1.04418L3.36339 4.02116C3.54507 4.20283 3.83957 4.20283 4.02125 4.02116Z" fill="black" stroke="black" stroke-width="0.5"/>
-                                    </svg>
-                                </div>
-                            </button>
-
-                            <div className="lessions-list" id="lession-group-3">
-                                <div className="lession-item">
-                                    <div className="left">
-                                        <img src={videoPlaceholderImg} className="lession-img" />
-                                        <b>Vídeo 1</b>
-                                    </div>
-
-                                    <button>
-                                        Assistir
-                                    </button>
-                                </div>
-                                <div className="lession-item">
-                                    <div className="left">
-                                        <img src={videoPlaceholderImg} className="lession-img" />
-                                        <b>Vídeo 2</b>
-                                    </div>
-
-                                    <button>
-                                        Assistir
-                                    </button>
-                                </div>
-                                <div className="lession-item">
-                                    <div className="left">
-                                        <img src={videoPlaceholderImg} className="lession-img" />
-                                        <b>Vídeo 3</b>
-                                    </div>
-
-                                    <button>
-                                        Assistir
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
+                            ))
+                        }
                     </div>
                 </div>
                 

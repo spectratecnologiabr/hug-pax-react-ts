@@ -172,6 +172,7 @@
 
 .dashboard-container .main-dash-wrapper .last-courses .course-item .course-img {
     height: 100%;
+    border-radius: 8px;
 }
 
 .dashboard-container .main-dash-wrapper .last-courses .course-item b {
@@ -186,18 +187,18 @@
     font-family: 'SF UI Display Medium';
 }
 
-.dashboard-container .main-dash-wrapper .last-courses .course-item button.open-course {
+.dashboard-container .main-dash-wrapper .last-courses .course-item a.open-course {
     font-family: 'SF UI Display Medium';
     font-size: 14px;
     background-color: #3696D3;
-    padding: 12px 20px;
+    padding: 12px;
     color: #ffffff;
     border-radius: 8px;
-    cursor: pointer;
+    text-decoration: none;
     transition: ease-in-out .3s all;
 }
 
-.dashboard-container .main-dash-wrapper .last-courses .course-item button.open-course:hover {
+.dashboard-container .main-dash-wrapper .last-courses .course-item a.open-course:hover {
     background-color: #5CADE0;
 }
 

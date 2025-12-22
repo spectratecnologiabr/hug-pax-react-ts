@@ -37,6 +37,10 @@
     gap: 40px;
 }
 
+.course-container .course-wrapper .course-header .left img {
+  border-radius: 10px;
+}
+
 .course-container .course-wrapper .course-header .course-title {
     display: flex;
     flex-direction: column;
