@@ -66,6 +66,7 @@
 
 .course-container .course-wrapper .lession-document-wrapper {
     min-height: 90vh;
+    max-width: 60vw;
     display: none;
 }
 
@@ -526,4 +527,44 @@
 
 .course-container .course-wrapper .comments-wrapper .comment-form button:hover {
     background-color: #5CADE0;
+}
+
+.course-container .course-wrapper .comments-wrapper .comments-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.course-container .course-wrapper .comments-wrapper .comments-list .comment-element {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding-top: 20px;
+}
+
+.course-container .course-wrapper .comments-wrapper .comments-list .comment-element .header {
+  display: flex;
+  gap: 10px;
+  align-items: baseline;
+}
+
+.course-container .course-wrapper .comments-wrapper .comments-list .comment-element .header b {
+  font-family: 'SF UI Display Medium';
+  font-size: 14px;
+}
+
+.course-container .course-wrapper .comments-wrapper .comments-list .comment-element .header small {
+  font-family: 'SF UI Display Light';
+  font-size: 10px;
+  color: #8E8E8E;
+}
+
+.course-container .course-wrapper .comments-wrapper .comments-list .comment-element span {
+  font-family: 'SF UI Display Light';
+}
+
+.course-container .course-wrapper .comments-wrapper .comments-list .comment-element hr {
+    width: -webkit-fill-available;
+    height: 0.5px;
+    background: #8E8E8E;
 }

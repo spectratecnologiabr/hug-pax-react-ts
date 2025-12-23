@@ -15,9 +15,6 @@ import EducatorsRoom from "../components/dash/educatorsRoom";
 import alunoImage from "../img/dash/aluno.svg";
 import notificationIcon from "../img/notification.svg";
 import alunoIcon from "../img/dash/aluno-icon.svg";
-import medio1img from "../img/dash/1-medio.svg";
-import medio2img from "../img/dash/2-medio.svg";
-import medio3img from "../img/dash/3-medio.svg";
 
 import "../style/dash.css";
 import Footer from "../components/footer";

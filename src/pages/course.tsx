@@ -1,7 +1,7 @@
 import React, { useState } from "react";
+import '../lib/pdf';
 import { useParams } from "react-router-dom";
 import { Document, Page } from 'react-pdf';
-import { pdfjs } from 'react-pdf';
 import { CircularProgressbar, buildStyles } from 'react-circular-progressbar';
 import { getCourseWithProgress } from "../controllers/course/getCourseWithProgress.controller";
 import { getCourseModules } from "../controllers/course/getCourseModules.controller";
@@ -20,8 +20,6 @@ import 'react-circular-progressbar/dist/styles.css';
 import "../style/course.css";
 import 'react-pdf/dist/Page/TextLayer.css';
 import 'react-pdf/dist/Page/AnnotationLayer.css';
-
-pdfjs.GlobalWorkerOptions.workerSrc = `${window.location.origin}/pdf.worker.min.mjs`;
 
 type TCourseData = {
     id: number,
@@ -199,6 +197,20 @@ function Course() {
         setLessionRate(star)
     }
 
+    const formatDate = (date: string) => {
+        const d = new Date(date);
+
+        const dia = String(d.getDate()).padStart(2, '0');
+        const mes = String(d.getMonth() + 1).padStart(2, '0');
+        const ano = d.getFullYear();
+
+        const hora = String(d.getHours()).padStart(2, '0');
+        const minuto = String(d.getMinutes()).padStart(2, '0');
+
+        return `${dia}/${mes}/${ano} - ${hora}:${minuto}`;
+    };
+
+
     return (
         <React.Fragment>
             <div className="course-container">
@@ -298,7 +310,7 @@ function Course() {
                                                             });
                                                         }} disabled={pageNumber <= 1}>
                                                             <svg width="35" height="35" viewBox="0 0 35 35" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                                <path d="M35 17.5C35 7.84 27.16 -3.42697e-07 17.5 -7.64949e-07C7.84 -1.1872e-06 -4.15739e-06 7.84 -4.57965e-06 17.5C-5.0019e-06 27.16 7.83999 35 17.5 35C27.16 35 35 27.16 35 17.5ZM12.8625 16.8875L17.745 12.005C18.305 11.445 19.25 11.83 19.25 12.6175L19.25 22.4C19.25 23.1875 18.305 23.5725 17.7625 23.0125L12.88 18.13C12.53 17.78 12.53 17.22 12.8625 16.8875Z" fill="#323232"/>
+                                                                <path d="M35 17\.5C35 7.84 27.16 -3.42697e-07 17.5 -7.64949e-07C7.84 -1.1872e-06 -4.15739e-06 7.84 -4.57965e-06 17.5C-5.0019e-06 27.16 7.83999 35 17.5 35C27.16 35 35 27.16 35 17.5ZM12.8625 16.8875L17.745 12.005C18.305 11.445 19.25 11.83 19.25 12.6175L19.25 22.4C19.25 23.1875 18.305 23.5725 17.7625 23.0125L12.88 18.13C12.53 17.78 12.53 17.22 12.8625 16.8875Z" fill="#323232"/>
                                                             </svg>
                                                         </button>   
 
@@ -382,9 +394,10 @@ function Course() {
                                                 <div className="comment-element">
                                                     <div className="header">
                                                         <b>{comment.creatorName}</b>
-                                                        <small>{new Date(comment.createdAt).toDateString()}</small>
+                                                        <small>{formatDate(comment.createdAt)}</small>
                                                     </div>
                                                     <span>{comment.text}</span>
+                                                    <hr />
                                                 </div>
                                             ))
                                         }
