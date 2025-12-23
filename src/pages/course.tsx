@@ -8,6 +8,7 @@ import { getCourseModules } from "../controllers/course/getCourseModules.control
 import { getModuleLessons } from "../controllers/course/getModuleLessons.controller";
 import { getLession } from "../controllers/course/getLesson.controller";
 import { updateProgress } from "../controllers/course/updateProgress.controller";
+import { listLessonComments } from "../controllers/course/listLessonComments.controller";
 
 import AsideMenu from "../components/asideMenu";
 import Footer from "../components/footer";
@@ -60,11 +61,22 @@ type TLesson = {
     updatedAt: string
 }
 
+type TComment = {
+    id: number,
+    creatorId: number,
+    creatorName: string,
+    lessonId: number,
+    text: string,
+    createdAt: string,
+    updatedAt: string
+}
+
 function Course() {
     const { courseSlug, lessonId } = useParams();
     const [courseData, setCourseData] = useState<TCourseData | null>(null);
     const [courseModules, setCourseModules] = useState([] as Array<TCourseModule>)
     const [lessionData, setLessionData] = useState<TLesson | null>(null)
+    const [lessonComments, setLessonComments] = useState([] as Array<TComment>)
 
     const [numPages, setNumPages] = React.useState(0);
     const [pageNumber, setPageNumber] = React.useState(1);
@@ -136,13 +148,19 @@ function Course() {
                 })
         }
 
+        async function getComments() {
+            await listLessonComments(Number(lessonId))
+                    .then(response => {
+                        setLessonComments(response)
+                    })
+        }
+
         if (lessonId) {
             getLessionData();
+            getComments();
         }
     }, [])
 
-    // (Removido: função sendProgress)
-    // Controle de envio automático para VÍDEO (a cada 5s)
     React.useEffect(() => {
         if (lessionData?.type !== "video") return;
 
@@ -357,6 +375,20 @@ function Course() {
                                         <input type="text" name="comment" id="commentEl" placeholder="Adcione um comentário" />
                                         <button type="submit">Comentar</button>
                                     </form>
+
+                                    <div className="comments-list">
+                                        {
+                                            lessonComments.map(comment => (
+                                                <div className="comment-element">
+                                                    <div className="header">
+                                                        <b>{comment.creatorName}</b>
+                                                        <small>{new Date(comment.createdAt).toDateString()}</small>
+                                                    </div>
+                                                    <span>{comment.text}</span>
+                                                </div>
+                                            ))
+                                        }
+                                    </div>
                                 </div>
                             </React.Fragment>
 
