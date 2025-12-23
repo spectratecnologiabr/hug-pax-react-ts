@@ -5,6 +5,7 @@ import { pdfjs } from 'react-pdf';
 import { CircularProgressbar, buildStyles } from 'react-circular-progressbar';
 import { getCourseWithProgress } from "../controllers/course/getCourseWithProgress.controller";
 import { getCourseModules } from "../controllers/course/getCourseModules.controller";
+import { getModuleLessons } from "../controllers/course/getModuleLessons.controller";
 
 import AsideMenu from "../components/asideMenu";
 import Footer from "../components/footer";
@@ -38,7 +39,8 @@ type TCourseModule = {
     title: string,
     description: string,
     order: number,
-    lessons: Array<TLesson>,
+    lessons: Array<TLesson>,    
+    progressPercentage: string,
     createdAt: string,
     updatedAt: string
 }
@@ -93,12 +95,22 @@ function Course() {
                     .then(async response => {
                         setCourseData(response[0]);
 
-                        await getCourseModules(response[0].id)
-                                .then(async response => {
-                                    setCourseModules(response);
+                        const modules = await getCourseModules(response[0].id);
 
-                                    
-                                })
+                        const modulesWithLessons = await Promise.all(
+                            modules
+                                .sort((a: TCourseModule, b: TCourseModule) => a.order - b.order) // 👈 ordenação correta
+                                .map(async (module: TCourseModule) => {
+                                const lessons = await getModuleLessons(module.id);
+
+                                return {
+                                    ...module,
+                                    lessons // 👈 sempre definido
+                                };
+                            })
+                        );
+
+                        setCourseModules(modulesWithLessons);
                     })
         }
 
@@ -319,7 +331,7 @@ function Course() {
                                             <b className="group-number">1</b>
                                             <div className="text">
                                                 <b>{module.title}</b>
-                                                <span>1 conteúdo</span>
+                                                <span>{module.lessons.length} conteúdo{(module.lessons.length > 1) ? "s" : ""}</span>
                                             </div>
                                         </div>
                                         <div className="right">
@@ -331,8 +343,8 @@ function Course() {
                                                         trailColor: '#d7d7da',
                                                         backgroundColor: '#3e98c7'
                                                     })}
-                                                    value={86}
-                                                    text={"86%"}
+                                                    value={Number(module.progressPercentage)}
+                                                    text={`${module.progressPercentage}%`}
                                                     className="course-progress"/>
                                             </div>
                                             <svg xmlns="http://www.w3.org/2000/svg" width="8" height="5" viewBox="0 0 8 5" fill="none">
@@ -342,16 +354,20 @@ function Course() {
                                     </button>
 
                                     <div className="lessions-list" id="lession-group-1">
-                                        <div className="lession-item">
-                                            <div className="left">
-                                                <img src={videoPlaceholderImg} className="lession-img" />
-                                                <b>Apresentação do Curso</b>
-                                            </div>
+                                        {
+                                            module.lessons.map(lesson => (
+                                                <div className="lession-item">
+                                                    <div className="left">
+                                                        <img src={lesson.cover} className="lession-img" />
+                                                        <b>{lesson.title}</b>
+                                                    </div>
 
-                                            <button>
-                                                Assistir
-                                            </button>
-                                        </div>
+                                                    <button>
+                                                        {(lesson.title == "video") ? "Assistir" : "Abrir"}
+                                                    </button>
+                                                </div>
+                                            ))
+                                        }
                                     </div>
                             </div>
                             ))
