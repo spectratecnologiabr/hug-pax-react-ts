@@ -7,6 +7,7 @@ import { getCourseWithProgress } from "../controllers/course/getCourseWithProgre
 import { getCourseModules } from "../controllers/course/getCourseModules.controller";
 import { getModuleLessons } from "../controllers/course/getModuleLessons.controller";
 import { getLession } from "../controllers/course/getLesson.controller";
+import { updateProgress } from "../controllers/course/updateProgress.controller";
 
 import AsideMenu from "../components/asideMenu";
 import Footer from "../components/footer";
@@ -76,6 +77,13 @@ function Course() {
     const [lessionRate, setLessionRate] = React.useState(0);
     const [volume, setVolume] = React.useState(1);
 
+    // Helper reutilizável para envio de progresso
+    const sendProgressSafe = React.useCallback(async (value: number) => {
+        if (!lessonId) return;
+
+        await updateProgress(Number(lessonId), Math.min(100, Math.max(0, value)));
+    }, [lessonId]);
+
     React.useEffect(() => {
         function handleFsChange() {
             setIsPdfFullscreen(Boolean(document.fullscreenElement));
@@ -133,6 +141,18 @@ function Course() {
         }
     }, [])
 
+    // (Removido: função sendProgress)
+    // Controle de envio automático para VÍDEO (a cada 5s)
+    React.useEffect(() => {
+        if (lessionData?.type !== "video") return;
+
+        const interval = setInterval(() => {
+            sendProgressSafe(progress);
+        }, 5000);
+
+        return () => clearInterval(interval);
+    }, [progress, lessionData?.type, sendProgressSafe]);
+
     function onDocumentLoadSuccess({ numPages }: { numPages: number }) {
         setNumPages(numPages);
     }
@@ -182,8 +202,8 @@ function Course() {
                                     trailColor: '#d7d7da',
                                     backgroundColor: '#3e98c7'
                                 })} 
-                                value={parseInt(courseData?.progressPercentage || "0")}
-                                text={courseData?.progressPercentage + "%"}
+                                value={Number(courseData?.progressPercentage) || 0}
+                                text={(courseData?.progressPercentage || 0) + "%"}
                                 className="course-progress"/>
                         </div>
                     </div>
@@ -250,13 +270,29 @@ function Course() {
 
                                                 <div className={`pdf-controls ${isPdfFullscreen ? "inside-fs" : ""}`}>
                                                     <div className="left">
-                                                        <button onClick={() => setPageNumber(p => Math.max(p - 1, 1))} disabled={pageNumber <= 1}>
+                                                        <button onClick={() => {
+                                                            setPageNumber(p => {
+                                                                const newPage = Math.max(p - 1, 1);
+                                                                const newProgress = (newPage / numPages) * 100;
+                                                                setProgress(newProgress);
+                                                                sendProgressSafe(newProgress);
+                                                                return newPage;
+                                                            });
+                                                        }} disabled={pageNumber <= 1}>
                                                             <svg width="35" height="35" viewBox="0 0 35 35" fill="none" xmlns="http://www.w3.org/2000/svg">
                                                                 <path d="M35 17.5C35 7.84 27.16 -3.42697e-07 17.5 -7.64949e-07C7.84 -1.1872e-06 -4.15739e-06 7.84 -4.57965e-06 17.5C-5.0019e-06 27.16 7.83999 35 17.5 35C27.16 35 35 27.16 35 17.5ZM12.8625 16.8875L17.745 12.005C18.305 11.445 19.25 11.83 19.25 12.6175L19.25 22.4C19.25 23.1875 18.305 23.5725 17.7625 23.0125L12.88 18.13C12.53 17.78 12.53 17.22 12.8625 16.8875Z" fill="#323232"/>
                                                             </svg>
                                                         </button>   
 
-                                                        <button onClick={() => setPageNumber(p => Math.min(p + 1, numPages))} disabled={pageNumber >= numPages}>
+                                                        <button onClick={() => {
+                                                            setPageNumber(p => {
+                                                                const newPage = Math.min(p + 1, numPages);
+                                                                const newProgress = (newPage / numPages) * 100;
+                                                                setProgress(newProgress);
+                                                                sendProgressSafe(newProgress);
+                                                                return newPage;
+                                                            });
+                                                        }} disabled={pageNumber >= numPages}>
                                                             <svg width="35" height="35" viewBox="0 0 35 35" fill="none" xmlns="http://www.w3.org/2000/svg">
                                                                 <path d="M2.29485e-06 17.5C1.02809e-06 27.16 7.84 35 17.5 35C27.16 35 35 27.16 35 17.5C35 7.84 27.16 -2.53093e-07 17.5 -1.51985e-06C7.84 -2.78661e-06 3.5616e-06 7.84 2.29485e-06 17.5ZM22.1375 18.1125L17.255 22.995C16.695 23.555 15.75 23.17 15.75 22.3825L15.75 12.6C15.75 11.8125 16.695 11.4275 17.2375 11.9875L22.12 16.87C22.47 17.22 22.47 17.78 22.1375 18.1125Z" fill="#323232"/>
                                                             </svg>
@@ -364,7 +400,7 @@ function Course() {
                                             <b className="group-number">1</b>
                                             <div className="text">
                                                 <b>{module.title}</b>
-                                                <span>{module.lessons.length} conteúdo{(module.lessons.length > 1) ? "s" : ""}</span>
+                                                <span>{module.lessons?.length ?? 0} conteúdo{((module.lessons?.length ?? 0) > 1) ? "s" : ""}</span>
                                             </div>
                                         </div>
                                         <div className="right">
