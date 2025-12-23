@@ -393,11 +393,11 @@ function Course() {
                     </div>
                     <div className="steps-list">
                         {
-                            courseModules.map(module => (
+                            courseModules.map((module, index) => (
                                 <div className="steps-group">
-                                    <button className="step-button" data-group-id="lession-group-1" onClick={toggleStepGroup}>
+                                    <button className="step-button" data-group-id={`lession-group-${index + 1}`} onClick={toggleStepGroup}>
                                         <div className="left">
-                                            <b className="group-number">1</b>
+                                            <b className="group-number">{module.order}</b>
                                             <div className="text">
                                                 <b>{module.title}</b>
                                                 <span>{module.lessons?.length ?? 0} conteúdo{((module.lessons?.length ?? 0) > 1) ? "s" : ""}</span>
@@ -422,7 +422,7 @@ function Course() {
                                         </div>
                                     </button>
 
-                                    <div className="lessions-list" id="lession-group-1">
+                                    <div className="lessions-list" id={`lession-group-${index + 1}`}>
                                         {
                                             module.lessons.map(lesson => (
                                                 <div className="lession-item">
