@@ -85,6 +85,66 @@
     display: block;
 }
 
+.pdf-page-wrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background: #111;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.pdf-page-wrapper canvas {
+  max-width: 100%;
+  max-height: 100%;
+  background: #fff;
+  box-shadow: 0 10px 30px rgba(0,0,0,.5);
+}
+
+/* CONTROLES */
+.pdf-controls {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0,0,0,.65);
+  backdrop-filter: blur(10px);
+  border-radius: 12px;
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  color: #000;
+}
+
+.pdf-controls .left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.pdf-controls button {
+  background: none;
+  border: none;
+  color: #000;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.pdf-controls button:hover {
+  color: #90C040;
+}
+
+.pdf-controls span {
+  font-size: 14px;
+}
+
+/* FULLSCREEN */
+.pdf-controls.inside-fs {
+  bottom: 30px;
+}
+
 .course-container .course-wrapper .lession-media-wrapper .video-player-wrapper {
   background: #EDEDED;
   display: flex;

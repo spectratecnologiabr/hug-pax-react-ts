@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import '../lib/pdf';
 import { useParams } from "react-router-dom";
-import { Document, Page } from 'react-pdf';
+import * as pdfjsLib from "pdfjs-dist";
+import { GlobalWorkerOptions } from "pdfjs-dist";
 import { CircularProgressbar, buildStyles } from 'react-circular-progressbar';
 import { getCourseWithProgress } from "../controllers/course/getCourseWithProgress.controller";
 import { getCourseModules } from "../controllers/course/getCourseModules.controller";
@@ -20,6 +21,8 @@ import 'react-circular-progressbar/dist/styles.css';
 import "../style/course.css";
 import 'react-pdf/dist/Page/TextLayer.css';
 import 'react-pdf/dist/Page/AnnotationLayer.css';
+
+GlobalWorkerOptions.workerSrc = `${process.env.PUBLIC_URL}/pdf.worker.min.js`;
 
 type TCourseData = {
     id: number,
@@ -75,6 +78,7 @@ function Course() {
     const [courseModules, setCourseModules] = useState([] as Array<TCourseModule>)
     const [lessionData, setLessionData] = useState<TLesson | null>(null)
     const [lessonComments, setLessonComments] = useState([] as Array<TComment>)
+    const canvasRef = React.useRef<HTMLCanvasElement | null>(null);
 
     const [numPages, setNumPages] = React.useState(0);
     const [pageNumber, setPageNumber] = React.useState(1);
@@ -210,6 +214,38 @@ function Course() {
         return `${dia}/${mes}/${ano} - ${hora}:${minuto}`;
     };
 
+    React.useEffect(() => {
+        if (!lessionData || lessionData.type !== "pdf") return;
+
+        let cancelled = false;
+
+        const renderPdf = async () => {
+            const pdf = await pdfjsLib.getDocument(lessionData.extUrl).promise;
+            if (cancelled) return;
+
+            setNumPages(pdf.numPages);
+
+            const page = await pdf.getPage(pageNumber);
+            if (cancelled) return;
+
+            const viewport = page.getViewport({ scale: isPdfFullscreen ? 1.2 : 1 });
+            const canvas = canvasRef.current;
+            if (!canvas) return;
+
+            const context = canvas.getContext("2d")!;
+            canvas.width = viewport.width;
+            canvas.height = viewport.height;
+
+            await page.render({ canvasContext: context, viewport, canvas }).promise;
+        };
+
+        renderPdf();
+
+        return () => {
+            cancelled = true;
+        };
+    }, [lessionData, pageNumber, isPdfFullscreen, numPages]);
+
 
     return (
         <React.Fragment>
@@ -290,78 +326,52 @@ function Course() {
                                         </div>) : ""
                                 }
                                 {
-                                    (lessionData.type === "pdf") ?
-                                        (<div className="lession-document-wrapper active">
+                                    (lessionData.type === "pdf") ? (
+                                        <div className="lession-document-wrapper active">
                                             <div className="pdf-page-wrapper">
-                                                <Document file={lessionData.extUrl} onLoadSuccess={onDocumentLoadSuccess} onLoadError={console.error} onSourceError={console.error}>
-                                                    <Page pageNumber={pageNumber} scale={isPdfFullscreen ? 1 : 1.2} renderTextLayer={false} renderAnnotationLayer={false}/>
-                                                </Document>
+                                            <canvas ref={canvasRef} />
 
-
-                                                <div className={`pdf-controls ${isPdfFullscreen ? "inside-fs" : ""}`}>
-                                                    <div className="left">
-                                                        <button onClick={() => {
-                                                            setPageNumber(p => {
-                                                                const newPage = Math.max(p - 1, 1);
-                                                                const newProgress = (newPage / numPages) * 100;
-                                                                setProgress(newProgress);
-                                                                sendProgressSafe(newProgress);
-                                                                return newPage;
-                                                            });
-                                                        }} disabled={pageNumber <= 1}>
-                                                            <svg width="35" height="35" viewBox="0 0 35 35" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                                <path d="M35 17\.5C35 7.84 27.16 -3.42697e-07 17.5 -7.64949e-07C7.84 -1.1872e-06 -4.15739e-06 7.84 -4.57965e-06 17.5C-5.0019e-06 27.16 7.83999 35 17.5 35C27.16 35 35 27.16 35 17.5ZM12.8625 16.8875L17.745 12.005C18.305 11.445 19.25 11.83 19.25 12.6175L19.25 22.4C19.25 23.1875 18.305 23.5725 17.7625 23.0125L12.88 18.13C12.53 17.78 12.53 17.22 12.8625 16.8875Z" fill="#323232"/>
-                                                            </svg>
-                                                        </button>   
-
-                                                        <button onClick={() => {
-                                                            setPageNumber(p => {
-                                                                const newPage = Math.min(p + 1, numPages);
-                                                                const newProgress = (newPage / numPages) * 100;
-                                                                setProgress(newProgress);
-                                                                sendProgressSafe(newProgress);
-                                                                return newPage;
-                                                            });
-                                                        }} disabled={pageNumber >= numPages}>
-                                                            <svg width="35" height="35" viewBox="0 0 35 35" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                                <path d="M2.29485e-06 17.5C1.02809e-06 27.16 7.84 35 17.5 35C27.16 35 35 27.16 35 17.5C35 7.84 27.16 -2.53093e-07 17.5 -1.51985e-06C7.84 -2.78661e-06 3.5616e-06 7.84 2.29485e-06 17.5ZM22.1375 18.1125L17.255 22.995C16.695 23.555 15.75 23.17 15.75 22.3825L15.75 12.6C15.75 11.8125 16.695 11.4275 17.2375 11.9875L22.12 16.87C22.47 17.22 22.47 17.78 22.1375 18.1125Z" fill="#323232"/>
-                                                            </svg>
-                                                        </button>
-
-                                                        <div className="page-input-wrapper">
-                                                            <input
-                                                                type="number"
-                                                                min={1}
-                                                                max={numPages}
-                                                                value={pageNumber}
-                                                                onChange={(e) => {
-                                                                    const value = Number(e.target.value);
-                                                                    if (!isNaN(value)) {
-                                                                        setPageNumber(Math.min(Math.max(1, value), numPages));
-                                                                    }
-                                                                }}
-                                                                onKeyDown={(e) => {
-                                                                    if (e.key === "Enter") {
-                                                                        const value = Number((e.target as HTMLInputElement).value);
-                                                                        if (!isNaN(value)) {
-                                                                            setPageNumber(Math.min(Math.max(1, value), numPages));
-                                                                        }
-                                                                    }
-                                                                }}
-                                                                className="page-number-input"
-                                                            />
-                                                            <span className="total-pages-label">de {numPages}</span>
-                                                        </div>
-                                                    </div>
-                                                    <button onClick={toggleFullscreen}>
-                                                        <svg height="35" viewBox="0 0 52 43" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                            <path d="M47.2727 28.6667H52V33.4444H47.2727V28.6667ZM47.2727 19.1111H52V23.8889H47.2727V19.1111ZM52 38.2222H47.2727V43C49.6364 43 52 40.6111 52 38.2222ZM28.3636 0H33.0909V4.77778H28.3636V0ZM47.2727 9.55556H52V14.3333H47.2727V9.55556ZM47.2727 0V4.77778H52C52 2.38889 49.6364 0 47.2727 0ZM0 9.55556H4.72727V14.3333H0V9.55556ZM37.8182 0H42.5455V4.77778H37.8182V0ZM37.8182 38.2222H42.5455V43H37.8182V38.2222ZM4.72727 0C2.36364 0 0 2.38889 0 4.77778H4.72727V0ZM18.9091 0H23.6364V4.77778H18.9091V0ZM9.45455 0H14.1818V4.77778H9.45455V0ZM0 19.1111V38.2222C0 40.85 2.12727 43 4.72727 43H33.0909V23.8889C33.0909 21.2611 30.9636 19.1111 28.3636 19.1111H0ZM6.21636 36.2872L9.73818 31.7244C10.2109 31.1272 11.0855 31.1033 11.5818 31.7006L14.8673 35.69L19.8309 29.24C20.3036 28.6189 21.2491 28.6189 21.6982 29.2639L26.9455 36.335C27.5364 37.1233 26.9691 38.2461 26 38.2461H7.13818C6.16909 38.2222 5.60182 37.0756 6.21636 36.2872Z" fill="#323232"/>
-                                                        </svg>
+                                            <div className={`pdf-controls ${isPdfFullscreen ? "inside-fs" : ""}`}>
+                                                <div className="left">
+                                                    <button 
+                                                      onClick={async () => {
+                                                        setPageNumber(p => {
+                                                          const newPage = Math.max(p - 1, 1);
+                                                          const newProgress = (newPage / numPages) * 100;
+                                                          setProgress(newProgress);
+                                                          sendProgressSafe(newProgress);
+                                                          return newPage;
+                                                        });
+                                                      }} 
+                                                      disabled={pageNumber <= 1}
+                                                    >
+                                                      ◀
                                                     </button>
+
+                                                    <button 
+                                                      onClick={async () => {
+                                                        setPageNumber(p => {
+                                                          const newPage = Math.min(p + 1, numPages);
+                                                          const newProgress = (newPage / numPages) * 100;
+                                                          setProgress(newProgress);
+                                                          sendProgressSafe(newProgress);
+                                                          return newPage;
+                                                        });
+                                                      }} 
+                                                      disabled={pageNumber >= numPages}
+                                                    >
+                                                      ▶
+                                                    </button>
+
+                                                    <span>{pageNumber} / {numPages}</span>
                                                 </div>
+
+                                                <button onClick={toggleFullscreen}>⛶</button>
                                             </div>
-                                        </div>) : ""
-                                    }
+                                            </div>
+                                        </div>
+                                    ) : ""
+                                }
                                 
 
                                 <div className="avaliation-wrapper">

@@ -14,7 +14,7 @@
     "@types/react": "^19.2.6",
     "@types/react-dom": "^19.2.3",
     "axios": "^1.13.2",
-    "pdfjs-dist": "^5.4.296",
+    "pdfjs-dist": "^5.4.449",
     "react": "^19.2.0",
     "react-circular-progressbar": "^2.2.0",
     "react-dom": "^19.2.0",
