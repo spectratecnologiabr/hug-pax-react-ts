@@ -21,7 +21,7 @@ function AsideMenu() {
                 <a href="/dashboard" className="menu-item">
                     <img src={homeIcon} alt="" className="menu-icon" />
                 </a>
-                <a href="#" className="menu-item">
+                <a href="/courses" className="menu-item">
                     <img src={hatIcon} alt="" className="menu-icon" />
                 </a>
                 <a href="#" className="menu-item">

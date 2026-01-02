@@ -8,6 +8,7 @@ import ResetPassword from './pages/resetPassword';
 // AVA Routes
 import Dashboard from './pages/dashboard';
 import Course from './pages/course';
+import EducatorsPage from './pages/educatorsPage';
 
 function MyRoutes() {
     return (
@@ -18,6 +19,7 @@ function MyRoutes() {
                 <Route path='/forgot-password' element={<ForgotPassword/>} />
                 <Route path='/reset-password' element={<ResetPassword/>} />
                 <Route path='/dashboard' element={<Dashboard/>} />
+                <Route path='/courses' element={<EducatorsPage/>} />
                 <Route path='/course/:courseSlug' element={<Course />} />
                 <Route path='/course/:courseSlug/lesson/:lessonId' element={<Course />} />
             </Routes>

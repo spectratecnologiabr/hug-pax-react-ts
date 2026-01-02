@@ -1,0 +1,15 @@
+.educators-page-container {
+    display: flex;
+    min-height: 100vh;
+    padding: 20px;
+    gap: 40px;
+    width: -webkit-fill-available;
+}
+
+.educators-page-container .educators-page-wrapper {
+    width: -webkit-fill-available;
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+    margin-left: 110px;
+}
