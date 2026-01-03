@@ -128,3 +128,7 @@ body, * {
 .warning-container.success button path {
     fill: #008A2E;
 }
+
+.anti-print {
+  filter: blur(25px) brightness(0.6);
+}

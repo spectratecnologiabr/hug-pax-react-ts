@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import ProtectedRoute from './components/protectedRoute';
 
 // Auth Routes
 import Login from './pages/login';
@@ -13,15 +14,15 @@ import EducatorsPage from './pages/educatorsPage';
 function MyRoutes() {
     return (
         <BrowserRouter>
-            <Routes >
+            <Routes>
                 <Route path='/' element={<Login/>} />
                 <Route path='/login' element={<Login/>} />
                 <Route path='/forgot-password' element={<ForgotPassword/>} />
                 <Route path='/reset-password' element={<ResetPassword/>} />
-                <Route path='/dashboard' element={<Dashboard/>} />
-                <Route path='/courses' element={<EducatorsPage/>} />
-                <Route path='/course/:courseSlug' element={<Course />} />
-                <Route path='/course/:courseSlug/lesson/:lessonId' element={<Course />} />
+                <Route path='/dashboard' element={<ProtectedRoute><Dashboard/></ProtectedRoute>} />
+                <Route path='/courses' element={<ProtectedRoute><EducatorsPage/></ProtectedRoute>} />
+                <Route path='/course/:courseSlug' element={<ProtectedRoute><Course /></ProtectedRoute>} />
+                <Route path='/course/:courseSlug/lesson/:lessonId' element={<ProtectedRoute><Course /></ProtectedRoute>} />
             </Routes>
         </BrowserRouter>
     )

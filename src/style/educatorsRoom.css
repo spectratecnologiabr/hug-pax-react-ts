@@ -38,13 +38,13 @@
 
 .educators-room-container .header-wrapper .filters-wrapper .search-wrapper button {
     position: absolute;
-    margin-left: 170px;
+    margin-left: 160px;
     align-self: center;
 }
 
 .educators-room-container .grid-wrapper {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(5, 1fr);
     gap: 20px;
 }
 
