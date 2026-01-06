@@ -77,6 +77,7 @@ type TComment = {
 
 function Course() {
     const { courseSlug, lessonId } = useParams();
+    const profilePic = localStorage.getItem("profilePic") || alunoIcon;
     const [courseData, setCourseData] = useState<TCourseData | null>(null);
     const [courseModules, setCourseModules] = useState([] as Array<TCourseModule>)
     const [lessionData, setLessionData] = useState<TLesson | null>(null)
@@ -497,8 +498,8 @@ function Course() {
                             <button className="notitications-button">
                                 <img src={notificationIcon} alt="" />
                             </button>
-                            <button className="profile-button">
-                                <img src={alunoIcon} alt="" className="profile-photo" />
+                            <button className="profile-button" onClick={() => window.location.pathname = "/profile"}>
+                                <div className="profile-photo" style={{ backgroundImage: profilePic ? `url("${profilePic}")` : "none" }}></div>
                                 <svg xmlns="http://www.w3.org/2000/svg" width="8" height="5" viewBox="0 0 8 5" fill="none">
                                     <path d="M4.02125 4.02116L6.99829 1.04411C7.17993 0.862473 7.17993 0.567893 6.99829 0.386256C6.81662 0.204581 6.52211 0.204581 6.34044 0.386256L4.15748 2.56921C4.15748 2.56921 3.93782 2.81522 3.69409 2.81006C3.45622 2.80502 3.22716 2.56921 3.22716 2.56921L1.0442 0.38633C0.862523 0.204656 0.568018 0.204656 0.386343 0.38633C0.295581 0.47713 0.250107 0.596212 0.250107 0.715257C0.250107 0.834301 0.295581 0.953347 0.386343 1.04418L3.36339 4.02116C3.54507 4.20283 3.83957 4.20283 4.02125 4.02116Z" fill="black" stroke="black" stroke-width="0.5"/>
                                 </svg>

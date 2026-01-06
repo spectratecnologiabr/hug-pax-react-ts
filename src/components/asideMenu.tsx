@@ -5,9 +5,10 @@ import mainIconWhite from "../img/pax-icon-white.svg";
 import homeIcon from "../img/menu/home.svg";
 import hatIcon from "../img/menu/hat.svg";
 import personIcon from "../img/menu/person.svg";
-import mailIcon from "../img/menu/mail.svg";
-import gearIcon from "../img/menu/gear.svg";
+import notificationIcon from "../img/notification.svg";
 import logoutIcon from "../img/menu/logout.svg";
+
+import { doLogout } from "../controllers/user/logout.controller";
 
 import "../style/asideMenu.css";
 
@@ -24,18 +25,15 @@ function AsideMenu() {
                 <a href="/courses" className="menu-item">
                     <img src={hatIcon} alt="" className="menu-icon" />
                 </a>
-                <a href="#" className="menu-item">
+                <a href="/profile" className="menu-item">
                     <img src={personIcon} alt="" className="menu-icon" />
                 </a>
                 <a href="#" className="menu-item">
-                    <img src={mailIcon} alt="" className="menu-icon" />
-                </a>
-                <a href="#" className="menu-item">
-                    <img src={gearIcon} alt="" className="menu-icon" />
+                    <img src={notificationIcon} alt="" className="menu-icon" />
                 </a>
             </div>
 
-            <button className="logout-button">
+            <button className="logout-button" onClick={doLogout}>
                 <img src={logoutIcon} alt="" />
             </button>
         </div>

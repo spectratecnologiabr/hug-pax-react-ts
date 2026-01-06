@@ -61,7 +61,7 @@
 
 .educators-room-container .grid-wrapper .course-item .description {
     display: flex;
-    height: 50px;
+    height: 40px;
     justify-content: space-evenly;
     align-items: center;
     margin: 5px 0;
@@ -70,6 +70,10 @@
 
 .educators-room-container .grid-wrapper .course-item .description .course-progress {
     height: 100%;
+}
+
+.educators-room-container .grid-wrapper .course-item .description .course-progress .CircularProgressbar-text {
+    font-size: 30px;
 }
 
 .educators-room-container .grid-wrapper .course-item a {

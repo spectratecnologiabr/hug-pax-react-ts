@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import { getCookies } from "../controllers/misc/cookies.controller";
 import { getOverviewData } from "../controllers/dash/overview.controller";
 import { listCourses } from "../controllers/course/listCourses.controller";
-import { listProgress } from "../controllers/user/listProgress.controller";
 
 import { CircularProgressbar, buildStyles } from 'react-circular-progressbar';
 import 'react-circular-progressbar/dist/styles.css';
@@ -13,7 +12,6 @@ import FastLinks from "../components/dash/fastLinks";
 import EducatorsRoom from "../components/dash/educatorsRoom";
 
 import alunoImage from "../img/dash/aluno.svg";
-import notificationIcon from "../img/notification.svg";
 import alunoIcon from "../img/dash/aluno-icon.svg";
 
 import "../style/dash.css";
@@ -23,6 +21,9 @@ type TUser = {
     id: number,
     firstName: string,
     lastName: string,
+    birthDate: string,
+    gender: string,
+    profilePic: string,
     phone: string,
     email: string,
     language: string,
@@ -52,7 +53,7 @@ function Dashboard() {
     const userData = getCookies("userData") as unknown as TUser;
     const [courses, setCourses] = useState<TCourse[]>([]);
     const [ overviewData, setOverviewData ] = useState<TOverviewData | null>(null);
-    const [ progress, setProgress ] = useState<number | null>(null);
+    const profilePic = localStorage.getItem("profilePic") || alunoIcon;
 
     useEffect(() => {
         async function fetchOverviewData() {
@@ -73,18 +74,9 @@ function Dashboard() {
             }
         }
 
-        async function fetchProgress() {
-            try {
-                const progressData = await listProgress();
-                setProgress(progressData);
-            } catch (error) {
-                console.error("Error fetching progress:", error);
-            }
-        }
-
+        console.log(userData);
         fetchCourses();
         fetchOverviewData();
-        fetchProgress();
     }, []);
 
 
@@ -136,11 +128,8 @@ function Dashboard() {
                         <input type="search" className="main-search" id="mainSearchInput" />
                     </div>
                     <div className="profile-wrapper">
-                        <button className="notitications-button">
-                            <img src={notificationIcon} alt="" />
-                        </button>
-                        <button className="profile-button">
-                            <img src={alunoIcon} alt="" className="profile-photo" />
+                        <button className="profile-button" onClick={() => window.location.pathname = "/profile"}>
+                            <div className="profile-photo" style={{ backgroundImage: profilePic ? `url("${profilePic}")` : "none" }}></div>
                             <svg xmlns="http://www.w3.org/2000/svg" width="8" height="5" viewBox="0 0 8 5" fill="none">
                                 <path d="M4.02125 4.02116L6.99829 1.04411C7.17993 0.862473 7.17993 0.567893 6.99829 0.386256C6.81662 0.204581 6.52211 0.204581 6.34044 0.386256L4.15748 2.56921C4.15748 2.56921 3.93782 2.81522 3.69409 2.81006C3.45622 2.80502 3.22716 2.56921 3.22716 2.56921L1.0442 0.38633C0.862523 0.204656 0.568018 0.204656 0.386343 0.38633C0.295581 0.47713 0.250107 0.596212 0.250107 0.715257C0.250107 0.834301 0.295581 0.953347 0.386343 1.04418L3.36339 4.02116C3.54507 4.20283 3.83957 4.20283 4.02125 4.02116Z" fill="black" stroke="black" stroke-width="0.5"/>
                             </svg>

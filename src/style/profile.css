@@ -1,0 +1,97 @@
+.main-profile-container {
+    display: flex;
+    min-height: 100vh;
+    padding: 20px;
+    gap: 40px;
+    width: -webkit-fill-available;
+}
+
+.main-profile-container .profile-wrapper {
+    width: -webkit-fill-available;
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+    margin-left: 110px;
+}
+
+.main-profile-container .profile-wrapper .page-title-wrapper {
+    display: flex;
+    width: 100%;
+    justify-content: center;
+}
+
+.main-profile-container .profile-wrapper .page-title-wrapper b {
+    font-family: 'SF UI Display Semibold';
+    font-size: 38px;
+}
+
+.main-profile-container .profile-wrapper .main-data-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.main-profile-container .profile-wrapper .main-data-wrapper b {
+    font-family: 'SF UI Display Semibold';
+    font-size: 20px;
+}
+
+.main-profile-container .profile-wrapper .main-data-wrapper.personal .fields-wrapper {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+}
+
+.main-profile-container .profile-wrapper .main-data-wrapper.password .fields-wrapper {
+    display: flex;
+    flex-direction: column;
+}
+
+.main-profile-container .profile-wrapper .main-data-wrapper .fields-wrapper .data-wrapper {
+    display: flex;
+    flex-direction: column;
+    padding: 10px;
+    gap: 5px;
+}
+
+.main-profile-container .profile-wrapper .main-data-wrapper .fields-wrapper .data-wrapper .preview {
+    height: 100px;
+    width: 100px;
+    margin-bottom: 10px;
+    background-size: cover;
+    background-position: center;
+    border-radius: 20px;
+}
+
+.main-profile-container .profile-wrapper .main-data-wrapper.password .fields-wrapper .data-wrapper {
+    width: fit-content;
+    min-width: 300px;   
+}
+
+.main-profile-container .profile-wrapper .main-data-wrapper .fields-wrapper .data-wrapper span {
+    font-family: 'SF UI Display Medium';
+    font-size: 14px;
+}
+
+.main-profile-container .profile-wrapper .main-data-wrapper .fields-wrapper .data-wrapper input:not([type="file"]), .main-profile-container .profile-wrapper .main-data-wrapper .fields-wrapper .data-wrapper select {
+    border-radius: 14px;
+    border: 1px solid #8E8E8E;
+    background: #F3F3F3;
+    height: 40px;
+    padding-left: 15px;
+}
+
+.main-profile-container .profile-wrapper .main-data-wrapper button {
+    width: fit-content;
+    align-self: flex-end;
+    padding: 15px;
+    border-radius: 14px;
+    background-color: #3696D3;
+    color: #FFFFFF;
+    font-family: 'SF UI Display Light';
+    cursor: pointer;
+    transition: ease-in-out .2s all;
+}   
+
+.main-profile-container .profile-wrapper .main-data-wrapper button:hover {
+    background-color: #2e86be;
+}

@@ -108,8 +108,6 @@
   bottom: 20px;
   left: 50%;
   transform: translateX(-50%);
-  background: rgba(0,0,0,.65);
-  backdrop-filter: blur(10px);
   border-radius: 12px;
   padding: 10px 14px;
   display: flex;
@@ -248,7 +246,7 @@
   justify-content: space-between;
   align-items: center;
   width: 100%;
-  background-color: #EDEDED;
+  background-color: transparent;
 }
 
 .course-container .course-wrapper .lession-document-wrapper .pdf-controls .left {
@@ -387,8 +385,12 @@
     cursor: pointer;
 }
 
-.course-container .right-container .profile-container .profile-wrapper .profile-button img {
+.course-container .right-container .profile-container .profile-wrapper .profile-button .profile-photo {
     border-radius: 8px;
+    width: 40px;
+    height: 40px;
+    background-size: cover;
+    background-position: center;
 }
 
 .course-container .right-container .steps-list {

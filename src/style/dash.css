@@ -107,8 +107,12 @@
     cursor: pointer;
 }
 
-.dashboard-container .main-dash-wrapper .profile-wrapper .profile-button img {
+.dashboard-container .main-dash-wrapper .profile-wrapper .profile-button .profile-photo {
     border-radius: 8px;
+    width: 40px;
+    height: 40px;
+    background-size: cover;
+    background-position: center;
 }
 
 .dashboard-container .main-dash-wrapper .finshed-courses, .dashboard-container .main-dash-wrapper .remaing-courses {

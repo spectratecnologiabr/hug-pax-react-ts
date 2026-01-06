@@ -37,8 +37,13 @@ function Login() {
                 .then((data) => {
                     if (data.success) {
                         console.log("Login successful:", data);
+                        const { profilePic, ...userWithoutPic } = data.user;
+
+                        console.log(profilePic)
+                        
                         setCookie({ name: "authToken", value: data.token });
-                        setCookie({ name: "userData", value: JSON.stringify(data.user) });
+                        setCookie({ name: "userData", value: JSON.stringify(userWithoutPic) });
+                        localStorage.setItem("profilePic", profilePic);
                         window.location.href = "/dashboard";
                     } else {
                         console.error("Login failed:", data.message);

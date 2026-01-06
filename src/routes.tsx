@@ -10,6 +10,7 @@ import ResetPassword from './pages/resetPassword';
 import Dashboard from './pages/dashboard';
 import Course from './pages/course';
 import EducatorsPage from './pages/educatorsPage';
+import Profile from './pages/profile';
 
 function MyRoutes() {
     return (
@@ -23,6 +24,7 @@ function MyRoutes() {
                 <Route path='/courses' element={<ProtectedRoute><EducatorsPage/></ProtectedRoute>} />
                 <Route path='/course/:courseSlug' element={<ProtectedRoute><Course /></ProtectedRoute>} />
                 <Route path='/course/:courseSlug/lesson/:lessonId' element={<ProtectedRoute><Course /></ProtectedRoute>} />
+                <Route path='/profile' element={<ProtectedRoute><Profile/></ProtectedRoute>} />
             </Routes>
         </BrowserRouter>
     )
