@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { getCookies, setCookie } from "../controllers/misc/cookies.controller";
 import imageCompression from "browser-image-compression";
 import updateUser from "../controllers/user/updateUser.controller";
+import updatePassword from "../controllers/user/updatePassword.controller";
 
 import AsideMenu from "../components/asideMenu";
 
@@ -28,6 +29,9 @@ function Profile() {
     const userData = getCookies("userData") as unknown as TUser;
     const profilePic = localStorage.getItem("profilePic");
     const [updateData, setUpdateData] = useState<TUser>({} as TUser);
+    const [oldPassword, setOldPassword] = useState("");
+    const [newPassword, setNewPassword] = useState("");
+    const [confirmPassword, setConfirmPassword] = useState("");
 
     const previewImage =
         updateData.profilePic ||
@@ -144,6 +148,50 @@ function Profile() {
         }
     }
 
+    async function updateMyPassword() {
+        if (!oldPassword || !newPassword || !confirmPassword) {
+            alert("Preencha todos os campos de senha");
+            return;
+        }
+
+        if (newPassword.length < 8) {
+            alert("A nova senha deve ter pelo menos 8 caracteres");
+            return;
+        }
+
+        if (newPassword !== confirmPassword) {
+            alert("As novas senhas não conferem");
+            return;
+        }
+
+        try {
+            const response = await updatePassword({
+                oldPassword,
+                newPassword,
+                confirmPassword
+            });
+
+            if (!response.success) {
+                alert(response.message || "Erro ao atualizar senha");
+                return;
+            }
+
+            alert("Senha alterada com sucesso!");
+
+            // Limpa os campos por segurança
+            setOldPassword("");
+            setNewPassword("");
+            setConfirmPassword("");
+
+            // Limpa inputs visuais
+            const inputs = document.querySelectorAll(".main-data-wrapper.password input");
+            inputs.forEach(input => (input as HTMLInputElement).value = "");
+        } catch (err) {
+            console.error(err);
+            alert("Erro inesperado ao atualizar senha");
+        }
+    }
+
     return (
         <React.Fragment>
             <div className="main-profile-container">
@@ -225,21 +273,21 @@ function Profile() {
                         <div className="fields-wrapper">
                             <div className="data-wrapper">
                                 <span>Senha Atual</span>
-                                <input type="password" name="oldPass" id="oldPass" />
+                                <input type="password" name="oldPass" id="oldPass" onChange={e => setOldPassword(e.currentTarget.value)} />
                             </div>
 
                             <div className="data-wrapper">
                                 <span>Nova Senha</span>
-                                <input type="password" name="newPass" id="newPass" />
+                                <input type="password" name="newPass" id="newPass" onChange={e => setNewPassword(e.currentTarget.value)}/>
                             </div>
                             
                             <div className="data-wrapper">
                                 <span>Confimar Nova Senha</span>
-                                <input type="password" name="newPassConfirm" id="newPassConfirm" />
+                                <input type="password" name="newPassConfirm" id="newPassConfirm" onChange={e => setConfirmPassword(e.currentTarget.value)} />
                             </div>
                         </div>
 
-                        <button>Alterar Senha</button>
+                        <button onClick={updateMyPassword}>Alterar Senha</button>
                     </div>
                 </div>
             </div>
