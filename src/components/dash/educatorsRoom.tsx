@@ -3,15 +3,6 @@ import React, { useState, useEffect } from "react";
 import { CircularProgressbar, buildStyles } from 'react-circular-progressbar';
 import 'react-circular-progressbar/dist/styles.css';
 
-import infantilImg from "../../img/dash/infantil.svg";
-import medio1img from "../../img/dash/1-medio.svg";
-import medio2img from "../../img/dash/2-medio.svg";
-import medio3img from "../../img/dash/3-medio.svg";
-import inicialImg from "../../img/dash/inicial.png";
-import liga2Img from "../../img/dash/liga2.png";
-import liga3Img from "../../img/dash/liga3.png";
-import liga4Img from "../../img/dash/liga4.png";
-
 import "../../style/educatorsRoom.css";
 
 type TCourse = {

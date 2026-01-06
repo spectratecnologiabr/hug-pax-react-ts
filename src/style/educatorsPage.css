@@ -13,3 +13,121 @@
     gap: 25px;
     margin-left: 110px;
 }
+
+.educators-page-container .educators-page-wrapper .educators-room-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+}
+
+.educators-page-container .educators-page-wrapper .educators-room-container .header-wrapper {
+    display: flex;
+    width: 100%;
+    justify-content: space-between;
+}
+
+.educators-page-container .educators-page-wrapper .educators-room-container .header-wrapper b {
+    font-family: 'SF UI Display Semibold';
+    font-size: 38px;
+}
+
+.educators-page-container .educators-page-wrapper .educators-room-container .header-wrapper .filters-wrapper {
+    display: flex;
+    gap: 20px;
+    align-items: flex-end;
+}
+
+.educators-page-container .educators-page-wrapper .educators-room-container .header-wrapper .filters-wrapper .search-wrapper {
+    display: flex;
+    height: 100%;
+}
+
+.educators-page-container .educators-page-wrapper .educators-room-container .header-wrapper .filters-wrapper .search-wrapper input, .educators-page-container .educators-page-wrapper .educators-room-container .header-wrapper .filters-wrapper select {
+    height: 100%;
+    background-color: #F5F5F7;
+    padding-left: 10px;
+    padding-right: 25px;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.educators-page-container .educators-page-wrapper .educators-room-container .header-wrapper .filters-wrapper .search-wrapper button {
+    position: absolute;
+    margin-left: 160px;
+    align-self: center;
+}
+
+.educators-page-container .educators-page-wrapper .educators-room-container .grid-wrapper {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 20px;
+}
+
+.educators-page-container .educators-page-wrapper .educators-room-container .grid-wrapper .course-item {
+    grid-column: span 1;
+    background-color: #F5F5F7;
+    border-radius: 20px;
+}
+
+.educators-page-container .educators-page-wrapper .educators-room-container .grid-wrapper .course-item .course-img {
+    width: 100%;
+    border-radius: 20px;
+}
+
+.educators-page-container .educators-page-wrapper .educators-room-container .grid-wrapper .course-item .description {
+    display: flex;
+    height: 40px;
+    justify-content: space-evenly;
+    align-items: center;
+    margin: 5px 0;
+    font-family: 'SF UI Display Medium';
+}
+
+.educators-page-container .educators-page-wrapper .educators-room-container .grid-wrapper .course-item .description .course-progress {
+    height: 100%;
+}
+
+.educators-page-container .educators-page-wrapper .educators-room-container .grid-wrapper .course-item .description .course-progress .CircularProgressbar-text {
+    font-size: 30px;
+}
+
+.educators-page-container .educators-page-wrapper .educators-room-container .grid-wrapper .course-item a {
+    text-decoration: none;
+    display: flex;
+    justify-content: center;
+    padding: 20px;
+    width: 100%;
+    border-bottom-left-radius: 20px;
+    border-bottom-right-radius: 20px;
+    background-color: #3696D3;
+    color: #ffffff;
+    font-family: 'SF UI Display Medium';
+    font-size: 18px;
+    transition: ease-in-out .3s all;
+}
+
+.educators-page-container .educators-page-wrapper .educators-room-container .grid-wrapper .course-item a:hover {
+    background-color: #5CADE0;
+}
+
+@media (max-width: 1450px) {
+    .educators-page-container .educators-page-wrapper .educators-room-container .header-wrapper {
+        flex-direction: column;
+    }
+
+    .educators-page-container .educators-page-wrapper .educators-room-container .header-wrapper .filters-wrapper {
+        height: 45px;
+    }
+}
+
+@media (max-width: 769px) {
+    .educators-page-container .educators-page-wrapper .educators-room-container .grid-wrapper {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .educators-page-container .educators-page-wrapper .educators-room-container .header-wrapper .filters-wrapper {
+        flex-direction: column;
+        height: fit-content;
+    }
+} 
