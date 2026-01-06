@@ -80,7 +80,6 @@ type TComment = {
 function Course() {
     const initializedRef = React.useRef(false)
     const [pendingSeek, setPendingSeek] = React.useState<number | null>(null)
-    const appliedSeekRef = React.useRef(false)
     const { courseSlug, lessonId } = useParams();
     const profilePic = localStorage.getItem("profilePic") || alunoIcon;
     const [courseData, setCourseData] = useState<TCourseData | null>(null);
@@ -90,7 +89,19 @@ function Course() {
     const canvasRef = React.useRef<HTMLCanvasElement | null>(null);
     const renderTaskRef = React.useRef<any>(null);
 
-    const [playbackMemory, setPlaybackMemory] = React.useState<any>(null)
+    type PlaybackLast = {
+        type: "video" | "pdf"
+        lessonId: number
+        position: number
+        duration: number
+    }
+
+    type PlaybackMemory = {
+        last: PlaybackLast
+        history: any[]
+    }
+
+    const [playbackMemory, setPlaybackMemory] = React.useState<PlaybackMemory | null>(null)
     const [numPages, setNumPages] = React.useState(0);
     const [pageNumber, setPageNumber] = React.useState(1);
     const videoRef = React.useRef<HTMLVideoElement | null>(null);
@@ -158,7 +169,17 @@ function Course() {
             await getLession(Number(lessonId))
                 .then(response => {
                     initializedRef.current = false
-                    setLessionData(response);
+                    setPendingSeek(null)
+
+                    if (videoRef.current) {
+                        videoRef.current.currentTime = 0
+                    }
+
+                    setCurrentTime(0)
+                    setProgress(0)
+                    setDuration(0)
+
+                    setLessionData(response)
                 })
         }
 
@@ -200,11 +221,22 @@ function Course() {
         if (lessionData.type === "video") {
             setPendingSeek(position)
         }
-
-        if (lessionData.type === "pdf") {
-            setPageNumber(position || 1)
-        }
     }, [playbackMemory, lessionData?.id])
+
+    React.useEffect(() => {
+        if (!playbackMemory?.last) return
+        if (!lessionData) return
+        if (lessionData.type !== "pdf") return
+        if (!numPages) return
+
+        const { lessonId: savedLessonId, position } = playbackMemory.last
+
+        if (Number(savedLessonId) !== Number(lessionData.id)) return
+
+        const safePage = Math.min(Math.max(position || 1, 1), numPages)
+        if (pageNumber === safePage) return
+        setPageNumber(safePage)
+    }, [playbackMemory, lessionData?.id, numPages])
 
     React.useEffect(() => {
         if (lessionData?.type !== "video") return;
@@ -345,12 +377,37 @@ function Course() {
     }, [lessonId, lessionData?.type, courseData?.id])
 
     React.useEffect(() => {
+        if (!lessonId) return
+        if (lessionData?.type !== "pdf") return
+        if (!numPages) return
+
+        const interval = setInterval(() => {
+            updatePlayback({
+            courseId: Number(courseData?.id),
+            lessonId: Number(lessonId),
+            type: "pdf",
+            position: pageNumber,
+            duration: numPages
+            })
+        }, 5000)
+
+        return () => clearInterval(interval)
+    }, [lessonId, lessionData?.type, pageNumber, numPages, courseData?.id])
+
+    React.useEffect(() => {
         if (!courseData?.id) return
 
         async function loadPlayback() {
             const res = await getPlayback(Number(courseData?.id))
-            if (res?.success && res.data) {
-            setPlaybackMemory(res.data)
+
+            if (
+                res?.success &&
+                res.data?.last &&
+                Number(res.data.last.lessonId) > 0
+            ) {
+                setPlaybackMemory(res.data)
+            } else {
+                setPlaybackMemory(null)
             }
         }
 
@@ -373,6 +430,11 @@ function Course() {
 
         // 🚑 Se os eventos já passaram, aplica direto
         if (video.readyState >= 1) {
+            if (pendingSeek > video.duration && video.duration > 0) {
+                setPendingSeek(video.duration - 0.5)
+                return
+            }
+
             applySeek()
             return
         }
