@@ -13,6 +13,8 @@ import { listLessonComments } from "../controllers/course/listLessonComments.con
 import { createComment } from "../controllers/course/createComment.controller";
 import { getMyRate } from "../controllers/course/getMyRate.controller";
 import { rateLesson } from "../controllers/course/rateLesson.controller";
+import { updatePlayback } from "../controllers/user/updatePlayback.controller";
+import { getPlayback } from "../controllers/user/getPlayback.controller";
 
 import AsideMenu from "../components/asideMenu";
 import Footer from "../components/footer";
@@ -76,6 +78,9 @@ type TComment = {
 }
 
 function Course() {
+    const initializedRef = React.useRef(false)
+    const [pendingSeek, setPendingSeek] = React.useState<number | null>(null)
+    const appliedSeekRef = React.useRef(false)
     const { courseSlug, lessonId } = useParams();
     const profilePic = localStorage.getItem("profilePic") || alunoIcon;
     const [courseData, setCourseData] = useState<TCourseData | null>(null);
@@ -85,6 +90,7 @@ function Course() {
     const canvasRef = React.useRef<HTMLCanvasElement | null>(null);
     const renderTaskRef = React.useRef<any>(null);
 
+    const [playbackMemory, setPlaybackMemory] = React.useState<any>(null)
     const [numPages, setNumPages] = React.useState(0);
     const [pageNumber, setPageNumber] = React.useState(1);
     const videoRef = React.useRef<HTMLVideoElement | null>(null);
@@ -151,6 +157,7 @@ function Course() {
         async function getLessionData() {
             await getLession(Number(lessonId))
                 .then(response => {
+                    initializedRef.current = false
                     setLessionData(response);
                 })
         }
@@ -178,7 +185,26 @@ function Course() {
             getComments();
             getRate();
         }
-    }, [])
+    }, [lessonId])
+
+    React.useEffect(() => {
+        if (!playbackMemory?.last) return
+        if (!lessionData) return
+
+        const { lessonId: savedLessonId, position } = playbackMemory.last
+
+        if (Number(savedLessonId) !== Number(lessionData.id)) {
+            return
+        }
+
+        if (lessionData.type === "video") {
+            setPendingSeek(position)
+        }
+
+        if (lessionData.type === "pdf") {
+            setPageNumber(position || 1)
+        }
+    }, [playbackMemory, lessionData?.id])
 
     React.useEffect(() => {
         if (lessionData?.type !== "video") return;
@@ -299,6 +325,66 @@ function Course() {
         setLessonComments(updatedComments);
     }
 
+    React.useEffect(() => {
+        if (!lessonId) return
+        if (lessionData?.type !== "video") return
+
+        const interval = setInterval(() => {
+            if (!videoRef.current) return
+
+            updatePlayback({
+            courseId: Number(courseData?.id),
+            lessonId: Number(lessonId),
+            type: "video",
+            position: videoRef.current.currentTime,
+            duration: videoRef.current.duration
+            })
+        }, 5000)
+
+        return () => clearInterval(interval)
+    }, [lessonId, lessionData?.type, courseData?.id])
+
+    React.useEffect(() => {
+        if (!courseData?.id) return
+
+        async function loadPlayback() {
+            const res = await getPlayback(Number(courseData?.id))
+            if (res?.success && res.data) {
+            setPlaybackMemory(res.data)
+            }
+        }
+
+        loadPlayback()
+    }, [courseData?.id])
+
+    React.useEffect(() => {
+        if (pendingSeek === null) return
+        if (!videoRef.current) return
+        if (initializedRef.current) return
+
+        const video = videoRef.current
+
+        const applySeek = () => {
+            if (initializedRef.current) return
+            video.currentTime = pendingSeek
+            initializedRef.current = true
+            setPendingSeek(null)
+        }
+
+        // 🚑 Se os eventos já passaram, aplica direto
+        if (video.readyState >= 1) {
+            applySeek()
+            return
+        }
+
+        video.addEventListener("loadedmetadata", applySeek)
+        video.addEventListener("canplay", applySeek)
+
+        return () => {
+            video.removeEventListener("loadedmetadata", applySeek)
+            video.removeEventListener("canplay", applySeek)
+        }
+    }, [pendingSeek, lessionData?.id])
 
     return (
         <React.Fragment>
@@ -337,7 +423,16 @@ function Course() {
                                     (lessionData.type === "video") ?
                                         (<div className="lession-media-wrapper active">
                                             <div className="video-player-wrapper">
-                                                <video ref={videoRef} src={lessionData.extUrl} onLoadedMetadata={(e) => setDuration(e.currentTarget.duration)} onTimeUpdate={(e) => { setCurrentTime(e.currentTarget.currentTime); setProgress((e.currentTarget.currentTime / duration) * 100); }} controlsList="nodownload" />
+                                                <video
+                                                    ref={videoRef}
+                                                    src={lessionData.extUrl}
+                                                    onLoadedMetadata={(e) => setDuration(e.currentTarget.duration)}
+                                                    onTimeUpdate={(e) => {
+                                                        setCurrentTime(e.currentTarget.currentTime)
+                                                        setProgress((e.currentTarget.currentTime / duration) * 100)
+                                                    }}
+                                                    controlsList="nodownload"
+                                                />
 
                                                 <div className="video-controls bar">
                                                     <div className="progress-track">
