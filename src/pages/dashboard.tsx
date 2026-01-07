@@ -46,7 +46,8 @@ type TCourse = {
 type TOverviewData = {
     completedCourses: number,
     inProgressCourses: number,
-    totalHours: number
+    totalHours: number,
+    unreadNotifications: number
 }
 
 function Dashboard() {
@@ -98,6 +99,18 @@ function Dashboard() {
                 nextShowedSlide?.classList.add("active");
             }
         }
+    }
+
+    function formatHours(totalHours: number) {
+        const totalMinutes = Math.round(totalHours * 60)
+        const hours = Math.floor(totalMinutes / 60)
+        const minutes = totalMinutes % 60
+
+        if (hours > 0) {
+            return `${hours}h ${minutes}m`
+        }
+
+        return `${minutes} min`
     }
 
     return (
@@ -186,8 +199,8 @@ function Dashboard() {
                     </div>
 
                     <div className="finshed-hours">
-                        <b>{overviewData?.totalHours}</b>
-                        <span>Total de horas em formação</span>
+                        <b>{formatHours(Number(overviewData?.totalHours))}</b>
+                        <span>de tempo total em formação</span>
                     </div>
                 </div>
                 <FastLinks />
