@@ -50,6 +50,11 @@
     gap: 5px;
 }
 
+.notifications-container .notifications-wrapper .notifications-listing .notification-element .title {
+    font-family: 'SF UI Display Medium';
+}
+
+
 .notifications-container .notifications-wrapper .notifications-listing .notification-element .message {
     font-family: 'SF UI Display Light';
     color: #2B3038;
