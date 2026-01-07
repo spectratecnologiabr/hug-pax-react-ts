@@ -21,6 +21,35 @@ type TCourseProps = {
 }
 
 function EducatorsRoom(coursesProp: TCourseProps) {
+    const [statusFilter, setStatusFilter] = useState("");
+    const [orderFilter, setOrderFilter] = useState("");
+
+    function handleCourseStatusFilter(e: React.ChangeEvent<HTMLSelectElement>) {
+        const filterValue = e.currentTarget.value;
+        setStatusFilter(filterValue);
+    }
+
+    function handleOrderFilter(e: React.ChangeEvent<HTMLSelectElement>) {
+        const filterValue = e.currentTarget.value;
+        setOrderFilter(filterValue);
+    }
+
+    const filteredCourses = coursesProp.courses
+        .filter(course => {
+            if (!statusFilter) return true;
+
+            if (statusFilter === "notInitiated") return Number(course.progressPercentage) === 0;
+            if (statusFilter === "inProgress") return Number(course.progressPercentage) > 0 && Number(course.progressPercentage) < 100;
+            if (statusFilter === "finshed") return Number(course.progressPercentage) === 100;
+
+            return true;
+        })
+        .sort((a, b) => {
+            if (orderFilter === "crescent") return a.title.localeCompare(b.title);
+            if (orderFilter === "decrescent") return b.title.localeCompare(a.title);
+            if (orderFilter === "progress") return Number(b.progressPercentage) - Number(a.progressPercentage);
+            return 0;
+        });
 
     return (
         <div className="educators-room-container">
@@ -37,14 +66,15 @@ function EducatorsRoom(coursesProp: TCourseProps) {
                         </button>
                     </div>
 
-                    <select name="courseStatus" id="courseStatusSelect">
+                    <select name="courseStatus" id="courseStatusSelect" onChange={handleCourseStatusFilter}>
                         <option value="">Status do curso</option>
                         <option value="notInitiated">Não iniciado</option>
                         <option value="inProgress">Em andamento</option>
                         <option value="finshed">Finalizado</option>
                     </select>
 
-                    <select name="order" id="order  Select">
+                    <select name="order" id="orderSelect" onChange={handleOrderFilter}>
+                        <option value="">Ordenação</option>
                         <option value="crescent">A - Z</option>
                         <option value="decrescent">Z - A</option>
                         <option value="progress">Progresso</option>
@@ -54,7 +84,7 @@ function EducatorsRoom(coursesProp: TCourseProps) {
 
             <div className="grid-wrapper">
                 {
-                    coursesProp.courses.map(course => {
+                    filteredCourses.map(course => {
                         return (
                             <div className="course-item">
                                 <img loading="lazy" src={course.cover} className="course-img" />

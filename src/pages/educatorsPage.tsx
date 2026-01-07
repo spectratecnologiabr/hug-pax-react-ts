@@ -20,6 +20,8 @@ type TCourse = {
 
 function EducatorsPage() {
     const [courses, setCourses] = useState<TCourse[]>([]);
+    const [statusFilter, setStatusFilter] = useState("");
+    const [orderFilter, setOrderFilter] = useState("");
 
         useEffect(() => {    
             async function fetchCourses() {
@@ -33,6 +35,29 @@ function EducatorsPage() {
     
             fetchCourses();
         }, []);
+
+    function handleCourseStatusFilter(e: React.ChangeEvent<HTMLSelectElement>) {
+        setStatusFilter(e.currentTarget.value);
+    }
+
+    function handleOrderFilter(e: React.ChangeEvent<HTMLSelectElement>) {
+        setOrderFilter(e.currentTarget.value);
+    }
+
+    const filteredCourses = courses
+        .filter(course => {
+            if (!statusFilter) return true;
+            if (statusFilter === "notInitiated") return course.progressPercentage === 0;
+            if (statusFilter === "inProgress") return course.progressPercentage > 0 && course.progressPercentage < 100;
+            if (statusFilter === "finshed") return course.progressPercentage === 100;
+            return true;
+        })
+        .sort((a, b) => {
+            if (orderFilter === "crescent") return a.title.localeCompare(b.title);
+            if (orderFilter === "decrescent") return b.title.localeCompare(a.title);
+            if (orderFilter === "progress") return b.progressPercentage - a.progressPercentage;
+            return 0;
+        });
 
     return (
         <React.Fragment>
@@ -53,14 +78,14 @@ function EducatorsPage() {
                                     </button>
                                 </div>
 
-                                <select name="courseStatus" id="courseStatusSelect">
+                                <select name="courseStatus" id="courseStatusSelect" onChange={handleCourseStatusFilter}>
                                     <option value="">Status do curso</option>
                                     <option value="notInitiated">Não iniciado</option>
                                     <option value="inProgress">Em andamento</option>
                                     <option value="finshed">Finalizado</option>
                                 </select>
 
-                                <select name="order" id="order  Select">
+                                <select name="order" id="orderSelect" onChange={handleOrderFilter}>
                                     <option value="crescent">A - Z</option>
                                     <option value="decrescent">Z - A</option>
                                     <option value="progress">Progresso</option>
@@ -70,7 +95,7 @@ function EducatorsPage() {
 
                         <div className="grid-wrapper">
                             {
-                                courses.map(course => {
+                                filteredCourses.map(course => {
                                     return (
                                         <div className="course-item">
                                             <img loading="lazy" src={course.cover} className="course-img" />

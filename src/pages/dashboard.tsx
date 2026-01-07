@@ -199,7 +199,7 @@ function Dashboard() {
                     </div>
 
                     <div className="finshed-hours">
-                        <b>{formatHours(Number(overviewData?.totalHours))}</b>
+                        <b>{formatHours(Number(overviewData?.totalHours) || 0)}</b>
                         <span>de tempo total em formação</span>
                     </div>
                 </div>
