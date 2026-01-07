@@ -18,7 +18,7 @@ function FastLinks() {
                 </a>
                 <a href="#">
                     <img src={gearImg} alt="hat image" />
-                    <span>Questionario pré-teste e pós-teste</span>
+                    <span>Questionarios</span>
                     <div></div>
                 </a>
                 <a href="#">
