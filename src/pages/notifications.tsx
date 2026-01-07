@@ -32,6 +32,19 @@ function Notifications() {
         fetchNotifications();
     }, [])
 
+    const formatDate = (date: string) => {
+        const d = new Date(date);
+
+        const dia = String(d.getDate()).padStart(2, '0');
+        const mes = String(d.getMonth() + 1).padStart(2, '0');
+        const ano = d.getFullYear();
+
+        const hora = String(d.getHours() + 3).padStart(2, '0');
+        const minuto = String(d.getMinutes()).padStart(2, '0');
+
+        return `${dia}/${mes}/${ano} - ${hora}:${minuto}`;
+    };
+
     return (
         <React.Fragment>
             <div className="notifications-container">
@@ -51,7 +64,7 @@ function Notifications() {
                                     </div>
                                     <div className="right">
                                         {notification.link ? (<a href={notification.link}>Acesse aqui</a>) : "" }
-                                        <span>07/01/2026</span>
+                                        <span>{formatDate(notification.createdAt)}</span>
                                     </div>
                                 </div>
                             ) : "")

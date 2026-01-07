@@ -268,19 +268,30 @@ function Course() {
         setPageNumber(safePage)
     }, [playbackMemory, lessionData?.id, numPages])
 
+    // PDF progress sending effect
+    React.useEffect(() => {
+        if (lessionData?.type !== "pdf") return;
+        if (!numPages) return;
+
+        const percent = (pageNumber / numPages) * 100;
+
+        const id = setTimeout(() => {
+            sendProgressSafe(percent);
+        }, 500);
+
+        return () => clearTimeout(id);
+    }, [pageNumber, numPages]);
+
     React.useEffect(() => {
         if (lessionData?.type !== "video") return;
+        if (!progress) return;
 
-        const interval = setInterval(() => {
+        const id = setTimeout(() => {
             sendProgressSafe(progress);
         }, 5000);
 
-        return () => clearInterval(interval);
-    }, [progress, lessionData?.type, sendProgressSafe]);
-
-    function onDocumentLoadSuccess({ numPages }: { numPages: number }) {
-        setNumPages(numPages);
-    }
+        return () => clearTimeout(id);
+    }, [progress]);
 
     function toggleStepGroup(e: React.MouseEvent<HTMLButtonElement>) {
         const groupId = e.currentTarget.dataset.groupId as string;
@@ -394,41 +405,40 @@ function Course() {
     }
 
     React.useEffect(() => {
-        if (!lessonId) return
-        if (lessionData?.type !== "video") return
+        if (!lessonId) return;
+        if (lessionData?.type !== "video") return;
+        if (!videoRef.current) return;
 
-        const interval = setInterval(() => {
-            if (!videoRef.current) return
-
+        const id = setTimeout(() => {
             updatePlayback({
-            courseId: Number(courseData?.id),
-            lessonId: Number(lessonId),
-            type: "video",
-            position: videoRef.current.currentTime,
-            duration: videoRef.current.duration
-            })
-        }, 5000)
+                courseId: Number(courseData?.id),
+                lessonId: Number(lessonId),
+                type: "video",
+                position: videoRef.current!.currentTime,
+                duration: videoRef.current!.duration
+            });
+        }, 5000);
 
-        return () => clearInterval(interval)
-    }, [lessonId, lessionData?.type, courseData?.id])
+        return () => clearTimeout(id);
+    }, [currentTime]);
 
     React.useEffect(() => {
-        if (!lessonId) return
-        if (lessionData?.type !== "pdf") return
-        if (!numPages) return
+        if (!lessonId) return;
+        if (lessionData?.type !== "pdf") return;
+        if (!numPages) return;
 
-        const interval = setInterval(() => {
+        const id = setTimeout(() => {
             updatePlayback({
-            courseId: Number(courseData?.id),
-            lessonId: Number(lessonId),
-            type: "pdf",
-            position: pageNumber,
-            duration: numPages
-            })
-        }, 5000)
+                courseId: Number(courseData?.id),
+                lessonId: Number(lessonId),
+                type: "pdf",
+                position: pageNumber,
+                duration: numPages
+            });
+        }, 5000);
 
-        return () => clearInterval(interval)
-    }, [lessonId, lessionData?.type, pageNumber, numPages, courseData?.id])
+        return () => clearTimeout(id);
+    }, [pageNumber]);
 
     React.useEffect(() => {
         if (!courseData?.id) return
@@ -585,7 +595,6 @@ function Course() {
                                                           const newPage = Math.max(p - 1, 1);
                                                           const newProgress = (newPage / numPages) * 100;
                                                           setProgress(newProgress);
-                                                          sendProgressSafe(newProgress);
                                                           return newPage;
                                                         });
                                                       }} 
@@ -601,7 +610,6 @@ function Course() {
                                                           const newPage = Math.min(p + 1, numPages);
                                                           const newProgress = (newPage / numPages) * 100;
                                                           setProgress(newProgress);
-                                                          sendProgressSafe(newProgress);
                                                           return newPage;
                                                         });
                                                       }} 
