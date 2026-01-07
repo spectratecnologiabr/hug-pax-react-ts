@@ -209,31 +209,61 @@ function Course() {
     }, [lessonId])
 
     React.useEffect(() => {
-        if (!playbackMemory?.last) return
+        if (!playbackMemory) return
         if (!lessionData) return
 
-        const { lessonId: savedLessonId, position } = playbackMemory.last
+        // Try last first, then scan history for a match.
+        // Use 'position' when coming from playbackMemory.last, but use 'endAt' when coming from playbackMemory.history.
+        let seekPosition: number | undefined
 
-        if (Number(savedLessonId) !== Number(lessionData.id)) {
-            return
+        if (playbackMemory.last && Number(playbackMemory.last.lessonId) === Number(lessionData.id)) {
+            seekPosition = playbackMemory.last.position
+        } else if (Array.isArray(playbackMemory.history)) {
+            const hist = playbackMemory.history.find((h: any) => Number(h.lessonId) === Number(lessionData.id))
+            if (hist && typeof hist.endAt !== "undefined") {
+                seekPosition = hist.endAt
+            } else if (hist && typeof hist.position !== "undefined") {
+                // fallback to position if endAt is not available
+                seekPosition = hist.position
+            }
         }
 
+        if (typeof seekPosition === "undefined") return
+
         if (lessionData.type === "video") {
-            setPendingSeek(position)
+            setPendingSeek(seekPosition)
         }
     }, [playbackMemory, lessionData?.id])
 
     React.useEffect(() => {
-        if (!playbackMemory?.last) return
+        if (!playbackMemory) return
         if (!lessionData) return
         if (lessionData.type !== "pdf") return
         if (!numPages) return
 
-        const { lessonId: savedLessonId, position } = playbackMemory.last
+        // Try last first, then scan history for a match.
+        // Use 'position' when coming from playbackMemory.last, but use 'endAt' when coming from playbackMemory.history.
+        let pageFromPlayback: number | undefined
+        let source: "last" | "history" | undefined
 
-        if (Number(savedLessonId) !== Number(lessionData.id)) return
+        if (playbackMemory.last && Number(playbackMemory.last.lessonId) === Number(lessionData.id)) {
+            pageFromPlayback = playbackMemory.last.position
+            source = "last"
+        } else if (Array.isArray(playbackMemory.history)) {
+            const hist = playbackMemory.history.find((h: any) => Number(h.lessonId) === Number(lessionData.id))
+            if (hist && typeof hist.endAt !== "undefined") {
+                pageFromPlayback = hist.endAt
+                source = "history"
+            } else if (hist && typeof hist.position !== "undefined") {
+                // fallback to position if endAt is not available
+                pageFromPlayback = hist.position
+                source = "history"
+            }
+        }
 
-        const safePage = Math.min(Math.max(position || 1, 1), numPages)
+        if (typeof pageFromPlayback === "undefined") return
+
+        const safePage = Math.min(Math.max(pageFromPlayback || 1, 1), numPages)
         if (pageNumber === safePage) return
         setPageNumber(safePage)
     }, [playbackMemory, lessionData?.id, numPages])
@@ -322,7 +352,13 @@ function Course() {
             const task = page.render({ canvasContext: context, viewport, canvas });
             renderTaskRef.current = task;
 
-            await task.promise;
+            try {
+                await task.promise;
+            } catch (err: any) {
+                if (err?.name !== "RenderingCancelledException") {
+                    console.error(err);
+                }
+            }
         };
 
         renderPdf();

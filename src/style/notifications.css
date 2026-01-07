@@ -1,0 +1,80 @@
+.notifications-container {
+    display: flex;
+    min-height: 100vh;
+    padding: 20px;
+    gap: 40px;
+    width: -webkit-fill-available;
+}
+
+.notifications-container .notifications-wrapper {
+    width: -webkit-fill-available;
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+    margin-left: 110px;
+}
+
+.notifications-container .notifications-wrapper .page-title-wrapper {
+    display: flex;
+    width: 100%;
+    justify-content: center;
+}
+
+.notifications-container .notifications-wrapper .page-title-wrapper b {
+    font-family: 'SF UI Display Semibold';
+    font-size: 38px;
+}
+
+.notifications-container .notifications-wrapper .notifications-listing {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.notifications-container .notifications-wrapper .notifications-listing .notification-element {
+    background-color: #EFEFEF;
+    padding: 20px;
+    border-radius: 10px;
+    display: flex;
+    justify-content: space-between;
+}
+
+.notifications-container .notifications-wrapper .notifications-listing .notification-element div {
+    display: flex;
+    flex-direction: column;
+}
+
+.notifications-container .notifications-wrapper .notifications-listing .notification-element div.right {
+    align-items: flex-end;
+    justify-content: baseline;
+    gap: 5px;
+}
+
+.notifications-container .notifications-wrapper .notifications-listing .notification-element .message {
+    font-family: 'SF UI Display Light';
+    color: #2B3038;
+}
+
+.notifications-container .notifications-wrapper .notifications-listing .notification-element .right a {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background-color: #3696D3;
+    padding: 5px 10px;
+    border-radius: 5px;
+    text-decoration: none;
+    font-family: 'SF UI Display Light';
+    font-size: 16px;
+    color: #ffffff;
+    transition: ease-in-out .3s all;
+}
+
+.notifications-container .notifications-wrapper .notifications-listing .notification-element .right a:hover {
+    background-color: #5CADE0;
+}
+
+.notifications-container .notifications-wrapper .notifications-listing .notification-element .right span {
+    font-family: 'SF UI Display Light';
+    font-size: 14px;
+    color: #A5A5AC;
+}

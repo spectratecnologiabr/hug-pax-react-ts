@@ -28,7 +28,7 @@ function AsideMenu() {
                 <a href="/profile" className="menu-item">
                     <img src={personIcon} alt="" className="menu-icon" />
                 </a>
-                <a href="#" className="menu-item">
+                <a href="/notifications" className="menu-item">
                     <img src={notificationIcon} alt="" className="menu-icon" />
                 </a>
             </div>

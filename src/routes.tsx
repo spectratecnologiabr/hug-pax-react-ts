@@ -11,6 +11,7 @@ import Dashboard from './pages/dashboard';
 import Course from './pages/course';
 import EducatorsPage from './pages/educatorsPage';
 import Profile from './pages/profile';
+import Notifications from './pages/notifications';
 
 function MyRoutes() {
     return (
@@ -25,6 +26,7 @@ function MyRoutes() {
                 <Route path='/course/:courseSlug' element={<ProtectedRoute><Course /></ProtectedRoute>} />
                 <Route path='/course/:courseSlug/lesson/:lessonId' element={<ProtectedRoute><Course /></ProtectedRoute>} />
                 <Route path='/profile' element={<ProtectedRoute><Profile/></ProtectedRoute>} />
+                <Route path='/notifications' element={<ProtectedRoute><Notifications/></ProtectedRoute>} />
             </Routes>
         </BrowserRouter>
     )
