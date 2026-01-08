@@ -113,7 +113,6 @@ function Dashboard() {
             }
         }
 
-        console.log(userData);
         fetchCourses();
         fetchOverviewData();
     }, []);
