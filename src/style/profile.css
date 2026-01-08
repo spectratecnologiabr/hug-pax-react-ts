@@ -74,10 +74,11 @@
 
 .main-profile-container .profile-wrapper .main-data-wrapper .fields-wrapper .data-wrapper input:not([type="file"]), .main-profile-container .profile-wrapper .main-data-wrapper .fields-wrapper .data-wrapper select {
     border-radius: 14px;
-    border: 1px solid #8E8E8E;
-    background: #F3F3F3;
-    height: 40px;
+    background-color: #F5F5F7;
     padding-left: 15px;
+    padding-right: 10px;
+    border-radius: 8px;
+    height: 40px;
 }
 
 .main-profile-container .profile-wrapper .main-data-wrapper button {
