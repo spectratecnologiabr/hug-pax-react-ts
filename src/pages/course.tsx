@@ -15,6 +15,7 @@ import { getMyRate } from "../controllers/course/getMyRate.controller";
 import { rateLesson } from "../controllers/course/rateLesson.controller";
 import { updatePlayback } from "../controllers/user/updatePlayback.controller";
 import { getPlayback } from "../controllers/user/getPlayback.controller";
+import { globalSearch } from "../controllers/dash/globalSearch.controller";
 
 import AsideMenu from "../components/asideMenu";
 import Footer from "../components/footer";
@@ -77,6 +78,40 @@ type TComment = {
     updatedAt: string
 }
 
+type TSearchCourse = {
+    id: number,
+    title: string,
+    sub_title?: string,
+    slug: string
+}
+
+type TSeachModule = {
+    id: number,
+    title: string,
+    description?: string,
+    course_id: number,
+    course_title: string,
+    course_slug: string
+}
+
+type TSearchLesson = {
+    id: number,
+    title: string,
+    sub_title?: string,
+    slug: string,
+    module_id: number,
+    module_title: string,
+    course_id: number,
+    course_title: string,
+    course_slug: string
+}
+
+type TSearchResult = {
+    courses: TSearchCourse[],
+    modules: TSeachModule[],
+    lessons: TSearchLesson[]
+}
+
 function Course() {
     const initializedRef = React.useRef(false)
     const [pendingSeek, setPendingSeek] = React.useState<number | null>(null)
@@ -88,6 +123,9 @@ function Course() {
     const [lessonComments, setLessonComments] = useState([] as Array<TComment>)
     const canvasRef = React.useRef<HTMLCanvasElement | null>(null);
     const renderTaskRef = React.useRef<any>(null);
+    const [search, setSearch] = useState("");
+    const [isSearching, setIsSearching] = useState(false);
+    const [searchResult, setSearchResult] = useState<TSearchResult>()
 
     type PlaybackLast = {
         type: "video" | "pdf"
@@ -127,6 +165,27 @@ function Course() {
         document.addEventListener("fullscreenchange", handleFsChange);
         return () => document.removeEventListener("fullscreenchange", handleFsChange);
     }, []);
+
+    React.useEffect(() => {
+        if (!search.trim()) {
+            setSearchResult(undefined);
+            return;
+        }
+
+        const delay = setTimeout(async () => {
+            try {
+            setIsSearching(true);
+            const result = await globalSearch(search);
+            setSearchResult(result);
+            } catch (err) {
+            console.error(err);
+            } finally {
+            setIsSearching(false);
+            }
+        }, 400);
+
+        return () => clearTimeout(delay);
+    }, [search]);
 
     React.useEffect(() => {
         if (videoRef.current) {
@@ -688,12 +747,38 @@ function Course() {
                 <div className="right-container">
                     <div className="profile-container">
                         <div className="search-wrapper">
-                            <button disabled>
-                                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 21 21" fill="none">
-                                    <path d="M13.6999 2.34726C10.5702 -0.782421 5.47644 -0.782421 2.34675 2.34726C-0.782251 5.47762 -0.782251 10.5707 2.34675 13.7011C5.13382 16.4875 9.47453 16.786 12.6022 14.6102C12.668 14.9216 12.8186 15.2188 13.0608 15.461L17.6186 20.0188C18.2828 20.6817 19.3561 20.6817 20.0169 20.0188C20.6805 19.3553 20.6805 18.282 20.0169 17.6205L15.4591 13.0613C15.2183 12.8212 14.9204 12.6699 14.609 12.604C16.7862 9.47572 16.4877 5.13569 13.6999 2.34726ZM12.2609 12.2621C9.92435 14.5987 6.12164 14.5987 3.78574 12.2621C1.45052 9.92553 1.45052 6.12351 3.78574 3.78693C6.12164 1.45103 9.92435 1.45103 12.2609 3.78693C14.5975 6.12351 14.5975 9.92553 12.2609 12.2621Z" fill="black"/>
-                                </svg>
-                            </button>
-                            <input type="search" className="main-search" id="mainSearchInput" />
+                            <div className="search-box">
+                                <button disabled>
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 21 21" fill="none">
+                                        <path d="M13.6999 2.34726C10.5702 -0.782421 5.47644 -0.782421 2.34675 2.34726C-0.782251 5.47762 -0.782251 10.5707 2.34675 13.7011C5.13382 16.4875 9.47453 16.786 12.6022 14.6102C12.668 14.9216 12.8186 15.2188 13.0608 15.461L17.6186 20.0188C18.2828 20.6817 19.3561 20.6817 20.0169 20.0188C20.6805 19.3553 20.6805 18.282 20.0169 17.6205L15.4591 13.0613C15.2183 12.8212 14.9204 12.6699 14.609 12.604C16.7862 9.47572 16.4877 5.13569 13.6999 2.34726ZM12.2609 12.2621C9.92435 14.5987 6.12164 14.5987 3.78574 12.2621C1.45052 9.92553 1.45052 6.12351 3.78574 3.78693C6.12164 1.45103 9.92435 1.45103 12.2609 3.78693C14.5975 6.12351 14.5975 9.92553 12.2609 12.2621Z" fill="black"/>
+                                    </svg>
+                                </button>
+                                 <input type="search" className="main-search" id="mainSearchInput" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar cursos, módulos ou aulas..."/>
+
+                                {searchResult && (
+                                    <div className="global-search-results">
+                                        {isSearching && <span>Buscando...</span>}
+
+                                        {searchResult.courses.map(course => (
+                                        <a key={`c-${course.id}`} href={`/course/${course.slug}`} className="search-item">
+                                            📘 {course.title}
+                                        </a>
+                                        ))}
+
+                                        {searchResult.modules.map(module => (
+                                        <a key={`m-${module.id}`} href={`/course/${module.course_slug}`} className="search-item">
+                                            📦 {module.course_title} • {module.title}
+                                        </a>
+                                        ))}
+
+                                        {searchResult.lessons.map(lesson => (
+                                        <a key={`l-${lesson.id}`} href={`/course/${lesson.course_slug}/lesson/${lesson.id}`} className="search-item">
+                                            🎬 {lesson.course_title} • {lesson.module_title} • {lesson.title}
+                                        </a>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
                         </div>
                         <div className="profile-wrapper">
                             <button className="notitications-button">
