@@ -5,6 +5,17 @@ body, * {
   box-sizing: border-box;
 }
 
+.pax-protected {
+  filter: blur(16px) brightness(0.7);
+  transition: 0.1s;
+}
+
+@media print{
+    body {
+        display: none;
+    }
+}
+
 @font-face {
     font-family: 'SF UI Display Ultralight';
     font-style: normal;

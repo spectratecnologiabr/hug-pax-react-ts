@@ -851,9 +851,20 @@ function Course() {
                                                         <b>{lesson.title}</b>
                                                     </div>
 
-                                                    <a href={`/course/${courseSlug}/lesson/${lesson.id}`}>
-                                                        {(lesson.type === "video") ? "Assistir" : "Ler"}
-                                                    </a>
+                                                    <a
+                                                        href={
+                                                            lesson.type === "attachment"
+                                                            ? lesson.extUrl
+                                                            : `/course/${courseSlug}/lesson/${lesson.id}`
+                                                        }
+                                                        {...(lesson.type === "attachment" && { download: true, target: "_blank" })}
+                                                        >
+                                                        {lesson.type === "video"
+                                                            ? "Assistir"
+                                                            : lesson.type === "attachment"
+                                                            ? "Baixar"
+                                                            : "Ler"}
+                                                        </a>
                                                 </div>
                                             ))
                                         }
