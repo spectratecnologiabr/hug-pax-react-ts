@@ -1,6 +1,6 @@
 .fast-links-container {
     width: 100%;
-    display: flex;
+    display: none;
     flex-direction: column;
     align-items: center;
     background-color: #F5F5F7;

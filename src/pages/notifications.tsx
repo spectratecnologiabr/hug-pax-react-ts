@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import listNotifications from "../controllers/notifications/listNotifications.controller";
+import { getOverviewData } from "../controllers/dash/overview.controller";
 
 import AsideMenu from "../components/asideMenu";
 
@@ -16,8 +17,16 @@ type INotification = {
     updatedAt: string
 }
 
+type TOverviewData = {
+    completedCourses: number,
+    inProgressCourses: number,
+    totalHours: number,
+    unreadNotifications: number
+}
+
 function Notifications() {
     const [ notifications, setNotifications ] = useState<INotification[]>([])
+    const [ overviewData, setOverviewData ] = useState<TOverviewData | null>(null);
 
     useEffect(() => {
         async function fetchNotifications() {
@@ -29,7 +38,17 @@ function Notifications() {
             }
         }
 
+        async function fetchOverviewData() {
+            try {
+                const overviewData = await getOverviewData();
+                setOverviewData(overviewData);
+            } catch (error) {
+                console.error("Error fetching overview data:", error);
+            }
+        }
+
         fetchNotifications();
+        fetchOverviewData();
     }, [])
 
     const formatDate = (date: string) => {
@@ -48,7 +67,7 @@ function Notifications() {
     return (
         <React.Fragment>
             <div className="notifications-container">
-                <AsideMenu />
+                <AsideMenu notificationCount={Number(overviewData?.unreadNotifications)}/>
                 <div className="notifications-wrapper">
                     <div className="page-title-wrapper">
                         <b>Notificações</b>
@@ -63,7 +82,9 @@ function Notifications() {
                                         <span className="message">{notification.text}</span>
                                     </div>
                                     <div className="right">
-                                        {notification.link ? (<a href={notification.link}>Acesse aqui</a>) : "" }
+                                        {
+                                            //notification.link ? (<a href={notification.link}>Acesse aqui</a>) : "" 
+                                        }
                                         <span>{formatDate(notification.createdAt)}</span>
                                     </div>
                                 </div>

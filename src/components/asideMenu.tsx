@@ -12,7 +12,7 @@ import { doLogout } from "../controllers/user/logout.controller";
 
 import "../style/asideMenu.css";
 
-function AsideMenu() {
+function AsideMenu(props: {notificationCount: number}) {
     return (
         <div className="aside-container">
             <div className="menu-wrapper">
@@ -30,6 +30,13 @@ function AsideMenu() {
                 </a>
                 <a href="/notifications" className="menu-item">
                     <img src={notificationIcon} alt="" className="menu-icon" />
+                    {
+                        props.notificationCount > 0 && (
+                            <span className="notification-count">
+                                {props.notificationCount > 9 ? "9+" : props.notificationCount}
+                            </span>
+                        )
+                    }
                 </a>
             </div>
 

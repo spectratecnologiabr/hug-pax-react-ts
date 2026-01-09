@@ -3,6 +3,7 @@ import { getCookies, setCookie } from "../controllers/misc/cookies.controller";
 import imageCompression from "browser-image-compression";
 import updateUser from "../controllers/user/updateUser.controller";
 import updatePassword from "../controllers/user/updatePassword.controller";
+import { getOverviewData } from "../controllers/dash/overview.controller";
 
 import AsideMenu from "../components/asideMenu";
 
@@ -25,6 +26,13 @@ type TUser = {
     isActive: boolean
 }
 
+type TOverviewData = {
+    completedCourses: number,
+    inProgressCourses: number,
+    totalHours: number,
+    unreadNotifications: number
+}
+
 function Profile() {
     const userData = getCookies("userData") as unknown as TUser;
     const profilePic = localStorage.getItem("profilePic");
@@ -32,6 +40,20 @@ function Profile() {
     const [oldPassword, setOldPassword] = useState("");
     const [newPassword, setNewPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
+    const [ overviewData, setOverviewData ] = useState<TOverviewData | null>(null);
+
+    React.useEffect(() => {
+        async function fetchOverviewData() {
+            try {
+                const overviewData = await getOverviewData();
+                setOverviewData(overviewData);
+            } catch (error) {
+                console.error("Error fetching overview data:", error);
+            }
+        }
+
+        fetchOverviewData();
+    }, [])
 
     const previewImage =
         updateData.profilePic ||
@@ -195,7 +217,7 @@ function Profile() {
     return (
         <React.Fragment>
             <div className="main-profile-container">
-                <AsideMenu />
+                <AsideMenu notificationCount={Number(overviewData?.unreadNotifications)}/>
                 <div className="profile-wrapper">
                     <div className="page-title-wrapper">
                         <b>Editar Informações</b>

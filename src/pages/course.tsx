@@ -16,6 +16,7 @@ import { rateLesson } from "../controllers/course/rateLesson.controller";
 import { updatePlayback } from "../controllers/user/updatePlayback.controller";
 import { getPlayback } from "../controllers/user/getPlayback.controller";
 import { globalSearch } from "../controllers/dash/globalSearch.controller";
+import { getOverviewData } from "../controllers/dash/overview.controller";
 
 import AsideMenu from "../components/asideMenu";
 import Footer from "../components/footer";
@@ -29,6 +30,13 @@ import 'react-pdf/dist/Page/TextLayer.css';
 import 'react-pdf/dist/Page/AnnotationLayer.css';
 
 GlobalWorkerOptions.workerSrc = `${process.env.PUBLIC_URL}/pdf.worker.min.js`;
+
+type TOverviewData = {
+    completedCourses: number,
+    inProgressCourses: number,
+    totalHours: number,
+    unreadNotifications: number
+}
 
 type TCourseData = {
     id: number,
@@ -126,6 +134,20 @@ function Course() {
     const [search, setSearch] = useState("");
     const [isSearching, setIsSearching] = useState(false);
     const [searchResult, setSearchResult] = useState<TSearchResult>()
+    const [ overviewData, setOverviewData ] = useState<TOverviewData | null>(null)
+
+    React.useEffect(() => {
+        async function fetchOverviewData() {
+            try {
+                const overviewData = await getOverviewData();
+                setOverviewData(overviewData);
+            } catch (error) {
+                console.error("Error fetching overview data:", error);
+            }
+        }
+
+        fetchOverviewData();
+    }, [])
 
     type PlaybackLast = {
         type: "video" | "pdf"
@@ -556,7 +578,7 @@ function Course() {
     return (
         <React.Fragment>
             <div className="course-container">
-                <AsideMenu />
+                <AsideMenu notificationCount={Number(overviewData?.unreadNotifications)}/>
                 <div className="course-wrapper">
                     <div className="course-header">
                         <div className="left">
@@ -781,9 +803,6 @@ function Course() {
                             </div>
                         </div>
                         <div className="profile-wrapper">
-                            <button className="notitications-button">
-                                <img src={notificationIcon} alt="" />
-                            </button>
                             <button className="profile-button" onClick={() => window.location.pathname = "/profile"}>
                                 <div className="profile-photo" style={{ backgroundImage: profilePic ? `url("${profilePic}")` : "none" }}></div>
                                 <svg xmlns="http://www.w3.org/2000/svg" width="8" height="5" viewBox="0 0 8 5" fill="none">

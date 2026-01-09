@@ -4,6 +4,7 @@ import { CircularProgressbar, buildStyles } from 'react-circular-progressbar';
 import 'react-circular-progressbar/dist/styles.css';
 
 import { listCourses } from "../controllers/course/listCourses.controller";
+import { getOverviewData } from "../controllers/dash/overview.controller";
 
 import "../style/educatorsPage.css";
 
@@ -18,11 +19,19 @@ type TCourse = {
     progressPercentage: number
 }
 
+type TOverviewData = {
+    completedCourses: number,
+    inProgressCourses: number,
+    totalHours: number,
+    unreadNotifications: number
+}
+
 function EducatorsPage() {
     const [courses, setCourses] = useState<TCourse[]>([]);
     const [statusFilter, setStatusFilter] = useState("");
     const [orderFilter, setOrderFilter] = useState("");
     const [search, setSearch] = useState("");
+    const [ overviewData, setOverviewData ] = useState<TOverviewData | null>(null);
 
         useEffect(() => {    
             async function fetchCourses() {
@@ -33,8 +42,18 @@ function EducatorsPage() {
                     console.error("Error fetching courses:", error);
                 }
             }
+
+            async function fetchOverviewData() {
+                try {
+                    const overviewData = await getOverviewData();
+                    setOverviewData(overviewData);
+                } catch (error) {
+                    console.error("Error fetching overview data:", error);
+                }
+            }
     
             fetchCourses();
+            fetchOverviewData();
         }, []);
 
     function handleCourseStatusFilter(e: React.ChangeEvent<HTMLSelectElement>) {
@@ -72,7 +91,7 @@ function EducatorsPage() {
     return (
         <React.Fragment>
             <div className="educators-page-container">
-                <AsideMenu />
+                <AsideMenu notificationCount={Number(overviewData?.unreadNotifications)}/>
                 <div className="educators-page-wrapper">
                     <div className="educators-room-container">
                         <div className="header-wrapper">

@@ -175,7 +175,7 @@ function Dashboard() {
     return (
         <React.Fragment>
         <div className="dashboard-container">
-            <AsideMenu/>
+            <AsideMenu notificationCount={Number(overviewData?.unreadNotifications)}/>
             <div className="dashboard-wrapper">
                 <div className="main-dash-wrapper">
                     <div className="greatings-card">
