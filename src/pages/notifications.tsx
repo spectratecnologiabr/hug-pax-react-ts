@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import listNotifications from "../controllers/notifications/listNotifications.controller";
 import { getOverviewData } from "../controllers/dash/overview.controller";
+import readNotifications from "../controllers/notifications/readNotifications.controller";
 
 import AsideMenu from "../components/asideMenu";
 
@@ -64,6 +65,20 @@ function Notifications() {
         return `${dia}/${mes}/${ano} - ${hora}:${minuto}`;
     };
 
+    useEffect(() => {
+        if (!notifications.length) return;
+
+        async function updateNotifications() {
+            try {
+                await readNotifications(notifications);
+            } catch (error) {
+                console.error("Error updating notifications:", error);
+            }
+        }
+
+        updateNotifications();
+    }, [notifications]);
+
     return (
         <React.Fragment>
             <div className="notifications-container">
@@ -74,21 +89,25 @@ function Notifications() {
                     </div>
 
                     <div className="notifications-listing">
-                        {   // TODO: levar a checagem de status da notificação pro backend
-                            notifications.map(notification => 
-                                notification.status === 0 ?(<div className="notification-element">
-                                    <div className="left">
-                                        {notification.title ? (<b className="title">{notification.title}</b>) : "" }
-                                        <span className="message">{notification.text}</span>
+                        {   
+                            notifications.length ?
+                                notifications.map(notification => 
+                                    <div className="notification-element">
+                                        <div className="left">
+                                            {notification.title ? (<b className="title">{notification.title}</b>) : "" }
+                                            <span className="message">{notification.text}</span>
+                                        </div>
+                                        <div className="right">
+                                            {
+                                                //notification.link ? (<a href={notification.link}>Acesse aqui</a>) : "" 
+                                            }
+                                            <span>{formatDate(notification.createdAt)}</span>
+                                        </div>
                                     </div>
-                                    <div className="right">
-                                        {
-                                            //notification.link ? (<a href={notification.link}>Acesse aqui</a>) : "" 
-                                        }
-                                        <span>{formatDate(notification.createdAt)}</span>
-                                    </div>
-                                </div>
-                            ) : "")
+                                )
+                            : <div className="no-content-container">
+                                <span>Nenhuma nova notificação no momento</span>
+                            </div>
                         }
                         
                     </div>

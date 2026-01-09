@@ -31,6 +31,16 @@
     gap: 10px;
 }
 
+.notifications-container .notifications-wrapper .notifications-listing .no-content-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.notifications-container .notifications-wrapper .notifications-listing .no-content-container span {
+    font-family: 'SF UI Display Light';
+}
+
 .notifications-container .notifications-wrapper .notifications-listing .notification-element {
     background-color: #EFEFEF;
     padding: 20px;
