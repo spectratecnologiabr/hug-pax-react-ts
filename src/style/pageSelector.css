@@ -1,13 +1,13 @@
 
 .page-selector {
   position: fixed;
-  top: 24px;
-  left: 24px;
+  top: 18px;
+  left: 18px;
   z-index: 9999;
 }
 
 .page-selector-btn {
-  background: rgba(95, 61, 196, 0.95);
+  background: #EC6C1D;
   backdrop-filter: blur(8px);
   border: none;
   border-radius: 10px;

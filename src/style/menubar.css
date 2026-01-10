@@ -1,0 +1,65 @@
+.admin-menubar {
+    display: flex;
+    justify-content: space-between;
+    padding: 20px;
+    background-color: #3696D3;
+    margin: 20px;
+    border-radius: 14px;
+}
+
+.admin-menubar .logo-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.admin-menubar .logo-wrapper .pax-logo {
+    height: 50px;
+}
+
+.admin-menubar .logo-wrapper b {
+  font-family: 'SF UI Display Medium';
+  color: #ffffff;
+  font-size: 20px;
+}
+
+.admin-menubar .menu-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.admin-menubar .menu-wrapper .menu-link {   
+    text-decoration: none;
+    padding: 10px;
+    border-radius: 10px;
+    background: #5CADE0;
+    border: 1px solid #5CADE0;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-family: 'SF UI Display Light';
+    color: #ffffff;
+    transition: ease-in-out .3s all;
+}
+
+.admin-menubar .menu-wrapper .menu-link:hover {
+    background-color: #3696D3;
+    border: 1px solid #ffffff;
+}
+
+.admin-menubar .menu-wrapper button {
+    padding: 10px;
+    border-radius: 10px;
+    background: #5CADE0;
+    border: 1px solid #5CADE0;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    transition: ease-in-out .3s all;
+}
+
+.admin-menubar .menu-wrapper button:hover {
+    background-color: #3696D3;
+    border: 1px solid #ffffff;
+}
