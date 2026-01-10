@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from "react";
 import AsideMenu from "../components/asideMenu";
+import PageSelector from "../components/pageSelector";
+import Footer from "../components/footer";
 import { CircularProgressbar, buildStyles } from 'react-circular-progressbar';
 import 'react-circular-progressbar/dist/styles.css';
 
@@ -156,6 +158,9 @@ function EducatorsPage() {
                     </div>
                 </div>
             </div>
+
+            <PageSelector />
+            <Footer />
         </React.Fragment>
     )
 }

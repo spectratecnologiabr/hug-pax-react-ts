@@ -28,6 +28,7 @@ import 'react-circular-progressbar/dist/styles.css';
 import "../style/course.css";
 import 'react-pdf/dist/Page/TextLayer.css';
 import 'react-pdf/dist/Page/AnnotationLayer.css';
+import PageSelector from "../components/pageSelector";
 
 GlobalWorkerOptions.workerSrc = `${process.env.PUBLIC_URL}/pdf.worker.min.js`;
 
@@ -876,6 +877,7 @@ function Course() {
                 </div>
                 
             </div>
+            <PageSelector />
             <Footer/>
         </React.Fragment>
     )

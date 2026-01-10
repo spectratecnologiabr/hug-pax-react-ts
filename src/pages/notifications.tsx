@@ -4,6 +4,8 @@ import { getOverviewData } from "../controllers/dash/overview.controller";
 import readNotifications from "../controllers/notifications/readNotifications.controller";
 
 import AsideMenu from "../components/asideMenu";
+import PageSelector from "../components/pageSelector";
+import Footer from "../components/footer";
 
 import "../style/notifications.css";
 
@@ -113,6 +115,9 @@ function Notifications() {
                     </div>
                 </div>
             </div>
+
+            <PageSelector />
+            <Footer />
         </React.Fragment>
     )
 }
