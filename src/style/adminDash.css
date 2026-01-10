@@ -1,3 +1,41 @@
 .admin-dashboard-container {
     margin-left: 50px;
 }
+
+.admin-dashboard-container .admin-dashboard-wrapper {
+    width: -webkit-fill-available;
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+}
+
+.admin-dashboard-container .admin-dashboard-wrapper .main-dash-wrapper {
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    grid-auto-rows: 40px;
+    gap: 25px;
+    width: 100%;
+    padding: 0 20px;
+}
+
+.admin-dashboard-container .admin-dashboard-wrapper .main-dash-wrapper .registered-colleges, .admin-dashboard-container .admin-dashboard-wrapper .main-dash-wrapper .registered-educators {
+    grid-column: span 2;
+    grid-row: span 2;
+    background-color: #F5F5F7;
+    border-radius: 14px;
+    padding: 10px;
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    align-items: center;
+}
+
+.admin-dashboard-container .admin-dashboard-wrapper .main-dash-wrapper .registered-colleges b, .admin-dashboard-container .admin-dashboard-wrapper .main-dash-wrapper .registered-educators b {
+    font-family: 'SF UI Display Medium';
+    font-size: 70px;
+}
+
+.admin-dashboard-container .admin-dashboard-wrapper .main-dash-wrapper .registered-colleges span, .admin-dashboard-container .admin-dashboard-wrapper .main-dash-wrapper .registered-educators span {
+    font-family: 'SF UI Display Medium';
+    font-size: 16px;
+}

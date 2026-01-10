@@ -3,7 +3,6 @@ import { getOverviewData } from "../controllers/dash/overview.controller";
 
 import PageSelector from "../components/pageSelector";
 import Menubar from "../components/admin/menubar";
-import FastLinks from "../components/dash/fastLinks";
 
 import "../style/adminDash.css";
 
@@ -14,7 +13,7 @@ type TOverviewData = {
     unreadNotifications: number
 }
 
-function AdminDash() {
+function CollegesPage() {
     const [ overviewData, setOverviewData ] = useState<TOverviewData | null>(null);
 
     useEffect(() => {
@@ -35,19 +34,7 @@ function AdminDash() {
             <div className="admin-dashboard-container">
                 <Menubar notificationCount={Number(overviewData?.unreadNotifications)}/>
                 <div className="admin-dashboard-wrapper">
-                    <div className="main-dash-wrapper">
-                        <div className="registered-colleges">
-                            <b>11</b>
-                            <span>Escolas <br />Cadastradas</span>
-                        </div>
-
-                        <div className="registered-educators">
-                            <b>30</b>
-                            <span>Educadores <br />Cadastrados</span>
-                        </div>
-
-                        <FastLinks/>
-                    </div>
+                    
                 </div>
             </div>
             <PageSelector />
@@ -55,4 +42,4 @@ function AdminDash() {
     )
 }
 
-export default AdminDash
+export default CollegesPage;

@@ -9,7 +9,6 @@ import 'react-circular-progressbar/dist/styles.css';
 
 import AsideMenu from "../components/asideMenu";
 import Feed from "../components/dash/feed";
-import FastLinks from "../components/dash/fastLinks";
 import EducatorsRoom from "../components/dash/educatorsRoom";
 
 import alunoImage from "../img/dash/aluno.svg";
@@ -289,7 +288,6 @@ function Dashboard() {
                         <span>de tempo total em formação</span>
                     </div>
                 </div>
-                <FastLinks />
                 <EducatorsRoom courses={courses} />
             </div>
             <Feed/>

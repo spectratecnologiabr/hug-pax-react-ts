@@ -1,12 +1,14 @@
 .fast-links-container {
     width: 100%;
-    display: none;
+    display: flex;
     flex-direction: column;
     align-items: center;
     background-color: #F5F5F7;
     padding: 10px 20px;
     border-radius: 14px;
-    gap: 10px
+    gap: 10px;
+    grid-column: span 4;
+    grid-row: span 2;
 }
 
 .fast-links-container b {

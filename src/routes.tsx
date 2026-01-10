@@ -13,7 +13,10 @@ import Course from './pages/course';
 import EducatorsPage from './pages/educatorsPage';
 import Profile from './pages/profile';
 import Notifications from './pages/notifications';
+
+// Admin Routes
 import AdminDash from './pages/adminDash';
+import CollegesPage from './pages/collegesPage';
 
 function MyRoutes() {
     return (
@@ -30,6 +33,7 @@ function MyRoutes() {
                 <Route path='/profile' element={<ProtectedRoute><Profile/></ProtectedRoute>} />
                 <Route path='/notifications' element={<ProtectedRoute><Notifications/></ProtectedRoute>} />
                 <Route path='/admin' element={<AdminRoute><AdminDash/></AdminRoute>} />
+                <Route path='/admin/colleges' element={<AdminRoute><CollegesPage/></AdminRoute>} />
             </Routes>
         </BrowserRouter>
     )
