@@ -1,5 +1,6 @@
 import React from "react";
 import { getOverviewData } from "../controllers/dash/overview.controller";
+import { createCollege, ICollegeProps } from "../controllers/college/createCollege.controller";
 
 import Menubar from "../components/admin/menubar";
 
@@ -14,6 +15,7 @@ type TOverviewData = {
 
 function NewCollegePage() {
     const [ overviewData, setOverviewData ] = React.useState<TOverviewData | null>(null);
+    const [ collegeData, setCollegeData ] = React.useState<ICollegeProps | null>(null);
 
     React.useEffect(() => {
         async function fetchOverviewData() {
@@ -27,6 +29,8 @@ function NewCollegePage() {
 
         fetchOverviewData()
     }, []);
+
+
 
     return (
         <React.Fragment>
@@ -70,8 +74,8 @@ function NewCollegePage() {
                                     <input type="text" id="city" name="city" />
                                 </div>
                                 <div className="input-wrapper">
-                                    <label htmlFor="regional">Regional/Gerência:*</label>
-                                    <input type="text" id="regional" name="regional" />
+                                    <label htmlFor="management">Regional/Gerência:*</label>
+                                    <input type="text" id="management" name="management" />
                                 </div>
                                 <div className="input-wrapper">
                                     <label htmlFor="collegeSeries">Séries da Escola:*</label>
@@ -82,12 +86,12 @@ function NewCollegePage() {
                                     <input type="text" id="contractSeries" name="contractSeries" />
                                 </div>
                                 <div className="input-wrapper">
-                                    <label htmlFor="comercialResponsavel">Comercial Responsável:*</label>
-                                    <input type="text" id="comercialResponsavel" name="comercialResponsavel" />
+                                    <label htmlFor="salesManager">Comercial Responsável:*</label>
+                                    <input type="text" id="salesManager" name="salesManager" />
                                 </div>
                                 <div className="input-wrapper">
-                                    <label htmlFor="coordenadorResponsavel">Coordenador Responsável:*</label>
-                                    <input type="text" id="coordenadorResponsavel" name="coordenadorResponsavel" />
+                                    <label htmlFor="coordinator">Coordenador Responsável:*</label>
+                                    <input type="text" id="coordinator" name="coordinator" />
                                 </div>
                             </div>
                             <div className="button-wrapper">
