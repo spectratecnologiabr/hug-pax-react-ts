@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { getOverviewData } from "../controllers/dash/overview.controller";
 
-import PageSelector from "../components/pageSelector";
 import Menubar from "../components/admin/menubar";
 import FastLinks from "../components/dash/fastLinks";
 
@@ -50,7 +49,6 @@ function AdminDash() {
                     </div>
                 </div>
             </div>
-            <PageSelector />
         </React.Fragment>
     )
 }

@@ -2,6 +2,8 @@ import React from "react";
 import { getCookies } from "../../controllers/misc/cookies.controller";
 import { doLogout } from "../../controllers/user/logout.controller";
 
+import PageSelector from "../pageSelector";
+
 import paxIconWhite from "../../img/pax-icon-white.svg";
 
 import "../../style/menubar.css";
@@ -66,6 +68,8 @@ function Menubar(props: {notificationCount: number}) {
 
                     <span>Relatórios</span>
                 </a>
+
+                <PageSelector title/>
 
                  <a href="#" className="menu-link">
                     <svg height="20" viewBox="0 0 24 26" fill="none" xmlns="http://www.w3.org/2000/svg">

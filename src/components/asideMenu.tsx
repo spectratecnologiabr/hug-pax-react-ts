@@ -1,4 +1,5 @@
 import React from "react";
+import PageSelector from "./pageSelector";
 
 import mainIcon from "../img/pax-icon-vertical.svg";
 import mainIconWhite from "../img/pax-icon-white.svg";
@@ -19,16 +20,16 @@ function AsideMenu(props: {notificationCount: number}) {
                 <img src={mainIcon} alt="main-logo" className="main-logo" />
                 <img src={mainIconWhite} alt="main-logo" className="main-logo-mob" />
 
-                <a href="/dashboard" className="menu-item">
+                <a href="/dashboard" className="menu-item" title="Dashboard">
                     <img src={homeIcon} alt="" className="menu-icon" />
                 </a>
-                <a href="/courses" className="menu-item">
+                <a href="/courses" className="menu-item" title="Cursos">
                     <img src={hatIcon} alt="" className="menu-icon" />
                 </a>
-                <a href="/profile" className="menu-item">
+                <a href="/profile" className="menu-item" title="Meu Perfil">
                     <img src={personIcon} alt="" className="menu-icon" />
                 </a>
-                <a href="/notifications" className="menu-item">
+                <a href="/notifications" className="menu-item" title="Notificações">
                     <img src={notificationIcon} alt="" className="menu-icon" />
                     {
                         props.notificationCount > 0 && (
@@ -38,6 +39,7 @@ function AsideMenu(props: {notificationCount: number}) {
                         )
                     }
                 </a>
+                <PageSelector />
             </div>
 
             <button className="logout-button" onClick={doLogout}>

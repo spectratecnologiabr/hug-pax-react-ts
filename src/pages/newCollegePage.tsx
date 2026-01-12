@@ -1,7 +1,6 @@
 import React from "react";
 import { getOverviewData } from "../controllers/dash/overview.controller";
 
-import PageSelector from "../components/pageSelector";
 import Menubar from "../components/admin/menubar";
 
 import "../style/adminDash.css";
@@ -256,7 +255,6 @@ function NewCollegePage() {
                     </div>
                 </div>
             </div>
-            <PageSelector />
         </React.Fragment>
     )
 }

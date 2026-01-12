@@ -71,6 +71,7 @@
     border: 1px solid #5CADE0;
     display: flex;
     align-items: center;
+    font-family: 'SF UI Display Light';
     cursor: pointer;
     transition: ease-in-out .3s all;
 }

@@ -45,6 +45,7 @@
 
 .aside-container .menu-wrapper .menu-item:hover {
     background-color: #5CADE0;
+    transform: translateY(-1px);
 }
 
 .aside-container button {
