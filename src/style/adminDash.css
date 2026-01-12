@@ -39,3 +39,285 @@
     font-family: 'SF UI Display Medium';
     font-size: 16px;
 }
+
+/* Listing Container Styles */
+
+.admin-dashboard-container .admin-dashboard-wrapper .listing-container {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    margin: 20px;
+}
+
+.admin-dashboard-container .admin-dashboard-wrapper .listing-container .buttons-wrapper {
+    border-bottom: 1px solid #e5e7eb;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    padding: 10px;
+}
+
+.admin-dashboard-container .admin-dashboard-wrapper .listing-container .buttons-wrapper .search-wrapper #searchInput {
+    background-color: #f5f7fa;
+    border: 1px solid #e5e7eb;
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: 'SF UI Display Medium';
+    padding: 5px;
+    width: 190px;
+}
+
+.admin-dashboard-container .admin-dashboard-wrapper .listing-container .buttons-wrapper .search-wrapper svg {
+    position: relative;
+    left: -20px;
+    cursor: pointer;
+}
+
+.admin-dashboard-container .admin-dashboard-wrapper .listing-container .buttons-wrapper a {
+    background: #3696D3;
+    border-radius: 8px;
+    color: #fff;
+    font-size: 14px;
+    text-decoration: none;
+    font-family: 'SF UI Display Medium';
+    padding: 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    padding: 7px 17px;
+    transition: all .3s ease-in-out;
+}
+
+.admin-dashboard-container .admin-dashboard-wrapper .listing-container .buttons-wrapper a:hover {
+    background-color: #5CADE0;
+}
+
+.admin-dashboard-container .admin-dashboard-wrapper .listing-container .listing-table-container {
+    height: calc(100vh - 250px);
+    overflow-y: scroll;
+    scrollbar-width: thin;
+}
+
+.admin-dashboard-container .admin-dashboard-wrapper .listing-container .listing-table-container .listing-table {
+    border-collapse: collapse;
+    table-layout: fixed;
+    width: -webkit-fill-available;
+}
+
+.admin-dashboard-container .admin-dashboard-wrapper .listing-container .listing-table-container .listing-table thead {
+    background-color: #f5f7fa;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.admin-dashboard-container .admin-dashboard-wrapper .listing-container .listing-table-container .listing-table thead th {
+    color: #6b7280;
+    font-family: 'SF UI Display Medium';
+    font-size: 14px;
+    padding: 8px;
+    text-align: start;
+}
+
+.admin-dashboard-container .admin-dashboard-wrapper .listing-container .listing-table-container .listing-table tbody tr:not(:last-child) {
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.admin-dashboard-container .admin-dashboard-wrapper .listing-container .listing-table-container .listing-table tbody tr td {
+    font-family: 'SF UI Display Light';
+    font-size: 12px;
+    padding: 8px;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+.admin-dashboard-container .admin-dashboard-wrapper .listing-container .listing-table-container .listing-table tbody tr td.buttons-cell {
+    display: flex;
+    gap: 10px;
+}
+
+.admin-dashboard-container .admin-dashboard-wrapper .listing-container .listing-table-container .listing-table tbody tr td.buttons-cell button {
+    background: transparent;
+    border-radius: 8px;
+    color: #fff;
+    font-family: 'SF UI Display Medium';
+    padding: 5px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all .3s ease-in-out;
+}
+
+.admin-dashboard-container .admin-dashboard-wrapper .listing-container .listing-table-container .listing-table tbody tr td.buttons-cell button path {
+    transition: all .3s ease-in-out;
+}
+
+.admin-dashboard-container .admin-dashboard-wrapper .listing-container .listing-table-container .listing-table tbody tr td.buttons-cell button:hover {
+    background-color: #ebf1f8;
+}
+
+.admin-dashboard-container .admin-dashboard-wrapper .listing-container .listing-table-container .listing-table tbody tr td.buttons-cell button:hover path {
+    fill: #3696D3;
+}
+
+/* Form Styles */
+.admin-dashboard-container .admin-dashboard-wrapper .form-container {
+    background-color: #fff;
+    border-radius: 8px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.admin-dashboard-container .admin-dashboard-wrapper .form-container > .title-wrapper {
+    display: flex;
+    justify-content: space-between;
+}
+
+.admin-dashboard-container .admin-dashboard-wrapper .form-container > .title-wrapper b {
+    font-family: 'SF UI Display Semibold';
+    font-size: 24px;
+}
+
+.admin-dashboard-container .admin-dashboard-wrapper .form-container > .title-wrapper button {
+    background: #3696D3;
+    border-radius: 8px;
+    color: #fff;
+    font-family: 'SF UI Display Medium';
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all .3s ease-in-out;
+}
+
+.admin-dashboard-container .admin-dashboard-wrapper .form-container .form-wrapper {
+    background-color: #f5f7fa;
+    border-radius: 8px;
+    padding: 20px;
+}
+
+.admin-dashboard-container .admin-dashboard-wrapper .form-container .form-wrapper .title-wrapper {
+    margin-bottom: 15px;
+    font-family: 'SF UI Display Semibold';
+    font-size: 16px;
+}
+
+.admin-dashboard-container .admin-dashboard-wrapper .form-container .form-wrapper .form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 15px;
+}
+
+.admin-dashboard-container .admin-dashboard-wrapper .form-container .form-wrapper .input-wrapper {
+    display: flex;
+    flex-direction: column;
+}
+
+.admin-dashboard-container .admin-dashboard-wrapper .form-container .form-wrapper .input-wrapper label {
+    font-family: 'SF UI Display Medium';
+    font-size: 14px;
+    margin-bottom: 5px;
+}
+
+.admin-dashboard-container .admin-dashboard-wrapper .form-container .form-wrapper .input-wrapper small {
+    font-family: 'SF UI Display Light';
+    font-size: 12px;
+    color: #6b7280;
+    margin-top: 3px;
+}
+
+.admin-dashboard-container .admin-dashboard-wrapper .form-container .form-wrapper input[type="text"],
+.admin-dashboard-container .admin-dashboard-wrapper .form-container .form-wrapper input[type="number"],
+.admin-dashboard-container .admin-dashboard-wrapper .form-container .form-wrapper input[type="date"] {
+    background-color: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 4px;
+    padding: 8px;
+}
+
+.admin-dashboard-container .admin-dashboard-wrapper .form-container .form-wrapper input[type="file"] {
+    background-color: #f5f7fa;
+    border: 1px solid #e5e7eb;
+    border-radius: 4px;
+    padding: 8px;
+    cursor: pointer;
+}
+
+.admin-dashboard-container .admin-dashboard-wrapper .form-container button.submit-button {
+    background-color: #3696D3;
+    border-radius: 8px;
+    color: #fff;
+    font-family: 'SF UI Display Medium';
+    padding: 10px 20px;
+    margin-top: 20px;
+}
+
+.admin-dashboard-container .admin-dashboard-wrapper .form-container .form-wrapper .form-table {
+    border-collapse: collapse;
+    table-layout: fixed;
+    width: -webkit-fill-available;
+}
+
+.admin-dashboard-container .admin-dashboard-wrapper .form-container .form-wrapper .form-table thead {
+    background-color: #f5f7fa;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.admin-dashboard-container .admin-dashboard-wrapper .form-container .form-wrapper .form-table thead th {
+    color: #6b7280;
+    font-family: 'SF UI Display Medium';
+    font-size: 14px;
+    padding: 8px;
+    text-align: start;
+}
+
+.admin-dashboard-container .admin-dashboard-wrapper .form-container .form-wrapper .form-table tbody tr:not(:last-child) {
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.admin-dashboard-container .admin-dashboard-wrapper .form-container .form-wrapper .form-table tbody tr td {
+    font-family: 'SF UI Display Light';
+    font-size: 12px;
+    padding: 8px;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+.admin-dashboard-container .admin-dashboard-wrapper .form-container .form-wrapper .form-table tbody tr td.buttons-cell {
+    display: flex;
+    gap: 10px;
+}
+
+.admin-dashboard-container .admin-dashboard-wrapper .form-container .form-wrapper .form-table tbody tr td.buttons-cell button.delete-button {
+    background: transparent;
+    border-radius: 8px;
+    color: #fff;
+    font-family: 'SF UI Display Medium';
+    padding: 5px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all .3s ease-in-out;
+}
+
+.admin-dashboard-container .admin-dashboard-wrapper .form-container .form-wrapper .form-table tbody tr td.buttons-cell button path {
+    transition: all .3s ease-in-out;
+}
+
+.admin-dashboard-container .admin-dashboard-wrapper .form-container .form-wrapper .form-table tbody tr td.buttons-cell button.delete-button:hover {
+    background-color: #feb8b8;
+}   
+
+.admin-dashboard-container .admin-dashboard-wrapper .form-container .form-wrapper .form-table tbody tr td button.download-button {
+    background: #10B981;
+    border-radius: 8px;
+    color: #fff;
+    font-family: 'SF UI Display Medium';
+    padding: 5px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all .3s ease-in-out;
+}
+
+.admin-dashboard-container .admin-dashboard-wrapper .form-container .form-wrapper .form-table tbody tr td button.download-button:hover {
+    background-color: #6EE7B7;
+}
+

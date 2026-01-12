@@ -17,6 +17,7 @@ import Notifications from './pages/notifications';
 // Admin Routes
 import AdminDash from './pages/adminDash';
 import CollegesPage from './pages/collegesPage';
+import NewCollegePage from './pages/newCollegePage';
 
 function MyRoutes() {
     return (
@@ -26,14 +27,17 @@ function MyRoutes() {
                 <Route path='/login' element={<Login/>} />
                 <Route path='/forgot-password' element={<ForgotPassword/>} />
                 <Route path='/reset-password' element={<ResetPassword/>} />
+
                 <Route path='/dashboard' element={<ProtectedRoute><Dashboard/></ProtectedRoute>} />
                 <Route path='/courses' element={<ProtectedRoute><EducatorsPage/></ProtectedRoute>} />
                 <Route path='/course/:courseSlug' element={<ProtectedRoute><Course /></ProtectedRoute>} />
                 <Route path='/course/:courseSlug/lesson/:lessonId' element={<ProtectedRoute><Course /></ProtectedRoute>} />
                 <Route path='/profile' element={<ProtectedRoute><Profile/></ProtectedRoute>} />
                 <Route path='/notifications' element={<ProtectedRoute><Notifications/></ProtectedRoute>} />
+                
                 <Route path='/admin' element={<AdminRoute><AdminDash/></AdminRoute>} />
                 <Route path='/admin/colleges' element={<AdminRoute><CollegesPage/></AdminRoute>} />
+                <Route path='/admin/colleges/add' element={<AdminRoute><NewCollegePage/></AdminRoute>} />
             </Routes>
         </BrowserRouter>
     )
