@@ -2,18 +2,21 @@ import axios from "axios";
 import { getCookies } from "../misc/cookies.controller";
 
 export interface ICollegeProps {
-    "name": string,
-    "partner": string,
-    "address": string,
-    "addressNumber": number,
-    "state": string,
-    "city": string,
-    "management": string,
-    "collegeSeries": string,
-    "contractSeries": string,
-    "salesManager": string,
-    "coordinator": string,
-    "internalManagement": any[]
+    contract: string,
+    initDate: string,
+    name: string,
+    partner: string,
+    address: string,
+    addressNumber: number,
+    state: string,
+    city: string,
+    management: string,
+    collegeSeries: string,
+    contractSeries: string,
+    salesManager: string,
+    consultor: string,
+    internalManagement: any[]
+    isActive?: boolean
 }
 
 export async function createCollege(data: ICollegeProps) {

@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { getOverviewData } from "../controllers/dash/overview.controller";
-import { createCollege, ICollegeProps } from "../controllers/college/createCollege.controller";
+import { updateCollege, ICollegeUpdateProps } from "../controllers/college/updateCollege.controller";
+import { findCollege } from "../controllers/college/findCollege.controller";
+import { ICollegeProps } from "../controllers/college/createCollege.controller";
 
 import Menubar from "../components/admin/menubar";
 
 import "../style/adminDash.css";
+import { useParams } from "react-router-dom";
 
 type TOverviewData = {
     completedCourses: number,
@@ -20,9 +23,10 @@ type TInternalManager = {
     phone: string
 }
 
-function NewCollegePage() {
+function EditCollegePage() {
+    const collegeId = useParams().collegeId as string;
     const [ overviewData, setOverviewData ] = useState<TOverviewData | null>(null);
-    const [ newCollegeData, setNewCollegeData ] = useState<ICollegeProps>({} as ICollegeProps);
+    const [ editCollegeData, setEditCollegeData ] = useState<ICollegeProps>({} as ICollegeProps);
     const [ newManagerData, setNewManagerData ] = useState<TInternalManager>({} as TInternalManager);
 
     useEffect(() => {
@@ -35,17 +39,18 @@ function NewCollegePage() {
             }
         }
 
+        async function fetchCollegeData() {
+            try {
+                const collegeData = await findCollege(collegeId);
+                setEditCollegeData(collegeData);
+            } catch (error) {
+                console.error("Error fetching college data:", error);
+            }
+        }
+
+        fetchCollegeData()
         fetchOverviewData()
     }, []);
-
-    function handleNewCollegeData(event: React.ChangeEvent<HTMLInputElement>) {
-        const target = event.currentTarget;
-
-        setNewCollegeData(prev => ({
-            ...prev,
-            [target.name]: target.value
-        }));
-    }
 
     function handleNewManagerData(event: React.ChangeEvent<HTMLInputElement>) {
         const target = event.currentTarget;
@@ -57,7 +62,7 @@ function NewCollegePage() {
     }
 
     function addManagerToCollege() {
-        setNewCollegeData(prev => ({
+        setEditCollegeData(prev => ({
             ...prev,
             internalManagement: [
                 ...(prev.internalManagement || []),
@@ -69,15 +74,9 @@ function NewCollegePage() {
     }
 
     async function sendCollegeData() {
-        setNewCollegeData(prev => ({
-            ...prev,
-            collegeSeries: "",
-            contractSeries: ""
-        }));
-        
-        const response = await createCollege(newCollegeData);
-        if (response.message === "College created") {
-            alert("Informações gravadas com sucesso.")
+        const response = await updateCollege(editCollegeData);
+        if (response.message === "College updated") {
+            alert("Informações atualizadas com sucesso.")
 
             setTimeout(() => {
                 window.location.href = "/admin/colleges";
@@ -88,11 +87,11 @@ function NewCollegePage() {
     return (
         <React.Fragment>
             <div className="admin-dashboard-container">
-                <Menubar notificationCount={Number(overviewData?.unreadNotifications)}/>
-                <div className="admin-dashboard-wrapper">
+                <Menubar notificationCount={Number(overviewData?.unreadNotifications)} />
+                 <div className="admin-dashboard-wrapper">
                     <div className="form-container">
                         <div className="title-wrapper">
-                            <b>Cadastrar nova escola</b>
+                            <b>Editar escola</b>
                             <button onClick={() => {window.history.back()}}>Voltar</button>
                         </div>
 
@@ -104,55 +103,63 @@ function NewCollegePage() {
                             <div className="form-grid">
                                 <div className="input-wrapper">
                                     <label htmlFor="contract">Contrato:*</label>
-                                    <input type="text" id="contract" name="contract" onChange={handleNewCollegeData} maxLength={10}/>
+                                    <input type="text" id="contract" name="contract" maxLength={10} value={editCollegeData.contract || ""} onChange={(e) => setEditCollegeData({...editCollegeData, contract: e.target.value})}/>
                                 </div>
                                 <div className="input-wrapper">
                                     <label htmlFor="initDate">Data de Início:*</label>
-                                    <input type="date" id="initDate" name="initDate" onChange={handleNewCollegeData}/>
+                                    <input type="date" id="initDate" name="initDate" value={editCollegeData.initDate || ""} onChange={(e) => setEditCollegeData({...editCollegeData, initDate: e.target.value})}/>
                                 </div>
                                 <div className="input-wrapper">
                                     <label htmlFor="name">Nome:*</label>
-                                    <input type="text" id="name" name="name" onChange={handleNewCollegeData}/>
+                                    <input type="text" id="name" name="name" value={editCollegeData.name || ""} onChange={(e) => setEditCollegeData({...editCollegeData, name: e.target.value})}/>
                                 </div>
                                 <div className="input-wrapper">
                                     <label htmlFor="partner">Parceiro Contratante:*</label>
-                                    <input type="text" id="partner" name="partner" onChange={handleNewCollegeData}/>
+                                    <input type="text" id="partner" name="partner" value={editCollegeData.partner || ""} onChange={(e) => setEditCollegeData({...editCollegeData, partner: e.target.value})}/>
                                 </div>
                                 <div className="input-wrapper">
                                     <label htmlFor="address">Endereço:*</label>
-                                    <input type="text" id="address" name="address" onChange={handleNewCollegeData}/>
+                                    <input type="text" id="address" name="address" value={editCollegeData.address || ""} onChange={(e) => setEditCollegeData({...editCollegeData, address: e.target.value})}/>
                                 </div>
                                 <div className="input-wrapper">
                                     <label htmlFor="addressNumber">Número:*</label>
-                                    <input type="number" id="addressNumber" name="addressNumber" onChange={handleNewCollegeData}/>
+                                    <input type="number" id="addressNumber" name="addressNumber" value={editCollegeData.addressNumber || ""} onChange={(e) => setEditCollegeData({...editCollegeData, addressNumber: Number(e.target.value)})}/>
                                 </div>
                                 <div className="input-wrapper">
                                     <label htmlFor="state">Estado:*</label>
-                                    <input type="text" id="state" name="state" onChange={handleNewCollegeData}/>
+                                    <input type="text" id="state" name="state" value={editCollegeData.state || ""} onChange={(e) => setEditCollegeData({...editCollegeData, state: e.target.value})}/>
                                 </div>
                                 <div className="input-wrapper">
                                     <label htmlFor="city">Município:*</label>
-                                    <input type="text" id="city" name="city" onChange={handleNewCollegeData}/>
+                                    <input type="text" id="city" name="city" value={editCollegeData.city || ""} onChange={(e) => setEditCollegeData({...editCollegeData, city: e.target.value})}/>
                                 </div>
                                 <div className="input-wrapper">
                                     <label htmlFor="management">Regional/Gerência:*</label>
-                                    <input type="text" id="management" name="management" onChange={handleNewCollegeData}/>
+                                    <input type="text" id="management" name="management" value={editCollegeData.management || ""} onChange={(e) => setEditCollegeData({...editCollegeData, management: e.target.value})}/>
                                 </div>
                                 <div className="input-wrapper">
                                     <label htmlFor="collegeSeries">Séries da Escola:*</label>
-                                    <input type="text" id="collegeSeries" name="collegeSeries" onChange={handleNewCollegeData}/>
+                                    <input type="text" id="collegeSeries" name="collegeSeries" value={editCollegeData.collegeSeries || ""} onChange={(e) => setEditCollegeData({...editCollegeData, collegeSeries: e.target.value})}/>
                                 </div>
                                 <div className="input-wrapper">
                                     <label htmlFor="contractSeries">Séries Contratadas:*</label>
-                                    <input type="text" id="contractSeries" name="contractSeries" onChange={handleNewCollegeData}/>
+                                    <input type="text" id="contractSeries" name="contractSeries" value={editCollegeData.contractSeries || ""} onChange={(e) => setEditCollegeData({...editCollegeData, contractSeries: e.target.value})}/>
                                 </div>
                                 <div className="input-wrapper">
                                     <label htmlFor="salesManager">Comercial Responsável:*</label>
-                                    <input type="text" id="salesManager" name="salesManager" onChange={handleNewCollegeData}/>
+                                    <input type="text" id="salesManager" name="salesManager" value={editCollegeData.salesManager || ""} onChange={(e) => setEditCollegeData({...editCollegeData, salesManager: e.target.value})}/>
                                 </div>
                                 <div className="input-wrapper">
                                     <label htmlFor="consultor">Consultor Responsável:*</label>
-                                    <input type="text" id="consultor" name="consultor" onChange={handleNewCollegeData}/>
+                                    <input type="text" id="consultor" name="consultor" value={editCollegeData.consultor || ""} onChange={(e) => setEditCollegeData({...editCollegeData, consultor: e.target.value})}/>
+                                </div>
+
+                                <div className="input-wrapper">
+                                    <label htmlFor="isActive">Status da Escola:*</label>
+                                    <select id="isActive" name="isActive" value={editCollegeData.isActive ? "active" : "inactive"} onChange={(e) => setEditCollegeData({...editCollegeData, isActive: e.target.value === "active" })}>
+                                        <option value="active">Ativa</option>
+                                        <option value="inactive">Inativa</option>
+                                    </select>
                                 </div>
                             </div>
                         </div>
@@ -174,7 +181,7 @@ function NewCollegePage() {
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {  newCollegeData.internalManagement?.map((member, index) => (
+                                        {  editCollegeData.internalManagement?.map((member, index) => (
                                         <tr key={index}>
                                             <td><span>{member.name}</span></td>
                                             <td><span>{member.role}</span></td>
@@ -194,15 +201,15 @@ function NewCollegePage() {
                                 <div className="form-grid">
                                     <div className="input-wrapper">
                                         <label htmlFor="name">Nome:*</label>
-                                        <input type="text" id="name" name="name" value={newManagerData.phone || ""} onChange={handleNewManagerData}/>
+                                        <input type="text" id="name" name="name" value={newManagerData.name || ""} onChange={handleNewManagerData}/>
                                     </div>
                                     <div className="input-wrapper">
                                         <label htmlFor="role">Cargo:*</label>
-                                        <input type="text" id="role" name="role" value={newManagerData.phone || ""} onChange={handleNewManagerData} />
+                                        <input type="text" id="role" name="role" value={newManagerData.role || ""} onChange={handleNewManagerData} />
                                     </div>
                                     <div className="input-wrapper">
                                         <label htmlFor="email">Email:*</label>
-                                        <input type="text" id="email" name="email" value={newManagerData.phone || ""} onChange={handleNewManagerData} />
+                                        <input type="text" id="email" name="email" value={newManagerData.email || ""} onChange={handleNewManagerData} />
                                     </div>
                                     <div className="input-wrapper">
                                         <label htmlFor="phone">Telefone:*</label>
@@ -215,15 +222,14 @@ function NewCollegePage() {
                             </div>
                         </div>
 
-
                         <div className="button-wrapper">
-                            <button className="submit-button" onClick={sendCollegeData}>Salvar informações</button>
+                            <button className="submit-button" onClick={sendCollegeData}>Salvar alterações</button>
                         </div>
                     </div>
                 </div>
             </div>
         </React.Fragment>
-    )
+    );
 }
 
-export default NewCollegePage
+export default EditCollegePage;

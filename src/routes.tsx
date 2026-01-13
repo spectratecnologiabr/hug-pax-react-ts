@@ -18,6 +18,7 @@ import Notifications from './pages/notifications';
 import AdminDash from './pages/adminDash';
 import CollegesPage from './pages/collegesPage';
 import NewCollegePage from './pages/newCollegePage';
+import EditCollegePage from './pages/editCollegePage';
 
 function MyRoutes() {
     return (
@@ -38,6 +39,7 @@ function MyRoutes() {
                 <Route path='/admin' element={<AdminRoute><AdminDash/></AdminRoute>} />
                 <Route path='/admin/colleges' element={<AdminRoute><CollegesPage/></AdminRoute>} />
                 <Route path='/admin/colleges/add' element={<AdminRoute><NewCollegePage/></AdminRoute>} />
+                <Route path='/admin/colleges/edit/:collegeId' element={<AdminRoute><EditCollegePage/></AdminRoute>} />
             </Routes>
         </BrowserRouter>
     )

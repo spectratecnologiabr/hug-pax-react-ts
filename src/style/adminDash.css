@@ -50,7 +50,7 @@
     border-bottom: 1px solid #e5e7eb;
     cursor: pointer;
     display: flex;
-    justify-content: space-between;
+    justify-content: flex-end;
     padding: 10px;
 }
 
@@ -223,7 +223,8 @@
 
 .admin-dashboard-container .admin-dashboard-wrapper .form-container .form-wrapper input[type="text"],
 .admin-dashboard-container .admin-dashboard-wrapper .form-container .form-wrapper input[type="number"],
-.admin-dashboard-container .admin-dashboard-wrapper .form-container .form-wrapper input[type="date"] {
+.admin-dashboard-container .admin-dashboard-wrapper .form-container .form-wrapper input[type="date"],
+.admin-dashboard-container .admin-dashboard-wrapper .form-container .form-wrapper select {
     background-color: #fff;
     border: 1px solid #e5e7eb;
     border-radius: 4px;
