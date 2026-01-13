@@ -1,4 +1,5 @@
 import axios from "axios";
+import { getCookies } from "../misc/cookies.controller";
 
 export interface ICollegeProps {
     "name": string,
@@ -21,9 +22,10 @@ export async function createCollege(data: ICollegeProps) {
         data,
         {
             headers: {
-                "Content-Type": "application/json"
+                Authorization: `Bearer ${getCookies("authToken")}`
             }
         }
     );
+
     return response.data;
 }

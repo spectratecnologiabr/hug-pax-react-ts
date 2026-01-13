@@ -58,7 +58,7 @@ function Menubar(props: {notificationCount: number}) {
                     </svg>
 
 
-                    <span>Agenda e calendário</span>
+                    <span>Agenda</span>
                 </a>
 
                 <a href="#" className="menu-link">

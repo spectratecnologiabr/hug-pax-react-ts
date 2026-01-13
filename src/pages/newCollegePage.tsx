@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { getOverviewData } from "../controllers/dash/overview.controller";
 import { createCollege, ICollegeProps } from "../controllers/college/createCollege.controller";
 
@@ -14,10 +14,12 @@ type TOverviewData = {
 }
 
 function NewCollegePage() {
-    const [ overviewData, setOverviewData ] = React.useState<TOverviewData | null>(null);
-    const [ collegeData, setCollegeData ] = React.useState<ICollegeProps | null>(null);
+    const [ overviewData, setOverviewData ] = useState<TOverviewData | null>(null);
+    const [ newCollegeData, setNewCollegeData ] = useState<ICollegeProps>({} as ICollegeProps);
+    const [ created, setCreated ] = useState(false);
+    const [ createdCollegeId, setCreatedCollegeId ] = useState<number | null>(null);
 
-    React.useEffect(() => {
+    useEffect(() => {
         async function fetchOverviewData() {
             try {
                 const overviewData = await getOverviewData();
@@ -30,7 +32,28 @@ function NewCollegePage() {
         fetchOverviewData()
     }, []);
 
+    function handleNewCollegeData(event: React.ChangeEvent<HTMLInputElement>) {
+        const target = event.currentTarget;
 
+        setNewCollegeData(prev => ({
+            ...prev,
+            [target.name]: target.value
+        }));
+    }
+
+    async function sendCollegeData() {
+        setNewCollegeData(prev => ({
+            ...prev,
+            collegeSeries: [],
+            contractSeries: []
+        }));
+        
+        const response = await createCollege(newCollegeData);
+        if (response.message === "College created") {
+            setCreated(true);
+            alert("Informações gravadas com sucesso.")
+        }
+    }
 
     return (
         <React.Fragment>
@@ -51,51 +74,51 @@ function NewCollegePage() {
                             <div className="form-grid">
                                 <div className="input-wrapper">
                                     <label htmlFor="name">Nome:*</label>
-                                    <input type="text" id="name" name="name" />
+                                    <input type="text" id="name" name="name" onChange={handleNewCollegeData}/>
                                 </div>
                                 <div className="input-wrapper">
                                     <label htmlFor="partner">Parceiro Contratante:*</label>
-                                    <input type="text" id="partner" name="partner" />
+                                    <input type="text" id="partner" name="partner" onChange={handleNewCollegeData}/>
                                 </div>
                                 <div className="input-wrapper">
                                     <label htmlFor="address">Endereço:*</label>
-                                    <input type="text" id="address" name="address" />
+                                    <input type="text" id="address" name="address" onChange={handleNewCollegeData}/>
                                 </div>
                                 <div className="input-wrapper">
                                     <label htmlFor="addressNumber">Número:*</label>
-                                    <input type="number" id="addressNumber" name="addressNumber" />
+                                    <input type="number" id="addressNumber" name="addressNumber" onChange={handleNewCollegeData}/>
                                 </div>
                                 <div className="input-wrapper">
                                     <label htmlFor="state">Estado:*</label>
-                                    <input type="text" id="state" name="state" />
+                                    <input type="text" id="state" name="state" onChange={handleNewCollegeData}/>
                                 </div>
                                 <div className="input-wrapper">
                                     <label htmlFor="city">Município:*</label>
-                                    <input type="text" id="city" name="city" />
+                                    <input type="text" id="city" name="city" onChange={handleNewCollegeData}/>
                                 </div>
                                 <div className="input-wrapper">
                                     <label htmlFor="management">Regional/Gerência:*</label>
-                                    <input type="text" id="management" name="management" />
+                                    <input type="text" id="management" name="management" onChange={handleNewCollegeData}/>
                                 </div>
                                 <div className="input-wrapper">
                                     <label htmlFor="collegeSeries">Séries da Escola:*</label>
-                                    <input type="text" id="collegeSeries" name="collegeSeries" />
+                                    <input type="text" id="collegeSeries" name="collegeSeries" onChange={handleNewCollegeData}/>
                                 </div>
                                 <div className="input-wrapper">
                                     <label htmlFor="contractSeries">Séries Contratadas:*</label>
-                                    <input type="text" id="contractSeries" name="contractSeries" />
+                                    <input type="text" id="contractSeries" name="contractSeries" onChange={handleNewCollegeData}/>
                                 </div>
                                 <div className="input-wrapper">
                                     <label htmlFor="salesManager">Comercial Responsável:*</label>
-                                    <input type="text" id="salesManager" name="salesManager" />
+                                    <input type="text" id="salesManager" name="salesManager" onChange={handleNewCollegeData}/>
                                 </div>
                                 <div className="input-wrapper">
                                     <label htmlFor="coordinator">Coordenador Responsável:*</label>
-                                    <input type="text" id="coordinator" name="coordinator" />
+                                    <input type="text" id="coordinator" name="coordinator" onChange={handleNewCollegeData}/>
                                 </div>
                             </div>
                             <div className="button-wrapper">
-                                <button className="submit-button">Salvar informações</button>
+                                <button className="submit-button" onClick={sendCollegeData}>Salvar informações</button>
                             </div>
                         </div>
 
@@ -134,19 +157,19 @@ function NewCollegePage() {
                                 <div className="form-grid">
                                     <div className="input-wrapper">
                                         <label htmlFor="managerName">Nome:*</label>
-                                        <input type="text" id="managerName" name="managerName" />
+                                        <input type="text" id="managerName" name="managerName" disabled={!created} />
                                     </div>
                                     <div className="input-wrapper">
                                         <label htmlFor="managerRole">Cargo:*</label>
-                                        <input type="text" id="managerRole" name="managerRole" />
+                                        <input type="text" id="managerRole" name="managerRole" disabled={!created} />
                                     </div>
                                     <div className="input-wrapper">
                                         <label htmlFor="managerEmail">Email:*</label>
-                                        <input type="text" id="managerEmail" name="managerEmail" />
+                                        <input type="text" id="managerEmail" name="managerEmail" disabled={!created} />
                                     </div>
                                     <div className="input-wrapper">
                                         <label htmlFor="managerPhone">Telefone:*</label>
-                                        <input type="text" id="managerPhone" name="managerPhone" />
+                                        <input type="text" id="managerPhone" name="managerPhone" disabled={!created} />
                                     </div>
                                 </div>
                                 <div className="button-wrapper">
@@ -188,20 +211,20 @@ function NewCollegePage() {
                                 <div className="form-grid">
                                     <div className="input-wrapper">
                                         <label htmlFor="visitDate">Data da Visita:*</label>
-                                        <input type="date" id="visitDate" name="visitDate" />
+                                        <input type="date" id="visitDate" name="visitDate" disabled={!created}/>
                                     </div>
                                     <div className="input-wrapper">
                                         <label htmlFor="visitPhotos">Fotos:</label>
-                                        <input type="file" id="visitPhotos" name="visitPhotos" multiple />
+                                        <input type="file" id="visitPhotos" name="visitPhotos" multiple disabled={!created}/>
                                     </div>
                                     <div className="input-wrapper">
                                         <label htmlFor="visitNotes">Observações:*</label>
-                                        <input type="file" name="visitNotes" id="visitNotes" />
+                                        <input type="file" name="visitNotes" id="visitNotes" disabled={!created} />
                                         <small>Importe suas observações preenchendo um documento word ou bloco de notas</small>
                                     </div>
                                 </div>
                                 <div className="button-wrapper">
-                                    <button className="submit-button">Adicionar visita</button>
+                                    <button className="submit-button" disabled={!created}>Adicionar visita</button>
                                 </div>
                             </div>
                         </div>
@@ -239,20 +262,20 @@ function NewCollegePage() {
                                 <div className="form-grid">
                                     <div className="input-wrapper">
                                         <label htmlFor="visitDate">Data:*</label>
-                                        <input type="date" id="visitDate" name="visitDate" />
+                                        <input type="date" id="visitDate" name="visitDate" disabled={!created} />
                                     </div>
                                     <div className="input-wrapper">
                                         <label htmlFor="visitPhotos">Fotos:</label>
-                                        <input type="file" id="visitPhotos" name="visitPhotos" multiple />
+                                        <input type="file" id="visitPhotos" name="visitPhotos" multiple disabled={!created} />
                                     </div>
                                     <div className="input-wrapper">
                                         <label htmlFor="visitNotes">Documento:*</label>
-                                        <input type="file" name="visitNotes" id="visitNotes" />
+                                        <input type="file" name="visitNotes" id="visitNotes" disabled={!created} />
                                         <small>Importe seu relatório preenchendo um documento word ou bloco de notas</small>
                                     </div>
                                 </div>
                                 <div className="button-wrapper">
-                                    <button className="submit-button">Adicionar relatório</button>
+                                    <button className="submit-button"disabled={!created}>Adicionar relatório</button>
                                 </div>
                             </div>
                         </div>
