@@ -43,7 +43,7 @@
     transition: ease-in-out .3s all;
 }
 
-.admin-menubar .menu-wrapper .menu-link:hover {
+.admin-menubar .menu-wrapper .menu-link:hover, .admin-menubar .menu-wrapper .menu-link.selected {
     background-color: #3696D3;
     border: 1px solid #ffffff;
 }
