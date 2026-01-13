@@ -9,8 +9,8 @@ export interface ICollegeProps {
     "state": string,
     "city": string,
     "management": string,
-    "collegeSeries": any[],
-    "contractSeries": any[],
+    "collegeSeries": string,
+    "contractSeries": string,
     "salesManager": string,
     "coordinator": string,
     "internalManagement": any[]

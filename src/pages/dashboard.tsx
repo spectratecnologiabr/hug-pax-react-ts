@@ -16,7 +16,6 @@ import alunoIcon from "../img/dash/aluno-icon.svg";
 
 import "../style/dash.css";
 import Footer from "../components/footer";
-import PageSelector from "../components/pageSelector";
 
 type TUser = {
     id: number,
@@ -292,8 +291,6 @@ function Dashboard() {
             </div>
             <Feed/>
         </div>
-
-        <PageSelector />
         <Footer />
         </React.Fragment>
     )

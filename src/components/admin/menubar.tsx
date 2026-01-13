@@ -69,7 +69,7 @@ function Menubar(props: {notificationCount: number}) {
                     <span>Relatórios</span>
                 </a>
 
-                <PageSelector title/>
+                <PageSelector/>
 
                  <a href="#" className="menu-link">
                     <svg height="20" viewBox="0 0 24 26" fill="none" xmlns="http://www.w3.org/2000/svg">
