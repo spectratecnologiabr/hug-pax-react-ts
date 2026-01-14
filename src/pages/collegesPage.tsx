@@ -28,7 +28,8 @@ type TCollege = {
     contractSeries: any[],
     internalManagement: any[],
     visits: any[],
-    reports: any[]
+    reports: any[],
+    educatorsLength: number
 }
 
 function CollegesPage() {
@@ -93,7 +94,7 @@ function CollegesPage() {
                                                 <td><span>{college.name.toLocaleUpperCase()}</span></td>
                                                 <td><span>{college.city.toLocaleUpperCase()} - {college.state.toLocaleUpperCase()}</span></td>
                                                 <td><span>{college.partner.toLocaleUpperCase()}</span></td>
-                                                <td><span>{college.internalManagement.length}</span></td>
+                                                <td><span>{college.educatorsLength}</span></td>
                                                 <td><span>{college.contractSeries ? college.contractSeries.toString().split(',').filter(item => item.trim() !== '').length : 0}</span></td>
                                                 <td className="buttons-cell">
                                                     <button className="edit-button" title="Editar" data-college-id={college.id} onClick={handleEditCollege}>
