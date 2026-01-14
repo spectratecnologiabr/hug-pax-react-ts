@@ -1,0 +1,56 @@
+.admin-date-picker {
+  grid-column: span 3;
+  width: 100%;
+  background: #fff;
+  border-radius: 16px;
+  padding: 16px;
+  font-family: 'SF UI Display Medium';
+  box-shadow: 0 12px 30px rgba(0,0,0,.12);
+}
+
+.date-display {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 12px;
+  text-align: center;
+}
+
+.react-datepicker {
+  border: none;
+  width: 100%;
+  font-family: inherit;
+}
+
+.react-datepicker__header {
+  background: none;
+  border-bottom: none;
+}
+
+.react-datepicker__month-container {
+  width: 100%;
+}
+
+.react-datepicker__current-month {
+  font-weight: 600;
+}
+
+.react-datepicker__day-name,
+.react-datepicker__day {
+  width: calc(100% / 7);
+  line-height: 40px;
+  margin: 0;
+  text-align: center;
+}
+
+.react-datepicker__day--selected {
+  background: #5ba4f8;
+  border-radius: 8px;
+}
+
+.react-datepicker__day:hover {
+  border-radius: 8px;
+}
+
+.react-datepicker__week {
+  display: flex;
+}

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { getOverviewData } from "../controllers/dash/overview.controller";
 
 import Menubar from "../components/admin/menubar";
-import FastLinks from "../components/dash/fastLinks";
+import AdminDatePicker from "../components/admin/AdminDatePicker";
 
 import "../style/adminDash.css";
 
@@ -14,6 +14,7 @@ type TOverviewData = {
 }
 
 function AdminDash() {
+    const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
     const [ overviewData, setOverviewData ] = useState<TOverviewData | null>(null);
 
     useEffect(() => {
@@ -35,17 +36,7 @@ function AdminDash() {
                 <Menubar notificationCount={Number(overviewData?.unreadNotifications)}/>
                 <div className="admin-dashboard-wrapper">
                     <div className="main-dash-wrapper">
-                        <div className="registered-colleges">
-                            <b>11</b>
-                            <span>Escolas <br />Cadastradas</span>
-                        </div>
-
-                        <div className="registered-educators">
-                            <b>30</b>
-                            <span>Educadores <br />Cadastrados</span>
-                        </div>
-
-                        <FastLinks/>
+                        <AdminDatePicker selectedDate={selectedDate} onChange={setSelectedDate} />
                     </div>
                 </div>
             </div>
