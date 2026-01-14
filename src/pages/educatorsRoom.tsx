@@ -8,7 +8,7 @@ import 'react-circular-progressbar/dist/styles.css';
 import { listCourses } from "../controllers/course/listCourses.controller";
 import { getOverviewData } from "../controllers/dash/overview.controller";
 
-import "../style/educatorsPage.css";
+import "../style/educatorsRoomPage.css";
 
 type TCourse = {
     id: number,
@@ -28,7 +28,7 @@ type TOverviewData = {
     unreadNotifications: number
 }
 
-function EducatorsPage() {
+function EducatorsRoom() {
     const [courses, setCourses] = useState<TCourse[]>([]);
     const [statusFilter, setStatusFilter] = useState("");
     const [orderFilter, setOrderFilter] = useState("");
@@ -165,4 +165,4 @@ function EducatorsPage() {
     )
 }
 
-export default EducatorsPage
+export default EducatorsRoom
