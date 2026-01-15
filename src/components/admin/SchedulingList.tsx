@@ -2,12 +2,15 @@ import React, { useState, useEffect } from "react";
 import { listSchedulings } from "../../controllers/consultant/listSchedulings.controller";
 
 import NewSchedulingForm from "./NewSchedulingForm";
+import ViewSchedulingForm from "./ViewSchedulingForm";
 
 import "../../style/schedulingList.css";
 
 function SchedulingList(props: { selectedDate?: string }) {
     const [ schedulings, setSchedulings ] = useState([] as any[]);
     const [ newSchedulingFormOpened, setNewSchedulingFormOpened ] = useState<boolean>(false);
+    const [ viewSchedulingFormOpened, setViewSchedulingFormOpened ] = useState<boolean>(false);
+    const [ openedSchedulingId, setOpenedSchedulingId ] = useState(0);
 
     useEffect(() => {
         const fetchSchedulings = async () => {
@@ -26,6 +29,11 @@ function SchedulingList(props: { selectedDate?: string }) {
 
         fetchSchedulings();
     }, [props.selectedDate]);
+
+    function viewScheduling(event: React.MouseEvent<HTMLButtonElement>) {
+        setOpenedSchedulingId(Number(event.currentTarget.dataset.schedulingId));
+        setViewSchedulingFormOpened(true)
+    }
 
     return (
         <React.Fragment>
@@ -59,7 +67,7 @@ function SchedulingList(props: { selectedDate?: string }) {
                                         </b>
                                         <p>{new Date(scheduling.visit_date).toLocaleDateString('pt-BR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })} | {new Date(scheduling.init_visit_time).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} - {new Date(scheduling.end_visit_time).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</p>
                                     </div>
-                                    <button data-scheduling-id={scheduling.id}>
+                                    <button data-scheduling-id={scheduling.id} onClick={viewScheduling}>
                                         Ver
                                     </button>
                                 </div>
@@ -74,6 +82,9 @@ function SchedulingList(props: { selectedDate?: string }) {
                 opened={newSchedulingFormOpened}
                 onClose={() => setNewSchedulingFormOpened(false)}
             />
+
+            <ViewSchedulingForm opened={viewSchedulingFormOpened} onClose={() => setViewSchedulingFormOpened(false)} visitId={openedSchedulingId}/>
+
         </React.Fragment>
     );
 }

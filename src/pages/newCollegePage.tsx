@@ -194,15 +194,15 @@ function NewCollegePage() {
                                 <div className="form-grid">
                                     <div className="input-wrapper">
                                         <label htmlFor="name">Nome:*</label>
-                                        <input type="text" id="name" name="name" value={newManagerData.phone || ""} onChange={handleNewManagerData}/>
+                                        <input type="text" id="name" name="name" value={newManagerData.name || ""} onChange={handleNewManagerData}/>
                                     </div>
                                     <div className="input-wrapper">
                                         <label htmlFor="role">Cargo:*</label>
-                                        <input type="text" id="role" name="role" value={newManagerData.phone || ""} onChange={handleNewManagerData} />
+                                        <input type="text" id="role" name="role" value={newManagerData.role || ""} onChange={handleNewManagerData} />
                                     </div>
                                     <div className="input-wrapper">
                                         <label htmlFor="email">Email:*</label>
-                                        <input type="text" id="email" name="email" value={newManagerData.phone || ""} onChange={handleNewManagerData} />
+                                        <input type="text" id="email" name="email" value={newManagerData.email || ""} onChange={handleNewManagerData} />
                                     </div>
                                     <div className="input-wrapper">
                                         <label htmlFor="phone">Telefone:*</label>

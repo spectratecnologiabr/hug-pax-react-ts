@@ -43,12 +43,12 @@ type TScheduling = {
 }
 
 function NewSchedulingForm(props: { opened: boolean; onClose: () => void }) {
-    const [ colleges, setColleges ] = useState<Array<TCollege>>([]);
+    const [ colleges, setColleges ] = useState<Array<TCollege>>([])
     const [ consultants, setConsultants ] = useState<Array<any>>([])
-    const [ selectedCollege, setSelectedCollege ] = useState<TCollege | null>(null);
-    const [ selectedGuests, setSelectedGuests ] = useState<string[]>([]);
-    const [ schedulingData, setSchedulingData ] = useState<Partial<TScheduling>>({});
-    const [ userId, setUserId ] = useState<number>(0);
+    const [ selectedCollege, setSelectedCollege ] = useState<TCollege | null>(null)
+    const [ selectedGuests, setSelectedGuests ] = useState<string[]>([])
+    const [ schedulingData, setSchedulingData ] = useState<Partial<TScheduling>>({})
+    const [ userId, setUserId ] = useState<number>(0)
 
     useEffect(() => {
         async function fetchColleges() {
@@ -75,7 +75,7 @@ function NewSchedulingForm(props: { opened: boolean; onClose: () => void }) {
                 console.log(sessionData.session.sub);
                 setUserId(sessionData.session.sub);
             } catch (error) {
-                console.log("Error fetching userData:", error)
+                console.error("Error fetching userData:", error)
             }
         }
 
@@ -123,8 +123,6 @@ function NewSchedulingForm(props: { opened: boolean; onClose: () => void }) {
             guestConsultants: selectedGuests,
             schedulingObservations: schedulingData.schedulingObservations || ""
         };
-
-        console.log(payload);
 
         await createScheduling(payload)
                 .then(response => {
