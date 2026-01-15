@@ -1,0 +1,110 @@
+.scheduling-form-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.scheduling-form-container.visible {
+    display: flex;
+}
+
+.scheduling-form {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    width: 500px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.scheduling-form .scheduling-header {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.scheduling-form .scheduling-header button {
+    background-color: #3696D3;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    padding: 5px 15px;
+    font-family: 'SF UI Display Medium';
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.scheduling-form .scheduling-header button:hover {
+    background-color: #2a78b5;
+}
+
+.scheduling-form .scheduling-header b {
+    font-size: 16px;
+    font-family: 'SF UI Display Semibold';
+}
+
+.scheduling-form .scheduling-body {
+    display: flex;
+    flex-direction: column;
+}
+
+.scheduling-form .scheduling-body .form-wrapper, .scheduling-form .scheduling-body .form-wrapper.container div {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 5px;
+    width: -webkit-fill-available;
+}
+
+.scheduling-form .scheduling-body .form-wrapper.container {
+    flex-direction: row;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.scheduling-form .scheduling-body .form-wrapper label {
+    font-size: 14px;
+    margin-bottom: 4px;
+    font-family: 'SF UI Display Medium';
+}
+
+.scheduling-form .scheduling-body .form-wrapper input,
+.scheduling-form .scheduling-body .form-wrapper select,
+.scheduling-form .scheduling-body .form-wrapper textarea {
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-family: 'SF UI Display Medium';
+    background-color: #f9f9f9;
+}
+
+.scheduling-form .scheduling-body .form-wrapper input:focus,
+.scheduling-form .scheduling-body .form-wrapper select:focus,
+.scheduling-form .scheduling-body .form-wrapper textarea:focus {
+    border-color: #3696D3;
+    outline: none;
+    background-color: #fff;
+}
+
+.scheduling-form .scheduling-body .form-wrapper textarea {
+    resize: none;
+}
+
+.scheduling-form .scheduling-body .form-wrapper button {
+    background-color: #3696D3;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    padding: 10px 20px;
+    font-family: 'SF UI Display Medium';
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    margin-top: 10px;
+}
