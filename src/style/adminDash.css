@@ -8,7 +8,7 @@
 
 .admin-dashboard-container .admin-dashboard-wrapper .main-dash-wrapper {
     display: grid;
-    grid-template-columns: repeat(8, 1fr);
+    grid-template-columns: repeat(9, 1fr);
     grid-auto-rows: 40px;
     gap: 25px;
     width: 100%;

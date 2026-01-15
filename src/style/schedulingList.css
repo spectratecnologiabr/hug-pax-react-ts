@@ -1,0 +1,80 @@
+.scheduling-container {
+    grid-column: span 4;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.scheduling-container button.new-scheduling-button {
+    align-self: flex-end;
+    background-color: #3696D3;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    padding: 10px 16px;
+    font-family: 'SF UI Display Medium';
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.scheduling-container button.new-scheduling-button:hover {
+    background-color: #2a78b5;
+}
+
+.scheduling-list {
+    width: 100%;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    padding: 16px;
+    height: fit-content;
+}
+
+.scheduling-list .scheduling-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 12px 0;
+    border-bottom: 1px solid #eee;
+}
+
+.scheduling-list .scheduling-item div {
+    display: flex;
+    flex-direction: column;
+}
+
+.scheduling-list .scheduling-item div b {
+    font-size: 16px;
+    margin-bottom: 4px;
+    font-family: 'SF UI Display Semibold';
+}
+
+.scheduling-list .scheduling-item div p {
+    font-size: 14px;
+    color: #666;
+    font-family: 'SF UI Display Medium';
+}
+
+.scheduling-list .scheduling-item button {
+    background-color: #3696D3;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    padding: 8px 12px;
+    font-family: 'SF UI Display Medium';
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.scheduling-list .scheduling-item button:hover {
+    background-color: #2a78b5;
+}
+
+.scheduling-list .scheduling-item:last-child {
+    border-bottom: none;
+}
+
+@media (max-width: 1550px) {
+    .scheduling-container {
+        grid-column: span 3;    
+    }
+}

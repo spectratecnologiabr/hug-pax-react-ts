@@ -3,6 +3,8 @@ import { getOverviewData } from "../controllers/dash/overview.controller";
 
 import Menubar from "../components/admin/menubar";
 import AdminDatePicker from "../components/admin/AdminDatePicker";
+import SchedulingList from "../components/admin/SchedulingList";
+import Feed from "../components/admin/feed";
 
 import "../style/adminDash.css";
 
@@ -14,7 +16,7 @@ type TOverviewData = {
 }
 
 function AdminDash() {
-    const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
+    const [selectedDate, setSelectedDate] = useState<Date>(new Date());
     const [ overviewData, setOverviewData ] = useState<TOverviewData | null>(null);
 
     useEffect(() => {
@@ -30,13 +32,19 @@ function AdminDash() {
         fetchOverviewData()
     }, []);
 
+    function handleDateChange(date: Date | null) {
+        setSelectedDate(date || new Date());
+    }
+
     return (
         <React.Fragment>
             <div className="admin-dashboard-container">
                 <Menubar notificationCount={Number(overviewData?.unreadNotifications)}/>
                 <div className="admin-dashboard-wrapper">
                     <div className="main-dash-wrapper">
-                        <AdminDatePicker selectedDate={selectedDate} onChange={setSelectedDate} />
+                        <AdminDatePicker selectedDate={selectedDate} onChange={handleDateChange} />
+                        <SchedulingList selectedDate={selectedDate.toISOString()} />
+                        <Feed />
                     </div>
                 </div>
             </div>
