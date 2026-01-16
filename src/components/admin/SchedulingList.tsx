@@ -11,6 +11,7 @@ function SchedulingList(props: { selectedDate?: string }) {
     const [ newSchedulingFormOpened, setNewSchedulingFormOpened ] = useState<boolean>(false);
     const [ viewSchedulingFormOpened, setViewSchedulingFormOpened ] = useState<boolean>(false);
     const [ openedSchedulingId, setOpenedSchedulingId ] = useState(0);
+    const [refreshKey, setRefreshKey] = useState(0);
 
     useEffect(() => {
         const fetchSchedulings = async () => {
@@ -28,7 +29,7 @@ function SchedulingList(props: { selectedDate?: string }) {
         };
 
         fetchSchedulings();
-    }, [props.selectedDate]);
+    }, [props.selectedDate, refreshKey]);
 
     function viewScheduling(event: React.MouseEvent<HTMLButtonElement>) {
         setOpenedSchedulingId(Number(event.currentTarget.dataset.schedulingId));
@@ -48,7 +49,7 @@ function SchedulingList(props: { selectedDate?: string }) {
                                 </div>
                         ) : (
                             schedulings.map((scheduling: any) => (
-                                <div className="scheduling-item" key={scheduling.id}>
+                                <div className={(scheduling.status === "cancelled") ? "scheduling-item cancelled" : "scheduling-item"} key={scheduling.id}>
                                     <div>
                                         <b>
                                             {scheduling.college_name} | {scheduling.city}
@@ -83,7 +84,12 @@ function SchedulingList(props: { selectedDate?: string }) {
                 onClose={() => setNewSchedulingFormOpened(false)}
             />
 
-            <ViewSchedulingForm opened={viewSchedulingFormOpened} onClose={() => setViewSchedulingFormOpened(false)} visitId={openedSchedulingId}/>
+            <ViewSchedulingForm
+                opened={viewSchedulingFormOpened}
+                onClose={() => setViewSchedulingFormOpened(false)}
+                visitId={openedSchedulingId}
+                onCancelled={() => setRefreshKey(prev => prev + 1)}
+            />
 
         </React.Fragment>
     );

@@ -69,10 +69,16 @@
     gap: 10px;
 }
 
-.scheduling-form .scheduling-body .form-wrapper label {
+.scheduling-form .scheduling-body .form-wrapper label, .scheduling-form .scheduling-body .form-wrapper span {
     font-size: 14px;
     margin-bottom: 4px;
     font-family: 'SF UI Display Medium';
+}
+
+.scheduling-form .scheduling-body .form-wrapper b {
+    font-size: 14px;
+    margin-bottom: 4px;
+    font-family: 'SF UI Display Bold';
 }
 
 .scheduling-form .scheduling-body .form-wrapper input,
@@ -98,7 +104,6 @@
 }
 
 .scheduling-form .scheduling-body .form-wrapper button {
-    background-color: #3696D3;
     color: #fff;
     border: none;
     border-radius: 4px;
@@ -107,4 +112,36 @@
     cursor: pointer;
     transition: background-color 0.3s ease;
     margin-top: 10px;
+}
+
+.scheduling-form .scheduling-body .form-wrapper button.submit-button {
+    background-color: #3696D3;
+}
+
+.scheduling-form .scheduling-body .form-wrapper button.submit-button:hover {
+    background-color: #2a78b5;
+}
+
+.scheduling-form .scheduling-body .form-wrapper button.rescheduling-button {
+    background-color: #fabf04;
+}
+
+.scheduling-form .scheduling-body .form-wrapper button.rescheduling-button:hover {
+    background-color: #dba803;
+}
+
+.scheduling-form .scheduling-body .form-wrapper button.go-button {
+    background-color: #22b1af;
+}
+
+.scheduling-form .scheduling-body .form-wrapper button.go-button:hover {
+    background-color: #1b9391;
+}
+
+.scheduling-form .scheduling-body .form-wrapper button.cancel-button {
+    background-color: #ea6c1d;
+}
+
+.scheduling-form .scheduling-body .form-wrapper button.cancel-button:hover {
+    background-color: #c55a18;
 }

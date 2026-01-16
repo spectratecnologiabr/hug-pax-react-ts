@@ -48,6 +48,11 @@
     font-family: 'SF UI Display Semibold';
 }
 
+.scheduling-list .scheduling-item.cancelled div b {
+    text-decoration: line-through;
+    color: #666;
+}
+
 .scheduling-list .scheduling-item div p {
     font-size: 14px;
     color: #666;

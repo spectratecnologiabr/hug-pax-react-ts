@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { getCookies, setCookie } from "../controllers/misc/cookies.controller";
+import { getCookies } from "../controllers/misc/cookies.controller";
 import imageCompression from "browser-image-compression";
 import updateUser from "../controllers/user/updateUser.controller";
 import updatePassword from "../controllers/user/updatePassword.controller";
