@@ -1,10 +1,35 @@
 import React, { useState, useEffect } from "react";
 import { findVisit } from "../../controllers/consultant/findVisit.controller";
+import { updateVisit } from "../../controllers/consultant/updateVisit.controller";
 
 import PopupCancelVisit from "./popupCancelVisit";
 import PopupReschedulingVisit from "./popupReschedulingVisit";
+import PopupInitRoute from "./popupInitRoute";
 
 import "../../style/schedulingForm.css";
+
+function getCurrentLocation(): Promise<{ lat: number; lng: number }> {
+    return new Promise((resolve, reject) => {
+        if (!navigator.geolocation) {
+            reject("Geolocalização não suportada");
+            return;
+        }
+
+        navigator.geolocation.getCurrentPosition(
+            position => {
+                resolve({
+                    lat: position.coords.latitude,
+                    lng: position.coords.longitude
+                });
+            },
+            () => reject("Permissão de localização negada"),
+            {
+                enableHighAccuracy: true,
+                timeout: 10000
+            }
+        );
+    });
+}
 
 type TScheduling = {
     id: number,
@@ -47,6 +72,7 @@ function ViewSchedulingForm(props: {
     const [ schedulingData, setSchedulingData ] = useState<Partial<TScheduling>>({})
     const [isCancelPopupOpen, setIsCancelPopupOpen] = useState(false);
     const [isReschedulingPopupOpen, setIsReschedulingPopupOpen] = useState(false);
+    const [isInitRoutePopupOpen, setIsInitRoutePopupOpen] = useState(false)
 
     useEffect(() => {
         async function getVisitData() {
@@ -71,6 +97,34 @@ function ViewSchedulingForm(props: {
     function formatTime(value?: string) {
       if (!value) return "";
       return value.split("T")[1]?.substring(0, 5) || "";
+    }
+
+    async function handleInitVisit() {
+        try {
+            const { lat, lng } = await getCurrentLocation();
+
+            const now = new Date();
+            const formattedDateTime = new Date(
+                now.getTime() - now.getTimezoneOffset() * 60000
+            )
+                .toISOString()
+                .replace("T", " ")
+                .substring(0, 19);
+
+            const payload = {
+                endRouteTime: formattedDateTime,
+                endRouteCoordinates: JSON.stringify({ lat, lng }),
+                initVisitTime: formattedDateTime,
+                status: "in progress"
+            };
+
+           await updateVisit(props.visitId, payload);
+
+            alert("Visita iniciada!");
+            props.onClose();
+        } catch {
+            alert("Não foi possível iniciar a visita. Verifique a localização.");
+        }
     }
 
     return (
@@ -149,20 +203,21 @@ function ViewSchedulingForm(props: {
                             <textarea id="schedulingObservations" className="schedulingObservations" rows={4} value={schedulingData.schedulingObservations} disabled></textarea>
                         </div>
                         <div className="form-wrapper container">
-                            <button className="rescheduling-button" onClick={() => setIsReschedulingPopupOpen(true)}>Reagendar</button>
-                            <button className="go-button">Iniciar Deslocamento</button>
-                            <button
-                                className="cancel-button"
-                                onClick={() => setIsCancelPopupOpen(true)}
-                            >
-                                Cancelar
-                            </button>
+                            {
+                                (schedulingData.status !== "on course") ? 
+                                <React.Fragment>
+                                    <button className="rescheduling-button" onClick={() => setIsReschedulingPopupOpen(true)}>Reagendar</button>
+                                    <button className="go-button" onClick={() => setIsInitRoutePopupOpen(true)}>Iniciar Deslocamento</button>
+                                    <button className="cancel-button" onClick={() => setIsCancelPopupOpen(true)}>Cancelar</button>
+                                </React.Fragment>
+                                 : <button className="go-button" onClick={handleInitVisit}>Iniciar Visita</button>
+                            }
                         </div>
                     </div>
                 </div>
             </div>
             <PopupCancelVisit opened={isCancelPopupOpen} onClose={() => { setIsCancelPopupOpen(false); props.onClose(); }} onCancelled={props.onCancelled} visitId={props.visitId} />
-
+            <PopupInitRoute opened={isInitRoutePopupOpen} onClose={() => { setIsInitRoutePopupOpen(false); props.onClose() }} visitId={props.visitId} />
             <PopupReschedulingVisit opened={isReschedulingPopupOpen} onClose={() => { setIsReschedulingPopupOpen(false); props.onClose(); }} onRescheduled={props.onRescheduled} visitId={props.visitId} lastVisitDate={schedulingData.visitDate || ""} lastReschedulingCount={Number(schedulingData.reschedulingAmount)} />
         </React.Fragment>
     )

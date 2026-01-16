@@ -36,6 +36,12 @@ function SchedulingList(props: { selectedDate?: string }) {
         setViewSchedulingFormOpened(true)
     }
 
+    function openVisitForm(event: React.MouseEvent<HTMLButtonElement>) {
+        const visitId = event.currentTarget.dataset.schedulingId;
+
+        alert("Abrir formulário para Visita id=" + visitId);
+    }
+
     return (
         <React.Fragment>
             <div className="scheduling-container">
@@ -58,6 +64,7 @@ function SchedulingList(props: { selectedDate?: string }) {
                                                     const statusMap: Record<string, string> = {
                                                         scheduled: "Agendado",
                                                         rescheduled: "Reagendado",
+                                                        "on course": "A caminho",
                                                         "in progress": "Em andamento",
                                                         cancelled: "Cancelado",
                                                         completed: "Concluído",
@@ -71,11 +78,15 @@ function SchedulingList(props: { selectedDate?: string }) {
 
                                     {
 
-                                        scheduling.status !== "cancelled" ? 
+                                        scheduling.status === "in progress" ? (
+                                            <button data-scheduling-id={scheduling.id} onClick={openVisitForm}>
+                                                Abrir
+                                            </button>
+                                        ) : scheduling.status !== "cancelled" ? (
                                             <button data-scheduling-id={scheduling.id} onClick={viewScheduling}>
                                                 Ver
                                             </button>
-                                        : ""
+                                        ) : ""
                                     }
                                 </div>
                             ))
@@ -92,7 +103,7 @@ function SchedulingList(props: { selectedDate?: string }) {
 
             <ViewSchedulingForm
                 opened={viewSchedulingFormOpened}
-                onClose={() => setViewSchedulingFormOpened(false)}
+                onClose={() => { setViewSchedulingFormOpened(false); setRefreshKey(prev => prev + 1)}}
                 visitId={openedSchedulingId}
                 onCancelled={() => setRefreshKey(prev => prev + 1)}
                 onRescheduled={() => setRefreshKey(prev => prev + 1)}
