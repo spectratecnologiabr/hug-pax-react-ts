@@ -39,7 +39,7 @@ function SchedulingList(props: { selectedDate?: string }) {
     function openVisitForm(event: React.MouseEvent<HTMLButtonElement>) {
         const visitId = event.currentTarget.dataset.schedulingId;
 
-        alert("Abrir formulário para Visita id=" + visitId);
+        window.location.pathname = `/admin/consultant/visit/${visitId}`
     }
 
     return (

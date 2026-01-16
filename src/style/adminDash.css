@@ -197,9 +197,20 @@
     font-size: 16px;
 }
 
+.admin-dashboard-container .admin-dashboard-wrapper .form-container .form-wrapper .sub-title-wrapper {
+    font-family: 'SF UI Display Semibold';
+    font-size: 16px;
+}
+
 .admin-dashboard-container .admin-dashboard-wrapper .form-container .form-wrapper .form-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 15px;
+}
+
+.admin-dashboard-container .admin-dashboard-wrapper .form-container .form-wrapper .form-grid.list {
+    display: flex;
+    flex-direction: column;
     gap: 15px;
 }
 

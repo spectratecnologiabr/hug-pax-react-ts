@@ -22,6 +22,7 @@ import EditCollegePage from './pages/editCollegePage';
 import EducatorsList from './pages/educatorsList';
 import NewEducatorPage from './pages/newEducatorPage';
 import EditEducatorPage from './pages/editEducatorPage';
+import VisitFormAnswers from './pages/visitFormAnswers';
 
 function MyRoutes() {
     return (
@@ -46,6 +47,7 @@ function MyRoutes() {
                 <Route path='/admin/educators' element={<AdminRoute><EducatorsList/></AdminRoute>} />
                 <Route path='/admin/educators/add' element={<AdminRoute><NewEducatorPage/></AdminRoute>} />
                 <Route path='/admin/educators/edit/:educatorId' element={<AdminRoute><EditEducatorPage/></AdminRoute>} />
+                <Route path='/admin/consultant/visit/:visitId' element={<AdminRoute><VisitFormAnswers/></AdminRoute>} />
             </Routes>
         </BrowserRouter>
     )
