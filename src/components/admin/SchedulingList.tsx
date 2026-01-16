@@ -68,9 +68,15 @@ function SchedulingList(props: { selectedDate?: string }) {
                                         </b>
                                         <p>{new Date(scheduling.visit_date).toLocaleDateString('pt-BR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })} | {new Date(scheduling.init_visit_time).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} - {new Date(scheduling.end_visit_time).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</p>
                                     </div>
-                                    <button data-scheduling-id={scheduling.id} onClick={viewScheduling}>
-                                        Ver
-                                    </button>
+
+                                    {
+
+                                        scheduling.status !== "cancelled" ? 
+                                            <button data-scheduling-id={scheduling.id} onClick={viewScheduling}>
+                                                Ver
+                                            </button>
+                                        : ""
+                                    }
                                 </div>
                             ))
                         )
