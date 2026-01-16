@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { findVisit } from "../../controllers/consultant/findVisit.controller";
 
 import PopupCancelVisit from "./popupCancelVisit";
+import PopupReschedulingVisit from "./popupReschedulingVisit";
 
 import "../../style/schedulingForm.css";
 
@@ -40,10 +41,12 @@ function ViewSchedulingForm(props: {
     opened: boolean; 
     onClose: () => void; 
     onCancelled: () => void;
+    onRescheduled: () => void;
     visitId: number 
 }) {
     const [ schedulingData, setSchedulingData ] = useState<Partial<TScheduling>>({})
     const [isCancelPopupOpen, setIsCancelPopupOpen] = useState(false);
+    const [isReschedulingPopupOpen, setIsReschedulingPopupOpen] = useState(false);
 
     useEffect(() => {
         async function getVisitData() {
@@ -51,12 +54,14 @@ function ViewSchedulingForm(props: {
                 const visitData = await findVisit(props.visitId);
                 setSchedulingData(visitData);
             } catch (error) {
-                console.error("Error fetching visit data:", error)
+                console.error("Error fetching visit data:", error);
             }
         }
 
-        getVisitData()
-    })
+        if (props.opened && props.visitId) {
+            getVisitData();
+        }
+    }, [props.opened, props.visitId]);
 
     function formatDate(value?: string) {
       if (!value) return "";
@@ -144,7 +149,7 @@ function ViewSchedulingForm(props: {
                             <textarea id="schedulingObservations" className="schedulingObservations" rows={4} value={schedulingData.schedulingObservations} disabled></textarea>
                         </div>
                         <div className="form-wrapper container">
-                            <button className="rescheduling-button">Reagendar</button>
+                            <button className="rescheduling-button" onClick={() => setIsReschedulingPopupOpen(true)}>Reagendar</button>
                             <button className="go-button">Iniciar Deslocamento</button>
                             <button
                                 className="cancel-button"
@@ -156,15 +161,9 @@ function ViewSchedulingForm(props: {
                     </div>
                 </div>
             </div>
-            <PopupCancelVisit
-                opened={isCancelPopupOpen}
-                onClose={() => {
-                    setIsCancelPopupOpen(false);
-                    props.onClose();
-                }}
-                onCancelled={props.onCancelled}
-                visitId={props.visitId}
-            />
+            <PopupCancelVisit opened={isCancelPopupOpen} onClose={() => { setIsCancelPopupOpen(false); props.onClose(); }} onCancelled={props.onCancelled} visitId={props.visitId} />
+
+            <PopupReschedulingVisit opened={isReschedulingPopupOpen} onClose={() => { setIsReschedulingPopupOpen(false); props.onClose(); }} onRescheduled={props.onRescheduled} visitId={props.visitId} lastVisitDate={schedulingData.visitDate || ""} lastReschedulingCount={Number(schedulingData.reschedulingAmount)} />
         </React.Fragment>
     )
 }

@@ -95,6 +95,7 @@ function SchedulingList(props: { selectedDate?: string }) {
                 onClose={() => setViewSchedulingFormOpened(false)}
                 visitId={openedSchedulingId}
                 onCancelled={() => setRefreshKey(prev => prev + 1)}
+                onRescheduled={() => setRefreshKey(prev => prev + 1)}
             />
 
         </React.Fragment>
