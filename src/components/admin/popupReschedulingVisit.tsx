@@ -5,6 +5,8 @@ import "../../style/schedulingForm.css";
 
 type TReschedulingInfo = {
     visitDate: string,
+    initVisitTime: string,
+    endVisitTime: string,
     lastVisitDate: string,
     lastReschedulingReason: string,
     reschedulingAmount: number,
@@ -21,6 +23,8 @@ function PopupReschedulingVisit(props: {
 }) {
     const [ updateData, setUpdateData ] = useState<TReschedulingInfo>({ 
         visitDate: "", 
+        initVisitTime: "",
+        endVisitTime: "",
         lastVisitDate: props.lastVisitDate,
         lastReschedulingReason: "", 
         reschedulingAmount: Number(props.lastReschedulingCount + 1), 
@@ -50,7 +54,21 @@ function PopupReschedulingVisit(props: {
     }
 
     async function rescheduleVisit() {
-        await updateVisit(props.visitId, updateData)
+        if (!updateData.visitDate || !updateData.initVisitTime || !updateData.endVisitTime) {
+            alert("Preencha a data e os horários antes de confirmar.");
+            return;
+        }
+
+        const initDateTime = `${updateData.visitDate} ${updateData.initVisitTime}:00`;
+        const endDateTime = `${updateData.visitDate} ${updateData.endVisitTime}:00`;
+
+        const payload = {
+            ...updateData,
+            initVisitTime: initDateTime,
+            endVisitTime: endDateTime
+        };
+
+        await updateVisit(props.visitId, payload)
             .then(response => {
                 if (response[0].changedRows > 0) {
                     alert("Visita reagendada!");
@@ -76,6 +94,16 @@ function PopupReschedulingVisit(props: {
                     <div className="form-wrapper">
                         <label htmlFor="visitDate">Nova data</label>
                         <input type="date" name="visitDate" id="visitDate" onChange={handleUpdateData} />
+                    </div>
+                    <div className="form-wrapper container">
+                        <div>
+                            <label htmlFor="initVisitTime">Previsão de início</label>
+                            <input type="time" name="initVisitTime" id="initVisitTime" onChange={handleUpdateData} />
+                        </div>
+                        <div>
+                            <label htmlFor="endVisitTime">Previsão de término</label>
+                            <input type="time" name="endVisitTime" id="endVisitTime" onChange={handleUpdateData} />
+                        </div>
                     </div>
                     <div className="form-wrapper">
                         <label htmlFor="lastReschedulingReason">Informe o motivo do reagendamento</label>
