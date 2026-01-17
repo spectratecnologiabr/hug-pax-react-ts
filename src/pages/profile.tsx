@@ -244,8 +244,8 @@ function Profile() {
                                 <select name="docType" id="docType" value={updateData.hasOwnProperty("docType") ? updateData.docType : userData.docType} onChange={setUpdatedData}>
                                     <option value="">Selecionar</option>
                                     <option value="cpf">CPF</option>
-                                    <option value="nif">NIF</option>
-                                    <option value="passport">PASSAPORTE</option>
+                                    {/*<option value="nif">NIF</option>
+                                    <option value="passport">PASSAPORTE</option>*/}
                                 </select>
                             </div>
 
@@ -265,7 +265,8 @@ function Profile() {
                                     <option value="">Selecionar</option>
                                     <option value="male">Masculino</option>
                                     <option value="female">Feminino</option>
-                                    <option value="other">Outro</option>
+                                    <option value="nonBin">Não Binário</option>
+                                    <option value="other">Prefiro não dizer</option>
                                 </select>
                             </div>
 
@@ -276,7 +277,18 @@ function Profile() {
 
                             <div className="data-wrapper">
                                 <span>Telefone</span>
-                                <input type="tel" name="phone" id="phone" value={updateData.hasOwnProperty("phone") ? updateData.phone : userData.phone} onChange={setUpdatedData}/>
+                                <input
+                                    type="tel"
+                                    name="phone"
+                                    id="phone"
+                                    inputMode="numeric"
+                                    pattern="[0-9]*"
+                                    value={updateData.hasOwnProperty("phone") ? updateData.phone : userData.phone}
+                                    onChange={(e) => {
+                                        e.target.value = e.target.value.replace(/\D/g, "");
+                                        setUpdatedData(e);
+                                    }}
+                                />
                             </div>
 
                             <div className="data-wrapper">
