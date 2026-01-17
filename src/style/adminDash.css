@@ -1,5 +1,4 @@
-
-.admin-dashboard-container .admin-dashboard-wrapper {
+    .admin-dashboard-container .admin-dashboard-wrapper {
     width: -webkit-fill-available;
     display: flex;
     flex-direction: column;

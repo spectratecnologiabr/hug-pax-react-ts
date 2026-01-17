@@ -11,7 +11,7 @@ body, * {
 }
 
 @media print{
-    body {
+    body.pax-protected {
         display: none;
     }
 }

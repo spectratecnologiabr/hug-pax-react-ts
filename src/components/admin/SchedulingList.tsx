@@ -42,6 +42,17 @@ function SchedulingList(props: { selectedDate?: string }) {
         window.location.pathname = `/admin/consultant/visit/${visitId}`
     }
 
+function openVisitPDF(event: React.MouseEvent<HTMLButtonElement>) {
+    const visitId = event.currentTarget.dataset.schedulingId;
+    if (!visitId) return;
+
+    window.open(
+        `/admin/visits/${visitId}/report-preview`,
+        "_blank",
+        "noopener,noreferrer"
+    );
+}
+
     return (
         <React.Fragment>
             <div className="scheduling-container">
@@ -80,6 +91,10 @@ function SchedulingList(props: { selectedDate?: string }) {
 
                                         scheduling.status === "in progress" ? (
                                             <button data-scheduling-id={scheduling.id} onClick={openVisitForm}>
+                                                Abrir
+                                            </button>
+                                        ) : scheduling.status === "completed" ? (
+                                            <button data-scheduling-id={scheduling.id} onClick={openVisitPDF}>
                                                 Abrir
                                             </button>
                                         ) : scheduling.status !== "cancelled" ? (

@@ -877,7 +877,6 @@ function Course() {
                 </div>
                 
             </div>
-            <PageSelector />
             <Footer/>
         </React.Fragment>
     )
