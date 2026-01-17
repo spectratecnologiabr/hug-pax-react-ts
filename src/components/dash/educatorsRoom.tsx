@@ -18,6 +18,7 @@ type TCourse = {
 
 type TCourseProps = {
     courses: Array<TCourse>
+    getCourseLink: (course: TCourse) => string
 }
 
 function EducatorsRoom(coursesProp: TCourseProps) {
@@ -112,8 +113,8 @@ function EducatorsRoom(coursesProp: TCourseProps) {
                                             className="course-progress"/>
                                     </div>
                                 </div>
-                                <a href={`/course/${course.slug}`}>
-                                    Acessar material
+                                <a href={coursesProp.getCourseLink(course)}>
+                                    {course.progressPercentage > 0 ? 'Continuar' : 'Iniciar'}
                                 </a>
                             </div>
                         )

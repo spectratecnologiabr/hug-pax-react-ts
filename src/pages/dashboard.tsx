@@ -17,18 +17,31 @@ import alunoIcon from "../img/dash/aluno-icon.svg";
 import "../style/dash.css";
 import Footer from "../components/footer";
 
+type TUserCoursePlayback = {
+    courseId: number
+    playback?: {
+        last?: {
+            lessonId: number
+            position: number
+            type: string
+            updatedAt: string
+        }
+        history?: any[]
+    }
+}
+
 type TUser = {
-    id: number,
-    firstName: string,
-    lastName: string,
-    birthDate: string,
-    gender: string,
-    profilePic: string,
-    phone: string,
-    email: string,
-    language: string,
-    courses: [],
-    role: string,
+    id: number
+    firstName: string
+    lastName: string
+    birthDate: string
+    gender: string
+    profilePic: string
+    phone: string
+    email: string
+    language: string
+    courses: TUserCoursePlayback[]
+    role: string
     isActive: boolean
 }
 
@@ -86,6 +99,12 @@ type TSearchResult = {
 
 function Dashboard() {
     const userData = getCookies("userData") as unknown as TUser;
+    const playbackMap = new Map<number, number | null>(
+        userData?.courses?.map(c => [
+            c.courseId,
+            c.playback?.last?.lessonId ?? null
+        ])
+    );
     const [courses, setCourses] = useState<TCourse[]>([]);
     const [ overviewData, setOverviewData ] = useState<TOverviewData | null>(null);
     const profilePic = localStorage.getItem("profilePic") || alunoIcon;
@@ -137,8 +156,6 @@ function Dashboard() {
         return () => clearTimeout(delay);
     }, [search]);
 
-
-
     function swipeCourses(e: React.MouseEvent<HTMLButtonElement>) {
         const direction = e.currentTarget.dataset.direction;
         const actualSlide = document.getElementById("last-courses-swiper")?.querySelector(".active");
@@ -169,6 +186,14 @@ function Dashboard() {
         }
 
         return `${minutes} min`
+    }
+
+    const getCourseLink = (course: TCourse) => {
+        const lastLessonId = playbackMap.get(course.id)
+
+        return lastLessonId
+            ? `/course/${course.slug}/lesson/${lastLessonId}`
+            : `/course/${course.slug}`
     }
 
     return (
@@ -261,7 +286,16 @@ function Dashboard() {
                                             text={`${course.progressPercentage}%`}
                                             className="course-progress"/>
                                     </div>
-                                    <a className="open-course" href={`/course/${course.slug}`}>Continue</a>
+                                    <a
+                                        className="open-course"
+                                        href={
+                                            playbackMap.get(course.id)
+                                                ? `/course/${course.slug}/lesson/${playbackMap.get(course.id)}`
+                                                : `/course/${course.slug}`
+                                        }
+                                    >
+                                        {playbackMap.get(course.id) ? 'Continuar' : 'Iniciar'}
+                                    </a>
                                 </div>
                             ))
                         }
@@ -287,7 +321,7 @@ function Dashboard() {
                         <span>de tempo total em formação</span>
                     </div>
                 </div>
-                <EducatorsRoom courses={courses} />
+                <EducatorsRoom courses={courses} getCourseLink={getCourseLink}/>
             </div>
             <Feed/>
         </div>
