@@ -328,7 +328,7 @@
 .course-container .right-container {
     display: flex;
     flex-direction: column;
-    min-width: 400px;
+    min-width: 350px;
     gap: 20px;
 }
 
