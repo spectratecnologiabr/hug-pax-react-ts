@@ -158,22 +158,33 @@ function Dashboard() {
 
     function swipeCourses(e: React.MouseEvent<HTMLButtonElement>) {
         const direction = e.currentTarget.dataset.direction;
-        const actualSlide = document.getElementById("last-courses-swiper")?.querySelector(".active");
-        var nextShowedSlide;
+        const container = document.getElementById("last-courses-swiper");
+        const actualSlide = container?.querySelector(".course-item.active") as HTMLElement | null;
+
+        if (!actualSlide) return;
+
+        let nextSlide: HTMLElement | null = null;
 
         if (direction === "previous") {
-            nextShowedSlide = actualSlide?.previousElementSibling;
-            if (nextShowedSlide) {
-                actualSlide?.classList.remove("active");
-                nextShowedSlide?.classList.add("active");
-            }
-        } else if (direction === "next") {
-            nextShowedSlide = actualSlide?.nextElementSibling;
-            if (nextShowedSlide) {
-                actualSlide?.classList.remove("active");
-                nextShowedSlide?.classList.add("active");
-            }
+            nextSlide = actualSlide.previousElementSibling as HTMLElement | null;
+        } else {
+            nextSlide = actualSlide.nextElementSibling as HTMLElement | null;
         }
+
+        if (!nextSlide) return;
+
+        actualSlide.classList.remove("active");
+        nextSlide.classList.remove("from-next", "from-prev");
+
+        if (direction === "previous") {
+            nextSlide.classList.add("from-prev");
+        } else {
+            nextSlide.classList.add("from-next");
+        }
+
+        requestAnimationFrame(() => {
+            nextSlide?.classList.add("active");
+        });
     }
 
     function formatHours(totalHours: number) {
