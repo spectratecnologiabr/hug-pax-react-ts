@@ -317,6 +317,11 @@
         font-size: 45px;
     }
 
+    .dashboard-container .main-dash-wrapper .finshed-courses b, .dashboard-container .main-dash-wrapper .remaing-courses b, .dashboard-container .main-dash-wrapper .finshed-hours b {
+        font-family: 'SF UI Display Medium';
+        font-size: 50px;
+    }
+
     .dashboard-container .main-dash-wrapper .search-wrapper {
         grid-column: span 4;
     }
@@ -337,12 +342,16 @@
         grid-column: span 4;
     }
 
+    .dashboard-container .main-dash-wrapper .last-courses .course-item b {
+        display: none;
+    }
+
     .dashboard-container .main-dash-wrapper .finshed-hours {
         grid-column: span 6;
     }
 }
 
-@media (max-width: 1520px) {
+@media (max-width: 1510px) {
     .dashboard-container .main-dash-wrapper {
         grid-template-columns: repeat(12, 1fr);
     }
@@ -370,6 +379,10 @@
 
     .dashboard-container .main-dash-wrapper .last-courses {
         grid-column: span 5;
+    }
+
+    .dashboard-container .main-dash-wrapper .last-courses .course-item b {
+        display: block;
     }
 
     .dashboard-container .main-dash-wrapper .last-courses-controls {
