@@ -260,7 +260,7 @@ function Profile() {
                             </div>
 
                             <div className="data-wrapper">
-                                <span>Sexo</span>
+                                <span>Gênero</span>
                                 <select name="gender" id="gender" value={updateData.hasOwnProperty("gender") ? updateData.gender : userData.gender} onChange={setUpdatedData}>
                                     <option value="">Selecionar</option>
                                     <option value="male">Masculino</option>

@@ -24,6 +24,7 @@ import NewEducatorPage from './pages/newEducatorPage';
 import EditEducatorPage from './pages/editEducatorPage';
 import VisitFormAnswers from './pages/visitFormAnswers';
 import VisitReportPreview from "./pages/visitReportPreview";
+import Courses from './pages/courses';
 
 function MyRoutes() {
     return (
@@ -49,7 +50,8 @@ function MyRoutes() {
                 <Route path='/admin/educators/add' element={<AdminRoute><NewEducatorPage/></AdminRoute>} />
                 <Route path='/admin/educators/edit/:educatorId' element={<AdminRoute><EditEducatorPage/></AdminRoute>} />
                 <Route path='/admin/consultant/visit/:visitId' element={<AdminRoute><VisitFormAnswers/></AdminRoute>} />
-                <Route path="/admin/visits/:visitId/report-preview" element={<AdminRoute><VisitReportPreview /></AdminRoute>} />
+                <Route path='/admin/visits/:visitId/report-preview' element={<AdminRoute><VisitReportPreview /></AdminRoute>} />
+                <Route path='/admin/courses' element={<AdminRoute><Courses/></AdminRoute>} />
             </Routes>
         </BrowserRouter>
     )
