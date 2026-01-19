@@ -7,6 +7,7 @@ import 'react-circular-progressbar/dist/styles.css';
 
 import { listCourses } from "../controllers/course/listCourses.controller";
 import { getOverviewData } from "../controllers/dash/overview.controller";
+import { getCookies } from "../controllers/misc/cookies.controller";
 
 import "../style/educatorsRoomPage.css";
 
@@ -28,35 +29,50 @@ type TOverviewData = {
     unreadNotifications: number
 }
 
+type TUserCoursePlayback = {
+    courseId: number
+    playback?: {
+        last?: {
+            lessonId: number
+            position: number
+            type: string
+            updatedAt: string
+        }
+    }
+}
+
+type TUser = {
+    courses: TUserCoursePlayback[]
+}
+
 function EducatorsRoom() {
-    const [courses, setCourses] = useState<TCourse[]>([]);
     const [statusFilter, setStatusFilter] = useState("");
     const [orderFilter, setOrderFilter] = useState("");
     const [search, setSearch] = useState("");
     const [ overviewData, setOverviewData ] = useState<TOverviewData | null>(null);
+    const [courses, setCourses] = useState<TCourse[]>([]);
+    const userData = getCookies("userData") as unknown as TUser;
 
-        useEffect(() => {    
-            async function fetchCourses() {
-                try {
-                    const coursesList = await listCourses();
-                    setCourses(coursesList);
-                } catch (error) {
-                    console.error("Error fetching courses:", error);
-                }
+    useEffect(() => {
+        async function fetchOverviewData() {
+            try {
+                const overviewData = await getOverviewData();
+                setOverviewData(overviewData);
+            } catch (error) {
+                console.error("Error fetching overview data:", error);
             }
-
-            async function fetchOverviewData() {
-                try {
-                    const overviewData = await getOverviewData();
-                    setOverviewData(overviewData);
-                } catch (error) {
-                    console.error("Error fetching overview data:", error);
-                }
+        }
+        async function fetchCourses() {
+            try {
+                const coursesList = await listCourses();
+                setCourses(coursesList);
+            } catch (error) {
+                console.error("Error fetching courses:", error);
             }
-    
-            fetchCourses();
-            fetchOverviewData();
-        }, []);
+        }
+        fetchOverviewData();
+        fetchCourses();
+    }, []);
 
     function handleCourseStatusFilter(e: React.ChangeEvent<HTMLSelectElement>) {
         setStatusFilter(e.currentTarget.value);
@@ -64,6 +80,21 @@ function EducatorsRoom() {
 
     function handleOrderFilter(e: React.ChangeEvent<HTMLSelectElement>) {
         setOrderFilter(e.currentTarget.value);
+    }
+
+    const playbackMap = new Map<number, number | null>(
+        userData?.courses?.map(c => [
+            c.courseId,
+            c.playback?.last?.lessonId ?? null
+        ])
+    );
+
+    const getCourseLink = (course: TCourse) => {
+        const lastLessonId = playbackMap.get(course.id)
+
+        return lastLessonId
+            ? `/course/${course.slug}/lesson/${lastLessonId}`
+            : `/course/${course.slug}`
     }
 
     const filteredCourses = courses
@@ -76,10 +107,9 @@ function EducatorsRoom() {
         })
         .filter(course => {
             if (!search) return true;
-
             return (
-            course.title.toLowerCase().includes(search.toLowerCase()) ||
-            course.subTitle?.toLowerCase().includes(search.toLowerCase())
+                course.title.toLowerCase().includes(search.toLowerCase()) ||
+                course.subTitle?.toLowerCase().includes(search.toLowerCase())
             );
         })
         .sort((a, b) => {
@@ -88,7 +118,6 @@ function EducatorsRoom() {
             if (orderFilter === "progress") return b.progressPercentage - a.progressPercentage;
             return 0;
         });
-
 
     return (
         <React.Fragment>
@@ -128,7 +157,7 @@ function EducatorsRoom() {
                             {
                                 filteredCourses.map(course => {
                                     return (
-                                        <div className="course-item">
+                                        <div className="course-item" key={course.id}>
                                             <img loading="lazy" src={course.cover} className="course-img" />
                                             <div className="description">
                                                 <span>{course.title}</span>
@@ -145,15 +174,13 @@ function EducatorsRoom() {
                                                         className="course-progress"/>
                                                 </div>
                                             </div>
-                                            <a href={`/course/${course.slug}`}>
-                                                Acessar material
+                                            <a href={getCourseLink(course)}>
+                                                {course.progressPercentage > 0 ? 'Continuar' : 'Iniciar'}
                                             </a>
                                         </div>
                                     )
                                 })
                             }
-
-                            
                         </div>
                     </div>
                 </div>

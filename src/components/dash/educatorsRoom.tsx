@@ -62,7 +62,7 @@ function EducatorsRoom(coursesProp: TCourseProps) {
 
 
     return (
-        <div className="educators-room-container">
+        <div className="educators-room-element">
             <div className="header-wrapper">
                 <b>Sala de educadores</b>
 

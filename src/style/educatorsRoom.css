@@ -1,33 +1,33 @@
-.educators-room-container {
+.educators-room-element {
     display: flex;
     flex-direction: column;
     gap: 10px;
     width: 100%;
 }
 
-.educators-room-container .header-wrapper {
+.educators-room-element .header-wrapper {
     display: flex;
     width: 100%;
     justify-content: space-between;
 }
 
-.educators-room-container .header-wrapper b {
+.educators-room-element .header-wrapper b {
     font-family: 'SF UI Display Semibold';
     font-size: 38px;
 }
 
-.educators-room-container .header-wrapper .filters-wrapper {
+.educators-room-element .header-wrapper .filters-wrapper {
     display: flex;
     gap: 20px;
     align-items: flex-end;
 }
 
-.educators-room-container .header-wrapper .filters-wrapper .search-wrapper {
+.educators-room-element .header-wrapper .filters-wrapper .search-wrapper {
     display: flex;
     height: 100%;
 }
 
-.educators-room-container .header-wrapper .filters-wrapper .search-wrapper input, .educators-room-container .header-wrapper .filters-wrapper select {
+.educators-room-element .header-wrapper .filters-wrapper .search-wrapper input, .educators-room-element .header-wrapper .filters-wrapper select {
     height: 100%;
     background-color: #F5F5F7;
     padding-left: 10px;
@@ -36,30 +36,30 @@
     cursor: pointer;
 }
 
-.educators-room-container .header-wrapper .filters-wrapper .search-wrapper button {
+.educators-room-element .header-wrapper .filters-wrapper .search-wrapper button {
     position: absolute;
     margin-left: 160px;
     align-self: center;
 }
 
-.educators-room-container .grid-wrapper {
+.educators-room-element .grid-wrapper {
     display: grid;
     grid-template-columns: repeat(5, 1fr);
     gap: 20px;
 }
 
-.educators-room-container .grid-wrapper .course-item {
+.educators-room-element .grid-wrapper .course-item {
     grid-column: span 1;
     background-color: #F5F5F7;
     border-radius: 20px;
 }
 
-.educators-room-container .grid-wrapper .course-item .course-img {
+.educators-room-element .grid-wrapper .course-item .course-img {
     width: 100%;
     border-radius: 20px;
 }
 
-.educators-room-container .grid-wrapper .course-item .description {
+.educators-room-element .grid-wrapper .course-item .description {
     display: flex;
     height: 40px;
     justify-content: space-evenly;
@@ -68,15 +68,15 @@
     font-family: 'SF UI Display Medium';
 }
 
-.educators-room-container .grid-wrapper .course-item .description .course-progress {
+.educators-room-element .grid-wrapper .course-item .description .course-progress {
     height: 100%;
 }
 
-.educators-room-container .grid-wrapper .course-item .description .course-progress .CircularProgressbar-text {
+.educators-room-element .grid-wrapper .course-item .description .course-progress .CircularProgressbar-text {
     font-size: 30px;
 }
 
-.educators-room-container .grid-wrapper .course-item a {
+.educators-room-element .grid-wrapper .course-item a {
     text-decoration: none;
     display: flex;
     justify-content: center;
@@ -91,30 +91,30 @@
     transition: ease-in-out .3s all;
 }
 
-.educators-room-container .grid-wrapper .course-item a:hover {
+.educators-room-element .grid-wrapper .course-item a:hover {
     background-color: #5CADE0;
 }
 
 @media (max-width: 1450px) {
-    .educators-room-container .header-wrapper {
+    .educators-room-element .header-wrapper {
         flex-direction: column;
     }
 
-    .educators-room-container .header-wrapper .filters-wrapper {
+    .educators-room-element .header-wrapper .filters-wrapper {
         height: 45px;
     }
 
-    .educators-room-container .grid-wrapper {
+    .educators-room-element .grid-wrapper {
         grid-template-columns: repeat(3, 1fr);
     }
 }
 
 @media (max-width: 769px) {
-    .educators-room-container .grid-wrapper {
+    .educators-room-element .grid-wrapper {
         grid-template-columns: repeat(2, 1fr);
     }
 
-    .educators-room-container .header-wrapper .filters-wrapper {
+    .educators-room-element .header-wrapper .filters-wrapper {
         flex-direction: column;
         height: fit-content;
     }
