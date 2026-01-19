@@ -4,7 +4,6 @@ import { getOverviewData } from "../controllers/dash/overview.controller";
 import Menubar from "../components/admin/menubar";
 import AdminDatePicker from "../components/admin/AdminDatePicker";
 import SchedulingList from "../components/admin/SchedulingList";
-import Feed from "../components/admin/feed";
 
 import "../style/adminDash.css";
 
@@ -43,8 +42,8 @@ function AdminDash() {
                 <div className="admin-dashboard-wrapper">
                     <div className="main-dash-wrapper">
                         <AdminDatePicker selectedDate={selectedDate} onChange={handleDateChange} />
+                        
                         <SchedulingList selectedDate={selectedDate.toISOString()} />
-                        <Feed />
                     </div>
                 </div>
             </div>

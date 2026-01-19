@@ -10,6 +10,10 @@ body, * {
   transition: 0.1s;
 }
 
+.hidden {
+    display: none !important;
+}
+
 @media print{
     body.pax-protected {
         display: none;

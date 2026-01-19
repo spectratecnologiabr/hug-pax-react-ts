@@ -221,7 +221,7 @@ function Dashboard() {
                         <div className="wrapper">
                             <img src={alunoImage} alt="" />
                         </div>
-                        <div className="wrapper">
+                        <div className="wrapper hidden">
                             <span>Este é o seu engajamento no fórum!</span>
                             <b id="percentage">0%</b>
                         </div>
