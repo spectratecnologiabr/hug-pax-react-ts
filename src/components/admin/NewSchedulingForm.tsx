@@ -72,7 +72,6 @@ function NewSchedulingForm(props: { opened: boolean; onClose: () => void }) {
         async function getUserId() {
             try {
                 const sessionData = await checkSession();
-                console.log(sessionData.session.sub);
                 setUserId(sessionData.session.sub);
             } catch (error) {
                 console.error("Error fetching userData:", error)

@@ -22,7 +22,6 @@ function SchedulingList(props: { selectedDate?: string }) {
 
                 const data = await listSchedulings(dateParam);
                 setSchedulings(data);
-                console.log("Fetched schedulings:", data);
             } catch (error) {
                 console.error("Error fetching schedulings:", error);
             }
