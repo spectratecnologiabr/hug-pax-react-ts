@@ -19,9 +19,11 @@ import AdminDash from './pages/adminDash';
 import CollegesPage from './pages/collegesPage';
 import NewCollegePage from './pages/newCollegePage';
 import EditCollegePage from './pages/editCollegePage';
+import ViewCollegeData from './pages/viewCollegeData';
 import EducatorsList from './pages/educatorsList';
 import NewEducatorPage from './pages/newEducatorPage';
 import EditEducatorPage from './pages/editEducatorPage';
+import ViewEducatorData from './pages/viewEducatorData';
 import VisitFormAnswers from './pages/visitFormAnswers';
 import VisitReportPreview from "./pages/visitReportPreview";
 import Courses from './pages/courses';
@@ -46,9 +48,11 @@ function MyRoutes() {
                 <Route path='/admin/colleges' element={<AdminRoute><CollegesPage/></AdminRoute>} />
                 <Route path='/admin/colleges/add' element={<AdminRoute><NewCollegePage/></AdminRoute>} />
                 <Route path='/admin/colleges/edit/:collegeId' element={<AdminRoute><EditCollegePage/></AdminRoute>} />
+                <Route path='/admin/colleges/:collegeId' element={<AdminRoute><ViewCollegeData/></AdminRoute>} />
                 <Route path='/admin/educators' element={<AdminRoute><EducatorsList/></AdminRoute>} />
                 <Route path='/admin/educators/add' element={<AdminRoute><NewEducatorPage/></AdminRoute>} />
                 <Route path='/admin/educators/edit/:educatorId' element={<AdminRoute><EditEducatorPage/></AdminRoute>} />
+                <Route path='/admin/educators/:educatorId' element={<AdminRoute><ViewEducatorData/></AdminRoute>} />
                 <Route path='/admin/consultant/visit/:visitId' element={<AdminRoute><VisitFormAnswers/></AdminRoute>} />
                 <Route path='/admin/visits/:visitId/report-preview' element={<AdminRoute><VisitReportPreview /></AdminRoute>} />
                 <Route path='/admin/courses' element={<AdminRoute><Courses/></AdminRoute>} />
