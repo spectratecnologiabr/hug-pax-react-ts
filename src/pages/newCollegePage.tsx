@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { getOverviewData } from "../controllers/dash/overview.controller";
 import { createCollege, ICollegeProps } from "../controllers/college/createCollege.controller";
+import { listConsultants } from "../controllers/user/listConsultants.controller";
 
 import Menubar from "../components/admin/menubar";
 
@@ -49,13 +50,35 @@ function NewCollegePage() {
         fetchOverviewData()
     }, []);
 
-    function handleNewCollegeData(event: React.ChangeEvent<HTMLInputElement>) {
+    const [consultants, setConsultants] = useState<{ id: number; firstName: string; lastName: string }[]>([]);
+
+    useEffect(() => {
+        async function fetchConsultants() {
+            try {
+                const data = await listConsultants();
+                setConsultants(data);
+            } catch (err) {
+                console.error(err);
+            }
+        }
+        fetchConsultants();
+    }, []);
+
+    function handleNewCollegeData(event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) {
         const target = event.currentTarget;
 
-        setNewCollegeData(prev => ({
-            ...prev,
-            [target.name]: target.value
-        }));
+        if (target.name === "collegeCode" || target.name === "consultorId" || target.name === "addressNumber") {
+            setNewCollegeData(prev => ({
+                ...prev,
+                [target.name]: Number(target.value)
+            }));
+        } else {
+            setNewCollegeData(prev => ({
+                ...prev,
+                [target.name]: target.value
+            }));
+        }
+        
     }
 
     function handleNewManagerData(event: React.ChangeEvent<HTMLInputElement>) {
@@ -129,8 +152,8 @@ function NewCollegePage() {
 
                             <div className="form-grid">
                                 <div className="input-wrapper">
-                                    <label htmlFor="contract">Cód. Escola:*</label>
-                                    <input type="text" id="contract" name="contract" onChange={handleNewCollegeData} maxLength={10}/>
+                                    <label htmlFor="collegeCode">Cód. Escola:*</label>
+                                    <input type="text" id="collegeCode" name="collegeCode" onChange={handleNewCollegeData} maxLength={8} inputMode="numeric" pattern="[0-9]*" onKeyDown={(e) => { const allowedKeys = [  "Backspace", "Delete", "ArrowLeft",  "ArrowRight",  "Tab" ]; if (allowedKeys.includes(e.key)) return; if (!/^[0-9]$/.test(e.key)) { e.preventDefault(); } }}/>
                                 </div>
                                 <div className="input-wrapper">
                                     <label htmlFor="initDate">Data de Início:*</label>
@@ -216,8 +239,15 @@ function NewCollegePage() {
                                     <input type="text" id="salesManager" name="salesManager" onChange={handleNewCollegeData}/>
                                 </div>
                                 <div className="input-wrapper">
-                                    <label htmlFor="consultor">Consultor Responsável:*</label>
-                                    <input type="text" id="consultor" name="consultor" onChange={handleNewCollegeData}/>
+                                    <label htmlFor="consultorId">Consultor Responsável:*</label>
+                                    <select id="consultorId" name="consultorId" onChange={handleNewCollegeData} defaultValue="">
+                                        <option value="" disabled>Selecione um consultor</option>
+                                        {consultants.map(consultant => (
+                                            <option key={consultant.id} value={consultant.id}>
+                                                {consultant.firstName} {consultant.lastName}
+                                            </option>
+                                        ))}
+                                    </select>
                                 </div>
                             </div>
                         </div>

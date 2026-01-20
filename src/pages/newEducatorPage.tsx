@@ -7,11 +7,28 @@ import Menubar from "../components/admin/menubar";
 
 import "../style/adminDash.css";
 
+
 type TOverviewData = {
     completedCourses: number,
     inProgressCourses: number,
     totalHours: number,
     unreadNotifications: number
+}
+
+function formatDocId(docId: string, docType: string) {
+    if (!docId) return "";
+
+    const clean = docId.replace(/\W/g, "");
+
+    if (docType === "cpf") {
+        return clean
+            .slice(0, 11)
+            .replace(/^(\d{3})(\d)/, "$1.$2")
+            .replace(/^(\d{3})\.(\d{3})(\d)/, "$1.$2.$3")
+            .replace(/^(\d{3})\.(\d{3})\.(\d{3})(\d{1,2})/, "$1.$2.$3-$4");
+    }
+
+    return docId;
 }
 
 function NewEducatorPage() {
@@ -104,14 +121,34 @@ function NewEducatorPage() {
                                 <div className="input-wrapper">
                                     <label htmlFor="docType">Tipo de Documento:</label>
                                     <select id="docType" className="docType" onChange={handleInputChange}>
+                                        <option value="">Selecionar</option>
                                         <option value="cpf">CPF</option>
-                                        <option value="nif">NIF</option>
-                                        <option value="passport">Passaporte</option>
                                     </select>
                                 </div>
                                 <div className="input-wrapper">
-                                    <label htmlFor="docNumber">Número do Documento:</label>
-                                    <input type="text" id="docNumber" className="docNumber" placeholder="Número do documento" onChange={handleInputChange}/>
+                                    <label htmlFor="docId">Número do Documento:</label>
+                                    <input
+                                        type="text"
+                                        id="docId"
+                                        className="docId"
+                                        inputMode="numeric"
+                                        pattern="[0-9]*"
+                                        placeholder="Número do documento"
+                                        value={createUserData.docId}
+                                        onKeyDown={(e) => {
+                                            const allowedKeys = ["Backspace", "Delete", "ArrowLeft", "ArrowRight", "Tab"];
+                                            if (allowedKeys.includes(e.key)) return;
+                                            if (!/^[0-9]$/.test(e.key)) e.preventDefault();
+                                        }}
+                                        onChange={(e) => {
+                                            const currentType = createUserData.docType || "cpf";
+                                            const formatted = formatDocId(e.target.value, currentType);
+                                            setCreateUserData(prev => ({
+                                                ...prev,
+                                                docId: formatted
+                                            }));
+                                        }}
+                                    />
                                 </div>
                                 <div className="input-wrapper">
                                     <label htmlFor="birthDate">Data de Nascimento:</label>

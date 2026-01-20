@@ -2,7 +2,7 @@ import axios from "axios";
 import { getCookies } from "../misc/cookies.controller";
 
 export interface ICollegeProps {
-    contract: string,
+    collegeCode: number,
     initDate: string,
     name: string,
     partner: string,
@@ -14,7 +14,7 @@ export interface ICollegeProps {
     collegeSeries: string,
     contractSeries: string,
     salesManager: string,
-    consultor: string,
+    consultorId: number,
     internalManagement: any[]
     isActive?: boolean
 }

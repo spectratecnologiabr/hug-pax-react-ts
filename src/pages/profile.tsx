@@ -251,7 +251,7 @@ function Profile() {
 
                             <div className="data-wrapper">
                                 <span>Número do Documento</span>
-                                <input type="text"  name="docId"  id="docId"  inputMode="numeric" pattern="[0-9]*" value={updateData.hasOwnProperty("docId") ? updateData.docId : userData.docId} onKeyDown={(e) => { const allowedKeys = [  "Backspace", "Delete", "ArrowLeft",  "ArrowRight",  "Tab" ]; if (allowedKeys.includes(e.key)) return; if (!/^[0-9]$/.test(e.key)) { e.preventDefault(); } }} onChange={setUpdatedData} />
+                                <input type="text"  name="docId"  id="docId" inputMode="numeric" pattern="[0-9]*" value={updateData.hasOwnProperty("docId") ? updateData.docId : userData.docId} onKeyDown={(e) => { const allowedKeys = [  "Backspace", "Delete", "ArrowLeft",  "ArrowRight",  "Tab" ]; if (allowedKeys.includes(e.key)) return; if (!/^[0-9]$/.test(e.key)) { e.preventDefault(); } }} onChange={setUpdatedData} />
                             </div>
 
                             <div className="data-wrapper">

@@ -23,6 +23,21 @@ type TInternalManager = {
     phone: string
 }
 
+function normalizeContractSeries(value: unknown): string[] {
+    if (Array.isArray(value)) return value;
+
+    if (typeof value === "string") {
+        try {
+            const parsed = JSON.parse(value);
+            if (Array.isArray(parsed)) return parsed;
+        } catch {
+            return value.split(",").map((v: string) => v.trim());
+        }
+    }
+
+    return [];
+}
+
 function EditCollegePage() {
     const collegeId = useParams().collegeId as string;
     const [ overviewData, setOverviewData ] = useState<TOverviewData | null>(null);
@@ -53,7 +68,15 @@ function EditCollegePage() {
         async function fetchCollegeData() {
             try {
                 const collegeData = await findCollege(collegeId);
-                setEditCollegeData(collegeData);
+                setEditCollegeData({
+                    ...collegeData,
+                    internalManagement: Array.isArray(collegeData.internalManagement)
+                        ? collegeData.internalManagement
+                        : typeof collegeData.internalManagement === "string"
+                            ? JSON.parse(collegeData.internalManagement)
+                            : [],
+                    contractSeries: normalizeContractSeries(collegeData.contractSeries)
+                });
             } catch (error) {
                 console.error("Error fetching college data:", error);
             }
@@ -87,9 +110,7 @@ function EditCollegePage() {
     async function sendCollegeData() {
         const payload = {
             ...editCollegeData,
-            contractSeries: Array.isArray(editCollegeData.contractSeries)
-                ? editCollegeData.contractSeries.join(",")
-                : editCollegeData.contractSeries,
+            contractSeries: normalizeContractSeries(editCollegeData.contractSeries)
         };
 
         const response = await updateCollege(payload as any);
@@ -108,14 +129,14 @@ function EditCollegePage() {
             ? editCollegeData.contractSeries
             : [];
 
-        const updated: string[] = current.includes(value)
-            ? current.filter((v: string) => v !== value)
+        const updated = current.includes(value)
+            ? current.filter(v => v !== value)
             : [...current, value];
 
-        setEditCollegeData({
-            ...editCollegeData,
-            contractSeries: updated as unknown as string,
-        });
+        setEditCollegeData(prev => ({
+            ...prev,
+            contractSeries: updated as unknown as ICollegeProps["contractSeries"]
+        }));
     }
 
     return (
@@ -136,8 +157,8 @@ function EditCollegePage() {
 
                             <div className="form-grid">
                                 <div className="input-wrapper">
-                                    <label htmlFor="contract">Cód. Escola:*</label>
-                                    <input type="text" id="contract" name="contract" maxLength={10} value={editCollegeData.contract || ""} onChange={(e) => setEditCollegeData({...editCollegeData, contract: e.target.value})}/>
+                                    <label htmlFor="collegeCode">Cód. Escola:*</label>
+                                    <input type="text" id="collegeCode" name="collegeCode" maxLength={8} inputMode="numeric" pattern="[0-9]*" onKeyDown={(e) => { const allowedKeys = [  "Backspace", "Delete", "ArrowLeft",  "ArrowRight",  "Tab" ]; if (allowedKeys.includes(e.key)) return; if (!/^[0-9]$/.test(e.key)) { e.preventDefault(); } }} value={editCollegeData.collegeCode || ""} onChange={(e) => setEditCollegeData({...editCollegeData, collegeCode: Number(e.target.value)})}/>
                                 </div>
                                 <div className="input-wrapper">
                                     <label htmlFor="initDate">Data de Início:*</label>
@@ -184,12 +205,7 @@ function EditCollegePage() {
                                             onClick={() => setIsSegmentOpen(prev => !prev)}
                                         >
                                             {(() => {
-                                                const segmentsArray = Array.isArray(editCollegeData.contractSeries)
-                                                    ? editCollegeData.contractSeries
-                                                    : typeof editCollegeData.contractSeries === "string" && editCollegeData.contractSeries.length
-                                                        ? editCollegeData.contractSeries.split(",")
-                                                        : [];
-
+                                                const segmentsArray = normalizeContractSeries(editCollegeData.contractSeries);
                                                 return segmentsArray.length
                                                     ? `${segmentsArray.length} segmento(s) selecionado(s)`
                                                     : "Selecionar segmentos";
@@ -202,13 +218,10 @@ function EditCollegePage() {
                                                     <label key={segment.value} className="multiselect-option">
                                                         <input
                                                             type="checkbox"
-                                                            checked={
-                                                                Array.isArray(editCollegeData.contractSeries)
-                                                                    ? editCollegeData.contractSeries.includes(segment.value)
-                                                                    : typeof editCollegeData.contractSeries === "string"
-                                                                        ? editCollegeData.contractSeries.split(",").includes(segment.value)
-                                                                        : false
-                                                            }
+                                                            checked={(() => {
+                                                                const currentSeries = normalizeContractSeries(editCollegeData.contractSeries);
+                                                                return currentSeries.includes(segment.value);
+                                                            })()}
                                                             onChange={() => toggleSegment(segment.value)}
                                                         />
                                                         <span>{segment.label}</span>
@@ -224,7 +237,7 @@ function EditCollegePage() {
                                 </div>
                                 <div className="input-wrapper">
                                     <label htmlFor="consultor">Consultor Responsável:*</label>
-                                    <input type="text" id="consultor" name="consultor" value={editCollegeData.consultor || ""} onChange={(e) => setEditCollegeData({...editCollegeData, consultor: e.target.value})}/>
+                                    <input type="text" id="consultor" name="consultor" value={editCollegeData.consultorId || ""} onChange={(e) => setEditCollegeData({...editCollegeData, consultorId: Number(e.target.value)})}/>
                                 </div>
 
                                 <div className="input-wrapper">

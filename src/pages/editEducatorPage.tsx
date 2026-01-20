@@ -87,17 +87,6 @@ function EditEducatorPage() {
                 .replace(/^(\d{3})\.(\d{3})\.(\d{3})(\d{1,2})/, "$1.$2.$3-$4");
         }
 
-        if (docType === "nif") {
-            return clean
-                .slice(0, 9)
-                .replace(/^(\d{3})(\d)/, "$1 $2")
-                .replace(/^(\d{3}) (\d{3})(\d)/, "$1 $2 $3");
-        }
-
-        if (docType === "passport") {
-            return docId.replace(/[^a-zA-Z0-9]/g, "").toUpperCase();
-        }
-
         return docId;
     }
 
@@ -161,14 +150,27 @@ function EditEducatorPage() {
                                 <div className="input-wrapper">
                                     <label htmlFor="docType">Tipo de Documento:</label>
                                     <select id="docType" className="docType" value={updateData.docType || editUserData.docType} onChange={setUpdatedData}>
+                                        <option value="">Selecionar</option>
                                         <option value="cpf">CPF</option>
-                                        <option value="nif">NIF</option>
-                                        <option value="passport">Passaporte</option>
                                     </select>
                                 </div>
                                 <div className="input-wrapper">
                                     <label htmlFor="docId">Número do Documento:</label>
-                                    <input type="text" id="docId" className="docId" placeholder="Número do documento" value={updateData.docId || editUserData.docId} onChange={setUpdatedData}/>
+                                    <input
+                                        type="text"
+                                        id="docId"
+                                        className="docId"
+                                        inputMode="numeric"
+                                        pattern="[0-9]*"
+                                        placeholder="Número do documento"
+                                        value={updateData.docId || editUserData.docId}
+                                        onKeyDown={(e) => {
+                                            const allowedKeys = ["Backspace", "Delete", "ArrowLeft", "ArrowRight", "Tab"];
+                                            if (allowedKeys.includes(e.key)) return;
+                                            if (!/^[0-9]$/.test(e.key)) e.preventDefault();
+                                        }}
+                                        onChange={setUpdatedData}
+                                    />
                                 </div>
                                 <div className="input-wrapper">
                                     <label htmlFor="birthDate">Data de Nascimento:</label>
