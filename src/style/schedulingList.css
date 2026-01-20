@@ -77,9 +77,3 @@
 .scheduling-list .scheduling-item:last-child {
     border-bottom: none;
 }
-
-@media (max-width: 1550px) {
-    .scheduling-container {
-        grid-column: span 3;    
-    }
-}

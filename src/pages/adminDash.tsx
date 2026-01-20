@@ -41,9 +41,34 @@ function AdminDash() {
                 <Menubar notificationCount={Number(overviewData?.unreadNotifications)}/>
                 <div className="admin-dashboard-wrapper">
                     <div className="main-dash-wrapper">
-                        <AdminDatePicker selectedDate={selectedDate} onChange={handleDateChange} />
-                        
+                        <div className="cards-list">
+                            <div className="card-item">
+                                <span>Escolas Ativas</span>
+                                <b>49</b>
+                            </div>
+                            <div className="card-item">
+                                <span>Educadores Ativos</span>
+                                <b>49</b>
+                            </div>
+                            <div className="card-item">
+                                <span>Agendamentos desse mês</span>
+                                <b>49</b>
+                            </div>
+                            <div className="card-item">
+                                <span>Reagendamentos desse mês</span>
+                                <b>49</b>
+                            </div>
+                            <div className="card-item">
+                                <span>Cancelamentos desse mês</span>
+                                <b>49</b>
+                            </div>
+                            <div className="card-item">
+                                <span>Visitas realizadas esse mês</span>
+                                <b>49</b>
+                            </div>
+                        </div>
                         <SchedulingList selectedDate={selectedDate.toISOString()} />
+                        <AdminDatePicker selectedDate={selectedDate} onChange={handleDateChange} />
                     </div>
                 </div>
             </div>

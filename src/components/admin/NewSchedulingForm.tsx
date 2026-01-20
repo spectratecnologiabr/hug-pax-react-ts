@@ -154,16 +154,16 @@ function NewSchedulingForm(props: { opened: boolean; onClose: () => void }) {
                     </div>
                     <div className="form-wrapper">
                         <label htmlFor="collegeAddress">Endereço</label>
-                        <input type="text" id="collegeAddress" value={selectedCollege ? selectedCollege.address : ''} readOnly />
+                        <input type="text" id="collegeAddress" value={selectedCollege ? selectedCollege.address : ''} disabled />
                     </div>
                     <div className="form-wrapper container">
                         <div>
                             <label htmlFor="collegeNumber">Número</label>
-                            <input type="text" id="collegeNumber" value={selectedCollege ? selectedCollege.addressNumber : ''} readOnly />
+                            <input type="text" id="collegeNumber" value={selectedCollege ? selectedCollege.addressNumber : ''} disabled />
                         </div>
                         <div>
                             <label htmlFor="city">Cidade</label>
-                            <input type="text" id="city" value={selectedCollege ? selectedCollege.city : ''} readOnly />
+                            <input type="text" id="city" value={selectedCollege ? selectedCollege.city : ''} disabled />
                         </div>
                     </div>
                     <div className="form-wrapper">

@@ -55,6 +55,7 @@ function openVisitPDF(event: React.MouseEvent<HTMLButtonElement>) {
     return (
         <React.Fragment>
             <div className="scheduling-container">
+                <button className="new-scheduling-button" onClick={() => setNewSchedulingFormOpened(true)}>Novo Agendamento</button>
                 <div className="scheduling-list">
                     {
                         schedulings.length === 0 ? (
@@ -108,7 +109,7 @@ function openVisitPDF(event: React.MouseEvent<HTMLButtonElement>) {
                     }
                 </div>
 
-                <button className="new-scheduling-button" onClick={() => setNewSchedulingFormOpened(true)}>Novo Agendamento</button>
+                
             </div>
             <NewSchedulingForm
                 opened={newSchedulingFormOpened}

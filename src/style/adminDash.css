@@ -329,8 +329,6 @@
     background-color: #6EE7B7;
 }
 
-
-
 /* Custom Multiselect (Segmentos) */
 .custom-multiselect {
     position: relative;
@@ -394,4 +392,34 @@
 .custom-multiselect .multiselect-option input[type="checkbox"] {
     accent-color: #3696D3;
     cursor: pointer;
+}
+
+/* ===== ADMIN DASH CARDS (estilo igual ao finshed-courses) ===== */
+
+.admin-dashboard-container .main-dash-wrapper .cards-list {
+    grid-column: span 2;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.admin-dashboard-container .main-dash-wrapper .cards-list .card-item {
+    background-color: #F5F5F7;
+    border-radius: 14px;
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 6px;
+    min-height: 100px;
+}
+
+.admin-dashboard-container .main-dash-wrapper .cards-list .card-item b {
+    font-family: 'SF UI Display Medium';
+    font-size: 50px;
+}
+
+.admin-dashboard-container .main-dash-wrapper .cards-list .card-item span {
+    font-family: 'SF UI Display Medium';
+    font-size: 18px;
 }
