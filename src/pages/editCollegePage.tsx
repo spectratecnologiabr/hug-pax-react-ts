@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { getOverviewData } from "../controllers/dash/overview.controller";
 import { updateCollege, ICollegeUpdateProps } from "../controllers/college/updateCollege.controller";
 import { findCollege } from "../controllers/college/findCollege.controller";
@@ -28,6 +28,17 @@ function EditCollegePage() {
     const [ overviewData, setOverviewData ] = useState<TOverviewData | null>(null);
     const [ editCollegeData, setEditCollegeData ] = useState<ICollegeProps>({} as ICollegeProps);
     const [ newManagerData, setNewManagerData ] = useState<TInternalManager>({} as TInternalManager);
+
+    const [isSegmentOpen, setIsSegmentOpen] = useState(false);
+    const segmentRef = useRef<HTMLDivElement | null>(null);
+
+    const segments = [
+        { value: "infantil", label: "Educação Infantil" },
+        { value: "fundamental", label: "Ensino Fundamental" },
+        { value: "medio", label: "Ensino Médio" },
+        { value: "profissional", label: "Educação Profissional" },
+        { value: "eja", label: "Educação de Jovens e Adultos" },
+    ];
 
     useEffect(() => {
         async function fetchOverviewData() {
@@ -74,14 +85,37 @@ function EditCollegePage() {
     }
 
     async function sendCollegeData() {
-        const response = await updateCollege(editCollegeData);
+        const payload = {
+            ...editCollegeData,
+            contractSeries: Array.isArray(editCollegeData.contractSeries)
+                ? editCollegeData.contractSeries.join(",")
+                : editCollegeData.contractSeries,
+        };
+
+        const response = await updateCollege(payload as any);
+
         if (response.message === "College updated") {
-            alert("Informações atualizadas com sucesso.")
+            alert("Informações atualizadas com sucesso.");
 
             setTimeout(() => {
                 window.location.href = "/admin/colleges";
             }, 1000);
         }
+    }
+
+    function toggleSegment(value: string) {
+        const current: string[] = Array.isArray(editCollegeData.contractSeries)
+            ? editCollegeData.contractSeries
+            : [];
+
+        const updated: string[] = current.includes(value)
+            ? current.filter((v: string) => v !== value)
+            : [...current, value];
+
+        setEditCollegeData({
+            ...editCollegeData,
+            contractSeries: updated as unknown as string,
+        });
     }
 
     return (
@@ -102,7 +136,7 @@ function EditCollegePage() {
 
                             <div className="form-grid">
                                 <div className="input-wrapper">
-                                    <label htmlFor="contract">Contrato:*</label>
+                                    <label htmlFor="contract">Cód. Escola:*</label>
                                     <input type="text" id="contract" name="contract" maxLength={10} value={editCollegeData.contract || ""} onChange={(e) => setEditCollegeData({...editCollegeData, contract: e.target.value})}/>
                                 </div>
                                 <div className="input-wrapper">
@@ -142,8 +176,47 @@ function EditCollegePage() {
                                     <input type="text" id="collegeSeries" name="collegeSeries" value={editCollegeData.collegeSeries || ""} onChange={(e) => setEditCollegeData({...editCollegeData, collegeSeries: e.target.value})}/>
                                 </div>
                                 <div className="input-wrapper">
-                                    <label htmlFor="contractSeries">Séries Contratadas:*</label>
-                                    <input type="text" id="contractSeries" name="contractSeries" value={editCollegeData.contractSeries || ""} onChange={(e) => setEditCollegeData({...editCollegeData, contractSeries: e.target.value})}/>
+                                    <label htmlFor="contractSeries">Seguimento:*</label>
+                                    <div className="custom-multiselect" ref={segmentRef}>
+                                        <button
+                                            type="button"
+                                            className="multiselect-trigger"
+                                            onClick={() => setIsSegmentOpen(prev => !prev)}
+                                        >
+                                            {(() => {
+                                                const segmentsArray = Array.isArray(editCollegeData.contractSeries)
+                                                    ? editCollegeData.contractSeries
+                                                    : typeof editCollegeData.contractSeries === "string" && editCollegeData.contractSeries.length
+                                                        ? editCollegeData.contractSeries.split(",")
+                                                        : [];
+
+                                                return segmentsArray.length
+                                                    ? `${segmentsArray.length} segmento(s) selecionado(s)`
+                                                    : "Selecionar segmentos";
+                                            })()}
+                                        </button>
+
+                                        {isSegmentOpen && (
+                                            <div className="multiselect-popup">
+                                                {segments.map(segment => (
+                                                    <label key={segment.value} className="multiselect-option">
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={
+                                                                Array.isArray(editCollegeData.contractSeries)
+                                                                    ? editCollegeData.contractSeries.includes(segment.value)
+                                                                    : typeof editCollegeData.contractSeries === "string"
+                                                                        ? editCollegeData.contractSeries.split(",").includes(segment.value)
+                                                                        : false
+                                                            }
+                                                            onChange={() => toggleSegment(segment.value)}
+                                                        />
+                                                        <span>{segment.label}</span>
+                                                    </label>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
                                 <div className="input-wrapper">
                                     <label htmlFor="salesManager">Comercial Responsável:*</label>

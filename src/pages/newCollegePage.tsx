@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { getOverviewData } from "../controllers/dash/overview.controller";
 import { createCollege, ICollegeProps } from "../controllers/college/createCollege.controller";
 
@@ -24,6 +24,17 @@ function NewCollegePage() {
     const [ overviewData, setOverviewData ] = useState<TOverviewData | null>(null);
     const [ newCollegeData, setNewCollegeData ] = useState<ICollegeProps>({} as ICollegeProps);
     const [ newManagerData, setNewManagerData ] = useState<TInternalManager>({} as TInternalManager);
+
+    const [isSegmentOpen, setIsSegmentOpen] = useState(false);
+    const segmentRef = useRef<HTMLDivElement | null>(null);
+
+    const segments = [
+        { value: "infantil", label: "Educação Infantil" },
+        { value: "fundamental", label: "Ensino Fundamental" },
+        { value: "medio", label: "Ensino Médio" },
+        { value: "profissional", label: "Educação Profissional" },
+        { value: "eja", label: "Educação de Jovens e Adultos" },
+    ];
 
     useEffect(() => {
         async function fetchOverviewData() {
@@ -68,6 +79,21 @@ function NewCollegePage() {
         setNewManagerData({} as TInternalManager);
     }
 
+    function toggleSegment(value: string) {
+        const current: string[] = Array.isArray(newCollegeData.contractSeries)
+            ? newCollegeData.contractSeries
+            : [];
+
+        const updated: string[] = current.includes(value)
+            ? current.filter((v: string) => v !== value)
+            : [...current, value];
+
+        setNewCollegeData({
+            ...newCollegeData,
+            contractSeries: updated as unknown as string,
+        });
+    }
+
     async function sendCollegeData() {
         setNewCollegeData(prev => ({
             ...prev,
@@ -103,7 +129,7 @@ function NewCollegePage() {
 
                             <div className="form-grid">
                                 <div className="input-wrapper">
-                                    <label htmlFor="contract">Contrato:*</label>
+                                    <label htmlFor="contract">Cód. Escola:*</label>
                                     <input type="text" id="contract" name="contract" onChange={handleNewCollegeData} maxLength={10}/>
                                 </div>
                                 <div className="input-wrapper">
@@ -143,8 +169,47 @@ function NewCollegePage() {
                                     <input type="text" id="collegeSeries" name="collegeSeries" onChange={handleNewCollegeData}/>
                                 </div>
                                 <div className="input-wrapper">
-                                    <label htmlFor="contractSeries">Séries Contratadas:*</label>
-                                    <input type="text" id="contractSeries" name="contractSeries" onChange={handleNewCollegeData}/>
+                                    <label htmlFor="contractSeries">Seguimento:*</label>
+                                    <div className="custom-multiselect" ref={segmentRef}>
+                                        <button
+                                            type="button"
+                                            className="multiselect-trigger"
+                                            onClick={() => setIsSegmentOpen(prev => !prev)}
+                                        >
+                                            {(() => {
+                                                const segmentsArray = Array.isArray(newCollegeData.contractSeries)
+                                                    ? newCollegeData.contractSeries
+                                                    : typeof newCollegeData.contractSeries === "string" && newCollegeData.contractSeries.length
+                                                        ? newCollegeData.contractSeries.split(",")
+                                                        : [];
+
+                                                return segmentsArray.length
+                                                    ? `${segmentsArray.length} segmento(s) selecionado(s)`
+                                                    : "Selecionar segmentos";
+                                            })()}
+                                        </button>
+
+                                        {isSegmentOpen && (
+                                            <div className="multiselect-popup">
+                                                {segments.map(segment => (
+                                                    <label key={segment.value} className="multiselect-option">
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={
+                                                                Array.isArray(newCollegeData.contractSeries)
+                                                                    ? newCollegeData.contractSeries.includes(segment.value)
+                                                                    : typeof newCollegeData.contractSeries === "string"
+                                                                        ? newCollegeData.contractSeries.split(",").includes(segment.value)
+                                                                        : false
+                                                            }
+                                                            onChange={() => toggleSegment(segment.value)}
+                                                        />
+                                                        <span>{segment.label}</span>
+                                                    </label>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
                                 <div className="input-wrapper">
                                     <label htmlFor="salesManager">Comercial Responsável:*</label>
