@@ -48,6 +48,22 @@
     gap: 10px;
 }
 
+.auth-container .auth-wrapper .form-wrapper .input-wrapper div {
+    align-items: center;
+    display: flex;
+    justify-content: center;
+    width: -webkit-fill-available;
+}
+
+.auth-container .auth-wrapper .form-wrapper .input-wrapper div label {
+    align-items: center;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    margin-right: -400px;
+    position: absolute;
+}
+
 .auth-container .auth-wrapper .form-wrapper .input-wrapper span {
     color: #818181;
     font-family: "SF UI Display Medium";
@@ -60,6 +76,7 @@
     padding-left: 10px;
     border-radius: 8px;
     border: 1px solid #ACACAC;
+    width: -webkit-fill-available;
 }
 
 .auth-container .auth-wrapper .form-wrapper .input-wrapper input:focus-visible {
