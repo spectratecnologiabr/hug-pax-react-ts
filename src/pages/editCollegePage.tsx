@@ -47,9 +47,27 @@ function EditCollegePage() {
     const [isSegmentOpen, setIsSegmentOpen] = useState(false);
     const segmentRef = useRef<HTMLDivElement | null>(null);
 
+    useEffect(() => {
+        function handleClickOutside(event: MouseEvent) {
+            if (
+                segmentRef.current &&
+                !segmentRef.current.contains(event.target as Node)
+            ) {
+                setIsSegmentOpen(false);
+            }
+        }
+
+        document.addEventListener("mousedown", handleClickOutside);
+
+        return () => {
+            document.removeEventListener("mousedown", handleClickOutside);
+        };
+    }, []);
+
     const segments = [
         { value: "infantil", label: "Educação Infantil" },
-        { value: "fundamental", label: "Ensino Fundamental" },
+        { value: "fundamental 1", label: "Ensino Fundamental I" },
+        { value: "fundamental 2", label: "Ensino Fundamental II" },
         { value: "medio", label: "Ensino Médio" },
         { value: "profissional", label: "Educação Profissional" },
         { value: "eja", label: "Educação de Jovens e Adultos" },
