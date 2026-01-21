@@ -232,7 +232,7 @@ function EditCollegePage() {
                                     <input type="text" id="management" name="management" value={editCollegeData.management || ""} onChange={(e) => setEditCollegeData({...editCollegeData, management: e.target.value})}/>
                                 </div>
                                 <div className="input-wrapper">
-                                    <label htmlFor="collegeSeries">Séries da Escola:*</label>
+                                    <label htmlFor="collegeSeries">Seguimento:*</label>
                                     <div className="custom-multiselect" ref={seriesRef}>
                                         <button
                                             type="button"
@@ -274,7 +274,7 @@ function EditCollegePage() {
                                     </div>
                                 </div>
                                 <div className="input-wrapper">
-                                    <label htmlFor="contractSeries">Seguimento:*</label>
+                                    <label htmlFor="contractSeries">Séries contratadas:*</label>
                                     <div className="custom-multiselect" ref={segmentRef}>
                                         <button
                                             type="button"

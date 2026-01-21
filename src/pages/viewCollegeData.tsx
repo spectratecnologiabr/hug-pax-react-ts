@@ -158,7 +158,7 @@ function ViewCollegeData() {
                                     <input type="text" id="management" name="management" value={collegeData.management || ""} disabled/>
                                 </div>
                                 <div className="input-wrapper">
-                                    <label htmlFor="collegeSeries">Séries da Escola:*</label>
+                                    <label htmlFor="collegeSeries">Seguimento:*</label>
                                     <div className="custom-multiselect" ref={seriesRef}>
                                         <button
                                             type="button"
@@ -193,7 +193,7 @@ function ViewCollegeData() {
                                     </div>
                                 </div>
                                 <div className="input-wrapper">
-                                    <label htmlFor="contractSeries">Seguimento:*</label>
+                                    <label htmlFor="contractSeries">Séries Contratadas:*</label>
                                     <div className="custom-multiselect" ref={segmentRef}>
                                         <button
                                             type="button"
