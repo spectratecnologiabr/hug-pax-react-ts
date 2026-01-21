@@ -27,7 +27,10 @@ function NewCollegePage() {
     const [ newManagerData, setNewManagerData ] = useState<TInternalManager>({} as TInternalManager);
 
     const [isSegmentOpen, setIsSegmentOpen] = useState(false);
+    const [isSeriesOpen, setIsSeriesOpen] = useState(false);
+
     const segmentRef = useRef<HTMLDivElement | null>(null);
+    const seriesRef = useRef<HTMLDivElement | null>(null);
 
     useEffect(() => {
         function handleClickOutside(event: MouseEvent) {
@@ -36,6 +39,13 @@ function NewCollegePage() {
                 !segmentRef.current.contains(event.target as Node)
             ) {
                 setIsSegmentOpen(false);
+            }
+
+            if (
+                seriesRef.current &&
+                !seriesRef.current.contains(event.target as Node)
+            ) {
+                setIsSeriesOpen(false);
             }
         }
 
@@ -207,7 +217,61 @@ function NewCollegePage() {
                                 </div>
                                 <div className="input-wrapper">
                                     <label htmlFor="collegeSeries">Séries da Escola:*</label>
-                                    <input type="text" id="collegeSeries" name="collegeSeries" onChange={handleNewCollegeData}/>
+                                    <div className="custom-multiselect" ref={seriesRef}>
+                                        <button
+                                            type="button"
+                                            className="multiselect-trigger"
+                                            onClick={() => setIsSeriesOpen(prev => !prev)}
+                                        >
+                                            {(() => {
+                                                const seriesArray = Array.isArray(newCollegeData.collegeSeries)
+                                                    ? newCollegeData.collegeSeries
+                                                    : typeof newCollegeData.collegeSeries === "string" && newCollegeData.collegeSeries.length
+                                                        ? newCollegeData.collegeSeries.split(",")
+                                                        : [];
+
+                                                return seriesArray.length
+                                                    ? `${seriesArray.length} série(s) selecionada(s)`
+                                                    : "Selecionar séries";
+                                            })()}
+                                        </button>
+
+                                        {isSeriesOpen && (
+                                            <div className="multiselect-popup">
+                                                {segments.map(segment => (
+                                                    <label key={segment.value} className="multiselect-option">
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={
+                                                                Array.isArray(newCollegeData.collegeSeries)
+                                                                    ? newCollegeData.collegeSeries.includes(segment.value)
+                                                                    : typeof newCollegeData.collegeSeries === "string"
+                                                                        ? newCollegeData.collegeSeries.split(",").includes(segment.value)
+                                                                        : false
+                                                            }
+                                                            onChange={() => {
+                                                                const current: string[] = Array.isArray(newCollegeData.collegeSeries)
+                                                                    ? newCollegeData.collegeSeries
+                                                                    : typeof newCollegeData.collegeSeries === "string" && newCollegeData.collegeSeries.length
+                                                                        ? newCollegeData.collegeSeries.split(",")
+                                                                        : [];
+
+                                                                const updated: string[] = current.includes(segment.value)
+                                                                    ? current.filter((v: string) => v !== segment.value)
+                                                                    : [...current, segment.value];
+
+                                                                setNewCollegeData(prev => ({
+                                                                    ...prev,
+                                                                    collegeSeries: updated as unknown as string,
+                                                                }));
+                                                            }}
+                                                        />
+                                                        <span>{segment.label}</span>
+                                                    </label>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
                                 <div className="input-wrapper">
                                     <label htmlFor="contractSeries">Seguimento:*</label>

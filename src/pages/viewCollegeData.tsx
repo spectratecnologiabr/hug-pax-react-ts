@@ -33,16 +33,45 @@ function normalizeContractSeries(value: unknown): string[] {
 function ViewCollegeData() {
     const collegeId = useParams().collegeId as string;
     const [ overviewData, setOverviewData ] = useState<TOverviewData | null>(null);
-    const [ collegeData, setCollegeData ] = useState<ICollegeProps>({} as ICollegeProps);    const [isSegmentOpen, setIsSegmentOpen] = useState(false);
+    const [ collegeData, setCollegeData ] = useState<ICollegeProps>({} as ICollegeProps);
+    const [isSegmentOpen, setIsSegmentOpen] = useState(false);
+    const [isSeriesOpen, setIsSeriesOpen] = useState(false);
+
     const segmentRef = useRef<HTMLDivElement | null>(null);
+    const seriesRef = useRef<HTMLDivElement | null>(null);
 
     const segments = [
         { value: "infantil", label: "Educação Infantil" },
-        { value: "fundamental", label: "Ensino Fundamental" },
+        { value: "fundamental 1", label: "Ensino Fundamental I" },
+        { value: "fundamental 2", label: "Ensino Fundamental II" },
         { value: "medio", label: "Ensino Médio" },
         { value: "profissional", label: "Educação Profissional" },
         { value: "eja", label: "Educação de Jovens e Adultos" },
     ];
+
+    useEffect(() => {
+        function handleClickOutside(event: MouseEvent) {
+            if (
+                segmentRef.current &&
+                !segmentRef.current.contains(event.target as Node)
+            ) {
+                setIsSegmentOpen(false);
+            }
+
+            if (
+                seriesRef.current &&
+                !seriesRef.current.contains(event.target as Node)
+            ) {
+                setIsSeriesOpen(false);
+            }
+        }
+
+        document.addEventListener("mousedown", handleClickOutside);
+
+        return () => {
+            document.removeEventListener("mousedown", handleClickOutside);
+        };
+    }, []);
 
     useEffect(() => {
         async function fetchOverviewData() {
@@ -130,7 +159,38 @@ function ViewCollegeData() {
                                 </div>
                                 <div className="input-wrapper">
                                     <label htmlFor="collegeSeries">Séries da Escola:*</label>
-                                    <input type="text" id="collegeSeries" name="collegeSeries" value={collegeData.collegeSeries || ""} disabled/>
+                                    <div className="custom-multiselect" ref={seriesRef}>
+                                        <button
+                                            type="button"
+                                            className="multiselect-trigger"
+                                            onClick={() => setIsSeriesOpen(prev => !prev)}
+                                        >
+                                            {(() => {
+                                                const seriesArray = normalizeContractSeries(collegeData.collegeSeries);
+                                                return seriesArray.length
+                                                    ? `${seriesArray.length} série(s) selecionada(s)`
+                                                    : "Nenhuma série selecionada";
+                                            })()}
+                                        </button>
+
+                                        {isSeriesOpen && (
+                                            <div className="multiselect-popup">
+                                                {segments.map(segment => {
+                                                    const currentSeries = normalizeContractSeries(collegeData.collegeSeries);
+                                                    return (
+                                                        <label key={segment.value} className="multiselect-option">
+                                                            <input
+                                                                type="checkbox"
+                                                                checked={currentSeries.includes(segment.value)}
+                                                                disabled
+                                                            />
+                                                            <span>{segment.label}</span>
+                                                        </label>
+                                                    );
+                                                })}
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
                                 <div className="input-wrapper">
                                     <label htmlFor="contractSeries">Seguimento:*</label>

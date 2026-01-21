@@ -24,14 +24,25 @@ type TInternalManager = {
 }
 
 function normalizeContractSeries(value: unknown): string[] {
-    if (Array.isArray(value)) return value;
+    if (Array.isArray(value)) {
+        return value.filter(v => typeof v === "string" && v.trim().length > 0);
+    }
 
     if (typeof value === "string") {
+        const trimmed = value.trim();
+
+        if (!trimmed) return [];
+
         try {
-            const parsed = JSON.parse(value);
-            if (Array.isArray(parsed)) return parsed;
+            const parsed = JSON.parse(trimmed);
+            if (Array.isArray(parsed)) {
+                return parsed.filter(v => typeof v === "string" && v.trim().length > 0);
+            }
         } catch {
-            return value.split(",").map((v: string) => v.trim());
+            return trimmed
+                .split(",")
+                .map(v => v.trim())
+                .filter(v => v.length > 0);
         }
     }
 
@@ -45,7 +56,10 @@ function EditCollegePage() {
     const [ newManagerData, setNewManagerData ] = useState<TInternalManager>({} as TInternalManager);
 
     const [isSegmentOpen, setIsSegmentOpen] = useState(false);
+    const [isSeriesOpen, setIsSeriesOpen] = useState(false);
+
     const segmentRef = useRef<HTMLDivElement | null>(null);
+    const seriesRef = useRef<HTMLDivElement | null>(null);
 
     useEffect(() => {
         function handleClickOutside(event: MouseEvent) {
@@ -54,6 +68,13 @@ function EditCollegePage() {
                 !segmentRef.current.contains(event.target as Node)
             ) {
                 setIsSegmentOpen(false);
+            }
+
+            if (
+                seriesRef.current &&
+                !seriesRef.current.contains(event.target as Node)
+            ) {
+                setIsSeriesOpen(false);
             }
         }
 
@@ -212,7 +233,45 @@ function EditCollegePage() {
                                 </div>
                                 <div className="input-wrapper">
                                     <label htmlFor="collegeSeries">Séries da Escola:*</label>
-                                    <input type="text" id="collegeSeries" name="collegeSeries" value={editCollegeData.collegeSeries || ""} onChange={(e) => setEditCollegeData({...editCollegeData, collegeSeries: e.target.value})}/>
+                                    <div className="custom-multiselect" ref={seriesRef}>
+                                        <button
+                                            type="button"
+                                            className="multiselect-trigger"
+                                            onClick={() => setIsSeriesOpen(prev => !prev)}
+                                        >
+                                            {(() => {
+                                                const seriesArray = normalizeContractSeries(editCollegeData.collegeSeries);
+                                                return seriesArray.length
+                                                    ? `${seriesArray.length} série(s) selecionada(s)`
+                                                    : "Selecionar séries";
+                                            })()}
+                                        </button>
+
+                                        {isSeriesOpen && (
+                                            <div className="multiselect-popup">
+                                                {segments.map(segment => (
+                                                    <label key={segment.value} className="multiselect-option">
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={normalizeContractSeries(editCollegeData.collegeSeries).includes(segment.value)}
+                                                            onChange={() => {
+                                                                const current = normalizeContractSeries(editCollegeData.collegeSeries);
+                                                                const updated = current.includes(segment.value)
+                                                                    ? current.filter(v => v !== segment.value)
+                                                                    : [...current, segment.value];
+
+                                                                setEditCollegeData(prev => ({
+                                                                    ...prev,
+                                                                    collegeSeries: updated as unknown as ICollegeProps["collegeSeries"]
+                                                                }));
+                                                            }}
+                                                        />
+                                                        <span>{segment.label}</span>
+                                                    </label>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
                                 <div className="input-wrapper">
                                     <label htmlFor="contractSeries">Seguimento:*</label>
