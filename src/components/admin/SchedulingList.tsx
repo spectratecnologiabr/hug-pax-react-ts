@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { listSchedulings } from "../../controllers/consultant/listSchedulings.controller";
+import { visitsToday } from "../../controllers/consultant/visitsToday.controller";
+import { visitsThisWeek } from "../../controllers/consultant/visitsThisWeek.controller";
+import { visitsThisMonth } from "../../controllers/consultant/visitsThisMonth.controller";
 
 import NewSchedulingForm from "./NewSchedulingForm";
 import ViewSchedulingForm from "./ViewSchedulingForm";
@@ -59,14 +62,52 @@ function SchedulingList(props: { selectedDate?: Date }) {
         );
     }
 
+    async function handleVisitsToday() {
+        try {
+            const data = await visitsToday();
+            setSchedulings(data);
+        } catch (error) {
+            console.error("Erro ao buscar visitas de hoje:", error);
+        }
+    }
+
+    async function handleVisitsThisWeek() {
+        try {
+            const data = await visitsThisWeek();
+            setSchedulings(data);
+        } catch (error) {
+            console.error("Erro ao buscar visitas da semana:", error);
+        }
+    }
+
+    async function handleVisitsThisMonth() {
+        try {
+            const data = await visitsThisMonth();
+            setSchedulings(data);
+        } catch (error) {
+            console.error("Erro ao buscar visitas do mês:", error);
+        }
+    }
+
     return (
         <React.Fragment>
             <div className="scheduling-container">
                 <div className="buttons-container">
-                    <button>Hoje</button>
-                    <button>Essa Semana</button>
-                    <button>Esse Mês</button>
-                    <button onClick={() => setNewSchedulingFormOpened(true)}>Novo Agendamento</button>
+                    <button onClick={handleVisitsToday}>
+                        Hoje
+                    </button>
+
+                    <button onClick={handleVisitsThisWeek}>
+                        Essa Semana
+                    </button>
+
+                    <button onClick={handleVisitsThisMonth}>
+                        Esse Mês
+                    </button>
+
+                    <button onClick={() => setNewSchedulingFormOpened(true)}>
+                        Novo Agendamento
+                    </button>
                 </div>
                 <div className="scheduling-list">
                     {
@@ -96,7 +137,37 @@ function SchedulingList(props: { selectedDate?: Date }) {
                                                 })()}
                                             )</span>
                                         </b>
-                                        <p>{new Date(scheduling.visit_date).toLocaleDateString('pt-BR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })} | {new Date(scheduling.init_visit_time).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} - {new Date(scheduling.end_visit_time).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</p>
+                                        <p>
+                                            {(() => {
+                                                const [year, month, day] = scheduling.visit_date.split("-").map(Number);
+                                                return new Date(year, month - 1, day).toLocaleDateString("pt-BR", {
+                                                weekday: "long",
+                                                year: "numeric",
+                                                month: "long",
+                                                day: "numeric",
+                                                });
+                                            })()} | {(() => {
+                                                const parseLocalDateTime = (dateTimeStr: string) => {
+                                                if (!dateTimeStr) return null;
+                                                const [datePart, timePart = "00:00:00"] = dateTimeStr.split(" ");
+                                                const [year, month, day] = datePart.split("-").map(Number);
+                                                const [hour, minute, second] = timePart.split(":").map(Number);
+                                                return new Date(year, month - 1, day, hour, minute, second || 0);
+                                                };
+                                                const initDate = parseLocalDateTime(scheduling.init_visit_time);
+                                                return initDate ? initDate.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }) : "";
+                                            })()} - {(() => {
+                                                const parseLocalDateTime = (dateTimeStr: string) => {
+                                                if (!dateTimeStr) return null;
+                                                const [datePart, timePart = "00:00:00"] = dateTimeStr.split(" ");
+                                                const [year, month, day] = datePart.split("-").map(Number);
+                                                const [hour, minute, second] = timePart.split(":").map(Number);
+                                                return new Date(year, month - 1, day, hour, minute, second || 0);
+                                                };
+                                                const endDate = parseLocalDateTime(scheduling.end_visit_time);
+                                                return endDate ? endDate.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }) : "";
+                                            })()}
+                                        </p>
                                     </div>
 
                                     {

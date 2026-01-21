@@ -37,8 +37,8 @@ function PopupReschedulingVisit(props: {
                 lastVisitDate: props.lastVisitDate,
                 reschedulingAmount: Number(props.lastReschedulingCount) + 1
             }));
-        }
-    }, [props.opened, props.lastVisitDate, props.lastReschedulingCount]);
+            }
+        }, [props.opened, props.lastVisitDate, props.lastReschedulingCount]);
 
     function handleUpdateData(
         event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
