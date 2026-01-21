@@ -6,7 +6,7 @@ import ViewSchedulingForm from "./ViewSchedulingForm";
 
 import "../../style/schedulingList.css";
 
-function SchedulingList(props: { selectedDate?: string }) {
+function SchedulingList(props: { selectedDate?: Date }) {
     const [ schedulings, setSchedulings ] = useState([] as any[]);
     const [ newSchedulingFormOpened, setNewSchedulingFormOpened ] = useState<boolean>(false);
     const [ viewSchedulingFormOpened, setViewSchedulingFormOpened ] = useState<boolean>(false);
@@ -16,9 +16,16 @@ function SchedulingList(props: { selectedDate?: string }) {
     useEffect(() => {
         const fetchSchedulings = async () => {
             try {
+                const formatLocalDate = (date: Date) => {
+                    const year = date.getFullYear();
+                    const month = String(date.getMonth() + 1).padStart(2, "0");
+                    const day = String(date.getDate()).padStart(2, "0");
+                    return `${year}-${month}-${day}`;
+                };
+
                 const dateParam = props.selectedDate
-                  ? props.selectedDate.split("T")[0]
-                  : new Date().toISOString().split("T")[0];
+                  ? formatLocalDate(props.selectedDate)
+                  : formatLocalDate(new Date());
 
                 const data = await listSchedulings(dateParam);
                 setSchedulings(data);
@@ -41,21 +48,26 @@ function SchedulingList(props: { selectedDate?: string }) {
         window.location.pathname = `/admin/consultant/visit/${visitId}`
     }
 
-function openVisitPDF(event: React.MouseEvent<HTMLButtonElement>) {
-    const visitId = event.currentTarget.dataset.schedulingId;
-    if (!visitId) return;
+    function openVisitPDF(event: React.MouseEvent<HTMLButtonElement>) {
+        const visitId = event.currentTarget.dataset.schedulingId;
+        if (!visitId) return;
 
-    window.open(
-        `/admin/visits/${visitId}/report-preview`,
-        "_blank",
-        "noopener,noreferrer"
-    );
-}
+        window.open(
+            `/admin/visits/${visitId}/report-preview`,
+            "_blank",
+            "noopener,noreferrer"
+        );
+    }
 
     return (
         <React.Fragment>
             <div className="scheduling-container">
-                <button className="new-scheduling-button" onClick={() => setNewSchedulingFormOpened(true)}>Novo Agendamento</button>
+                <div className="buttons-container">
+                    <button>Hoje</button>
+                    <button>Essa Semana</button>
+                    <button>Esse Mês</button>
+                    <button onClick={() => setNewSchedulingFormOpened(true)}>Novo Agendamento</button>
+                </div>
                 <div className="scheduling-list">
                     {
                         schedulings.length === 0 ? (

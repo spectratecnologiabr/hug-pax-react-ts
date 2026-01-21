@@ -5,7 +5,12 @@
     gap: 16px;
 }
 
-.scheduling-container button.new-scheduling-button {
+.scheduling-container .buttons-container {
+    display: flex;
+    justify-content: space-between;
+}
+
+.scheduling-container .buttons-container button {
     align-self: flex-end;
     background-color: #3696D3;
     color: #fff;
@@ -17,7 +22,7 @@
     transition: background-color 0.3s ease;
 }
 
-.scheduling-container button.new-scheduling-button:hover {
+.scheduling-container .buttons-container button:hover, .scheduling-container .buttons-container button.active {
     background-color: #2a78b5;
 }
 

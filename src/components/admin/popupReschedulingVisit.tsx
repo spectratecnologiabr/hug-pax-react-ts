@@ -59,8 +59,41 @@ function PopupReschedulingVisit(props: {
             return;
         }
 
-        const initDateTime = `${updateData.visitDate} ${updateData.initVisitTime}:00`;
-        const endDateTime = `${updateData.visitDate} ${updateData.endVisitTime}:00`;
+        const buildDateTimeWithOffset = (date: string, time: string) => {
+            const [year, month, day] = date.split("-").map(Number);
+            const [hour, minute] = time.split(":").map(Number);
+
+            const localDate = new Date(year, month - 1, day, hour, minute, 0);
+
+            const offsetMinutes = localDate.getTimezoneOffset();
+            const offsetHours = Math.floor(Math.abs(offsetMinutes) / 60)
+                .toString()
+                .padStart(2, "0");
+            const offsetMins = (Math.abs(offsetMinutes) % 60)
+                .toString()
+                .padStart(2, "0");
+
+            const sign = offsetMinutes > 0 ? "-" : "+";
+
+            const yyyy = localDate.getFullYear();
+            const mm = String(localDate.getMonth() + 1).padStart(2, "0");
+            const dd = String(localDate.getDate()).padStart(2, "0");
+            const hh = String(localDate.getHours()).padStart(2, "0");
+            const mi = String(localDate.getMinutes()).padStart(2, "0");
+            const ss = "00";
+
+            return `${yyyy}-${mm}-${dd}T${hh}:${mi}:${ss}${sign}${offsetHours}:${offsetMins}`;
+        };
+
+        const initDateTime = buildDateTimeWithOffset(
+            updateData.visitDate,
+            updateData.initVisitTime
+        );
+
+        const endDateTime = buildDateTimeWithOffset(
+            updateData.visitDate,
+            updateData.endVisitTime
+        );
 
         const payload = {
             ...updateData,

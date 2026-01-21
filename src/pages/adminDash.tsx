@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { getOverviewData } from "../controllers/dash/overview.controller";
+import { getConsultanOverviewData } from "../controllers/dash/consultantOverview.controller";
 
 import Menubar from "../components/admin/menubar";
 import AdminDatePicker from "../components/admin/AdminDatePicker";
@@ -14,9 +15,19 @@ type TOverviewData = {
     unreadNotifications: number
 }
 
+type TConsultantOverviewData = {
+    activeColleges: number,
+    activeEducators: number,
+    scheduledThisMonth: number,
+    rescheduledThisMonth: number,
+    cancelledThisMonth: number,
+    completedThisMonth: number
+}
+
 function AdminDash() {
     const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-    const [ overviewData, setOverviewData ] = useState<TOverviewData | null>(null);
+    const [overviewData, setOverviewData] = useState<TOverviewData | null>(null);
+    const [consultantOverviewData, setConsultantOverviewData] = useState<TConsultantOverviewData | null>(null);
 
     useEffect(() => {
         async function fetchOverviewData() {
@@ -28,6 +39,16 @@ function AdminDash() {
             }
         }
 
+        async function fetchConsultamtOverviewData() {
+            try {
+                const fetchedData = await getConsultanOverviewData();
+                setConsultantOverviewData(fetchedData);
+            } catch (error) {
+                console.error("Error fetching consultant overview data:", error);
+            }
+        }
+
+        fetchConsultamtOverviewData()
         fetchOverviewData()
     }, []);
 
@@ -44,30 +65,30 @@ function AdminDash() {
                         <div className="cards-list">
                             <div className="card-item">
                                 <span>Escolas Ativas</span>
-                                <b>49</b>
+                                <b>{consultantOverviewData?.activeColleges}</b>
                             </div>
                             <div className="card-item">
                                 <span>Educadores Ativos</span>
-                                <b>49</b>
+                                <b>{consultantOverviewData?.activeEducators}</b>
                             </div>
                             <div className="card-item">
                                 <span>Agendamentos desse mês</span>
-                                <b>49</b>
+                                <b>{consultantOverviewData?.scheduledThisMonth}</b>
                             </div>
                             <div className="card-item">
                                 <span>Reagendamentos desse mês</span>
-                                <b>49</b>
+                                <b>{consultantOverviewData?.rescheduledThisMonth}</b>
                             </div>
                             <div className="card-item">
                                 <span>Cancelamentos desse mês</span>
-                                <b>49</b>
+                                <b>{consultantOverviewData?.cancelledThisMonth}</b>
                             </div>
                             <div className="card-item">
                                 <span>Visitas realizadas esse mês</span>
-                                <b>49</b>
+                                <b>{consultantOverviewData?.completedThisMonth}</b>
                             </div>
                         </div>
-                        <SchedulingList selectedDate={selectedDate.toISOString()} />
+                        <SchedulingList selectedDate={selectedDate} />
                         <AdminDatePicker selectedDate={selectedDate} onChange={handleDateChange} />
                     </div>
                 </div>
