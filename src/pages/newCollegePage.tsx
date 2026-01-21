@@ -57,13 +57,64 @@ function NewCollegePage() {
     }, []);
 
     const segments = [
-        { value: "infantil", label: "Educação Infantil" },
-        { value: "fundamental 1", label: "Ensino Fundamental I" },
-        { value: "fundamental 2", label: "Ensino Fundamental II" },
-        { value: "medio", label: "Ensino Médio" },
-        { value: "profissional", label: "Educação Profissional" },
-        { value: "eja", label: "Educação de Jovens e Adultos" },
+        { value: "EDUCACAO_INFANTIL", label: "Educação Infantil" },
+        { value: "ENSINO_FUNDAMENTAL_I", label: "Ensino Fundamental I" },
+        { value: "ENSINO_FUNDAMENTAL_II", label: "Ensino Fundamental II" },
+        { value: "ENSINO_MEDIO", label: "Ensino Médio" },
+        { value: "EDUCACAO_PROFISSIONAL", label: "Educação Profissional" },
+        { value: "EJA", label: "Educação de Jovens e Adultos" },
     ];
+
+    const SERIES_BY_SEGMENT = {
+        EDUCACAO_INFANTIL: [
+            { value: "CRECHE_0_3", label: "Creche (0 a 3 anos)" },
+            { value: "PRE_ESCOLA_4_5", label: "Pré-escola (4 a 5 anos)" },
+        ],
+
+        ENSINO_FUNDAMENTAL_I: [
+            { value: "FUND_I_1", label: "1º ano" },
+            { value: "FUND_I_2", label: "2º ano" },
+            { value: "FUND_I_3", label: "3º ano" },
+            { value: "FUND_I_4", label: "4º ano" },
+            { value: "FUND_I_5", label: "5º ano" },
+        ],
+
+        ENSINO_FUNDAMENTAL_II: [
+            { value: "FUND_II_6", label: "6º ano" },
+            { value: "FUND_II_7", label: "7º ano" },
+            { value: "FUND_II_8", label: "8º ano" },
+            { value: "FUND_II_9", label: "9º ano" },
+        ],
+
+        ENSINO_MEDIO: [
+            { value: "MEDIO_1", label: "1ª série" },
+            { value: "MEDIO_2", label: "2ª série" },
+            { value: "MEDIO_3", label: "3ª série" },
+        ],
+
+        EDUCACAO_PROFISSIONAL: [
+            { value: "TECNICO_NIVEL_MEDIO", label: "Técnico de Nível Médio" },
+            { value: "TECNOLOGO_SUPERIOR", label: "Tecnólogo (Nível Superior)" },
+        ],
+
+        EJA: [
+            { value: "EJA_FUNDAMENTAL", label: "EJA Ensino Fundamental (1º ao 9º ano)" },
+            { value: "EJA_MEDIO", label: "EJA Ensino Médio (1ª à 3ª série)" },
+        ],
+    }
+
+    function getAvailableSeriesBySelectedSegments(selectedSegments: unknown) {
+        const segmentsArray: string[] = Array.isArray(selectedSegments)
+            ? selectedSegments
+            : typeof selectedSegments === "string" && selectedSegments.length
+                ? selectedSegments.split(",").map(v => v.trim()).filter(Boolean)
+                : [];
+
+        return segmentsArray.flatMap(segmentKey => {
+            const series = SERIES_BY_SEGMENT[segmentKey as keyof typeof SERIES_BY_SEGMENT];
+            return series ? series : [];
+        });
+    }
 
     useEffect(() => {
         async function fetchOverviewData() {
@@ -231,8 +282,8 @@ function NewCollegePage() {
                                                         : [];
 
                                                 return seriesArray.length
-                                                    ? `${seriesArray.length} série(s) selecionada(s)`
-                                                    : "Selecionar séries";
+                                                    ? `${seriesArray.length} segmento(s) selecionado(s)`
+                                                    : "Selecionar segmentos";
                                             })()}
                                         </button>
 
@@ -289,27 +340,27 @@ function NewCollegePage() {
                                                         : [];
 
                                                 return segmentsArray.length
-                                                    ? `${segmentsArray.length} segmento(s) selecionado(s)`
-                                                    : "Selecionar segmentos";
+                                                    ? `${segmentsArray.length} série(s) selecionada(s)`
+                                                    : "Selecionar séries";
                                             })()}
                                         </button>
 
                                         {isSegmentOpen && (
                                             <div className="multiselect-popup">
-                                                {segments.map(segment => (
-                                                    <label key={segment.value} className="multiselect-option">
+                                                {getAvailableSeriesBySelectedSegments(newCollegeData.collegeSeries).map(series => (
+                                                    <label key={series.value} className="multiselect-option">
                                                         <input
                                                             type="checkbox"
                                                             checked={
                                                                 Array.isArray(newCollegeData.contractSeries)
-                                                                    ? newCollegeData.contractSeries.includes(segment.value)
+                                                                    ? newCollegeData.contractSeries.includes(series.value)
                                                                     : typeof newCollegeData.contractSeries === "string"
-                                                                        ? newCollegeData.contractSeries.split(",").includes(segment.value)
+                                                                        ? newCollegeData.contractSeries.split(",").includes(series.value)
                                                                         : false
                                                             }
-                                                            onChange={() => toggleSegment(segment.value)}
+                                                            onChange={() => toggleSegment(series.value)}
                                                         />
-                                                        <span>{segment.label}</span>
+                                                        <span>{series.label}</span>
                                                     </label>
                                                 ))}
                                             </div>

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { listConsultants } from "../controllers/user/listConsultants.controller";
 import { useParams } from "react-router-dom";
 import { getOverviewData } from "../controllers/dash/overview.controller";
 import { findCollege } from "../controllers/college/findCollege.controller";
@@ -13,6 +14,12 @@ type TOverviewData = {
     inProgressCourses: number,
     totalHours: number,
     unreadNotifications: number
+}
+
+type TConsultant = {
+    id: number;
+    firstName: string;
+    lastName: string;
 }
 
 function normalizeContractSeries(value: unknown): string[] {
@@ -36,18 +43,70 @@ function ViewCollegeData() {
     const [ collegeData, setCollegeData ] = useState<ICollegeProps>({} as ICollegeProps);
     const [isSegmentOpen, setIsSegmentOpen] = useState(false);
     const [isSeriesOpen, setIsSeriesOpen] = useState(false);
+    const [consultants, setConsultants] = useState<TConsultant[]>([]);
 
     const segmentRef = useRef<HTMLDivElement | null>(null);
     const seriesRef = useRef<HTMLDivElement | null>(null);
 
     const segments = [
-        { value: "infantil", label: "Educação Infantil" },
-        { value: "fundamental 1", label: "Ensino Fundamental I" },
-        { value: "fundamental 2", label: "Ensino Fundamental II" },
-        { value: "medio", label: "Ensino Médio" },
-        { value: "profissional", label: "Educação Profissional" },
-        { value: "eja", label: "Educação de Jovens e Adultos" },
+        { value: "EDUCACAO_INFANTIL", label: "Educação Infantil" },
+        { value: "ENSINO_FUNDAMENTAL_I", label: "Ensino Fundamental I" },
+        { value: "ENSINO_FUNDAMENTAL_II", label: "Ensino Fundamental II" },
+        { value: "ENSINO_MEDIO", label: "Ensino Médio" },
+        { value: "EDUCACAO_PROFISSIONAL", label: "Educação Profissional" },
+        { value: "EJA", label: "Educação de Jovens e Adultos" },
     ];
+
+    const SERIES_BY_SEGMENT = {
+        EDUCACAO_INFANTIL: [
+            { value: "CRECHE_0_3", label: "Creche (0 a 3 anos)" },
+            { value: "PRE_ESCOLA_4_5", label: "Pré-escola (4 a 5 anos)" },
+        ],
+
+        ENSINO_FUNDAMENTAL_I: [
+            { value: "FUND_I_1", label: "1º ano" },
+            { value: "FUND_I_2", label: "2º ano" },
+            { value: "FUND_I_3", label: "3º ano" },
+            { value: "FUND_I_4", label: "4º ano" },
+            { value: "FUND_I_5", label: "5º ano" },
+        ],
+
+        ENSINO_FUNDAMENTAL_II: [
+            { value: "FUND_II_6", label: "6º ano" },
+            { value: "FUND_II_7", label: "7º ano" },
+            { value: "FUND_II_8", label: "8º ano" },
+            { value: "FUND_II_9", label: "9º ano" },
+        ],
+
+        ENSINO_MEDIO: [
+            { value: "MEDIO_1", label: "1ª série" },
+            { value: "MEDIO_2", label: "2ª série" },
+            { value: "MEDIO_3", label: "3ª série" },
+        ],
+
+        EDUCACAO_PROFISSIONAL: [
+            { value: "TECNICO_NIVEL_MEDIO", label: "Técnico de Nível Médio" },
+            { value: "TECNOLOGO_SUPERIOR", label: "Tecnólogo (Nível Superior)" },
+        ],
+
+        EJA: [
+            { value: "EJA_FUNDAMENTAL", label: "EJA Ensino Fundamental (1º ao 9º ano)" },
+            { value: "EJA_MEDIO", label: "EJA Ensino Médio (1ª à 3ª série)" },
+        ],
+    }
+
+    function getAvailableSeriesBySelectedSegments(selectedSegments: unknown) {
+        const segmentsArray: string[] = Array.isArray(selectedSegments)
+            ? selectedSegments
+            : typeof selectedSegments === "string" && selectedSegments.length
+                ? selectedSegments.split(",").map(v => v.trim()).filter(Boolean)
+                : [];
+
+        return segmentsArray.flatMap(segmentKey => {
+            const series = SERIES_BY_SEGMENT[segmentKey as keyof typeof SERIES_BY_SEGMENT];
+            return series ? series : [];
+        });
+    }
 
     useEffect(() => {
         function handleClickOutside(event: MouseEvent) {
@@ -100,8 +159,18 @@ function ViewCollegeData() {
             }
         }
 
+        async function fetchConsultants() {
+            try {
+                const consultantsData = await listConsultants();
+                setConsultants(consultantsData);
+            } catch (error) {
+                console.error("Error fetching consultants:", error);
+            }
+        }
+
         fetchCollegeData()
         fetchOverviewData()
+        fetchConsultants();
     }, []);
 
     return (
@@ -168,8 +237,8 @@ function ViewCollegeData() {
                                             {(() => {
                                                 const seriesArray = normalizeContractSeries(collegeData.collegeSeries);
                                                 return seriesArray.length
-                                                    ? `${seriesArray.length} série(s) selecionada(s)`
-                                                    : "Nenhuma série selecionada";
+                                                    ? `${seriesArray.length} segmento(s) selecionado(s)`
+                                                    : "Nenhum segmento selecionado";
                                             })()}
                                         </button>
 
@@ -203,26 +272,26 @@ function ViewCollegeData() {
                                             {(() => {
                                                 const segmentsArray = normalizeContractSeries(collegeData.contractSeries);
                                                 return segmentsArray.length
-                                                    ? `${segmentsArray.length} segmento(s) selecionado(s)`
-                                                    : "Selecionar segmentos";
+                                                    ? `${segmentsArray.length} série(s) selecionada(s)`
+                                                    : "Nenhuma série selecionada";
                                             })()}
                                         </button>
 
                                         {isSegmentOpen && (
                                             <div className="multiselect-popup">
-                                                {segments.map(segment => (
-                                                    <label key={segment.value} className="multiselect-option">
-                                                        <input
-                                                            type="checkbox"
-                                                            checked={(() => {
-                                                                const currentSeries = normalizeContractSeries(collegeData.contractSeries);
-                                                                return currentSeries.includes(segment.value);
-                                                            })()}
-                                                            disabled
-                                                        />
-                                                        <span>{segment.label}</span>
-                                                    </label>
-                                                ))}
+                                                {getAvailableSeriesBySelectedSegments(collegeData.collegeSeries).map(series => {
+                                                    const currentSeries = normalizeContractSeries(collegeData.contractSeries);
+                                                    return (
+                                                        <label key={series.value} className="multiselect-option">
+                                                            <input
+                                                                type="checkbox"
+                                                                checked={currentSeries.includes(series.value)}
+                                                                disabled
+                                                            />
+                                                            <span>{series.label}</span>
+                                                        </label>
+                                                    );
+                                                })}
                                             </div>
                                         )}
                                     </div>
@@ -232,8 +301,22 @@ function ViewCollegeData() {
                                     <input type="text" id="salesManager" name="salesManager" value={collegeData.salesManager || ""} disabled/>
                                 </div>
                                 <div className="input-wrapper">
-                                    <label htmlFor="consultor">Consultor Responsável:*</label>
-                                    <input type="text" id="consultor" name="consultor" value={collegeData.consultorId || ""} disabled/>
+                                    <label htmlFor="consultorId">Consultor Responsável:*</label>
+                                    <select
+                                        id="consultorId"
+                                        name="consultorId"
+                                        value={collegeData.consultorId || ""}
+                                        disabled
+                                    >
+                                        <option value="" disabled>
+                                            Nenhum consultor selecionado
+                                        </option>
+                                        {consultants.map((consultant: TConsultant) => (
+                                            <option key={consultant.id} value={consultant.id}>
+                                                {consultant.firstName} {consultant.lastName}
+                                            </option>
+                                        ))}
+                                    </select>
                                 </div>
 
                                 <div className="input-wrapper">
