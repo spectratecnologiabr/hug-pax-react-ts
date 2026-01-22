@@ -70,6 +70,16 @@
     color: #2394DA;
 }
 
+.scheduling-container .no-shedule {
+  display: flex;
+  justify-content: center;
+}
+
+.scheduling-container .no-shedule p {
+  font-family: 'SF UI Display Light';
+  color: #323232;
+}
+
 .schedule-card {
   display: grid;
   grid-template-columns: 72px 1fr auto auto;

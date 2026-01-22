@@ -28,6 +28,7 @@ function SchedulingList(props: { selectedDate?: Date }) {
                     const year = date.getFullYear();
                     const month = String(date.getMonth() + 1).padStart(2, "0");
                     const day = String(date.getDate()).padStart(2, "0");
+                    setRange(`${day}/${month}/${year}`)
                     return `${year}-${month}-${day}`;
                 };
 
@@ -98,6 +99,8 @@ function SchedulingList(props: { selectedDate?: Date }) {
         }
     }
 
+
+
     async function handleVisitsThisMonth() {
         try {
             const data = await visitsThisMonth();
@@ -149,11 +152,9 @@ function SchedulingList(props: { selectedDate?: Date }) {
                 <div className="scheduling-list">
                     {
                         schedulings.length === 0 ? (
-                            <div className="scheduling-item">
-                                    <div>
-                                        <p>Nenhum agendamento para a data selecionada.</p>
-                                    </div>
-                                </div>
+                            <div className="no-shedule">
+                                <p>Nenhum agendamento para a data selecionada.</p>
+                            </div>
                         ) : (
                             schedulings.map((scheduling: any) => {
                               const statusMap: Record<string, { label: string; className: string }> = {

@@ -56,6 +56,16 @@ function AdminDash() {
         setSelectedDate(date || new Date());
     }
 
+    const formatDate = (date: string) => {
+        const d = new Date(date);
+
+        const dia = String(d.getDate()).padStart(2, '0');
+        const mes = String(d.getMonth() + 1).padStart(2, '0');
+        const ano = d.getFullYear();
+
+        return `${dia}/${mes}/${ano}`;
+    };
+
     return (
         <React.Fragment>
             <div className="admin-dashboard-container">
@@ -88,7 +98,7 @@ function AdminDash() {
                                 <b>{consultantOverviewData?.completedThisMonth}</b>
                             </div>
                         </div>
-                        <SchedulingList selectedDate={selectedDate} />
+                        <SchedulingList selectedDate={selectedDate}/>
                         <AdminDatePicker selectedDate={selectedDate} onChange={handleDateChange} />
                     </div>
                 </div>
