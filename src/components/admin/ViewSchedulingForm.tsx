@@ -11,7 +11,7 @@ import "../../style/schedulingForm.css";
 function getCurrentLocation(): Promise<{ lat: number; lng: number }> {
     return new Promise((resolve, reject) => {
         if (!navigator.geolocation) {
-            reject("Geolocalização não suportada");
+            reject("Geolocalização não suportada neste dispositivo");
             return;
         }
 
@@ -22,10 +22,25 @@ function getCurrentLocation(): Promise<{ lat: number; lng: number }> {
                     lng: position.coords.longitude
                 });
             },
-            () => reject("Permissão de localização negada"),
+            error => {
+                switch (error.code) {
+                    case error.PERMISSION_DENIED:
+                        reject("Permissão de localização negada");
+                        break;
+                    case error.POSITION_UNAVAILABLE:
+                        reject("Localização indisponível no dispositivo");
+                        break;
+                    case error.TIMEOUT:
+                        reject("Tempo limite para obter a localização");
+                        break;
+                    default:
+                        reject("Erro desconhecido ao obter localização");
+                }
+            },
             {
                 enableHighAccuracy: true,
-                timeout: 10000
+                timeout: 30000,
+                maximumAge: 0
             }
         );
     });
@@ -103,27 +118,43 @@ function ViewSchedulingForm(props: {
         try {
             const { lat, lng } = await getCurrentLocation();
 
+            const buildDateTimeWithOffset = (date: Date) => {
+                const offsetMinutes = date.getTimezoneOffset();
+                const offsetHours = Math.floor(Math.abs(offsetMinutes) / 60)
+                    .toString()
+                    .padStart(2, "0");
+                const offsetMins = (Math.abs(offsetMinutes) % 60)
+                    .toString()
+                    .padStart(2, "0");
+
+                const sign = offsetMinutes > 0 ? "-" : "+";
+
+                const yyyy = date.getFullYear();
+                const mm = String(date.getMonth() + 1).padStart(2, "0");
+                const dd = String(date.getDate()).padStart(2, "0");
+                const hh = String(date.getHours()).padStart(2, "0");
+                const mi = String(date.getMinutes()).padStart(2, "0");
+                const ss = String(date.getSeconds()).padStart(2, "0");
+
+                return `${yyyy}-${mm}-${dd}T${hh}:${mi}:${ss}${sign}${offsetHours}:${offsetMins}`;
+            };
+
             const now = new Date();
-            const formattedDateTime = new Date(
-                now.getTime() - now.getTimezoneOffset() * 60000
-            )
-                .toISOString()
-                .replace("T", " ")
-                .substring(0, 19);
 
             const payload = {
-                endRouteTime: formattedDateTime,
-                endRouteCoordinates: JSON.stringify({ lat, lng }),
-                initVisitTime: formattedDateTime,
+                endRouteTime: buildDateTimeWithOffset(now),
+                endRouteCoordinates: { lat, lng },
+                initVisitTime: buildDateTimeWithOffset(now),
                 status: "in progress"
             };
 
-           await updateVisit(props.visitId, payload);
+            await updateVisit(props.visitId, payload);
 
             alert("Visita iniciada!");
             props.onClose();
-        } catch {
-            alert("Não foi possível iniciar a visita. Verifique a localização.");
+        } catch (error) {
+            console.error("Erro ao obter localização:", error);
+            alert(String(error));
         }
     }
 
