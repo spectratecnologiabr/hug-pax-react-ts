@@ -1,7 +1,8 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import DatePicker from "react-datepicker";
 import { ptBR } from "date-fns/locale";
 import { registerLocale } from "react-datepicker";
+import { getDatesWithVisit } from "../../controllers/consultant/getDatesWithVisits.controller";
 import "react-datepicker/dist/react-datepicker.css";
 import "../../style/adminDatePicker.css";
 
@@ -10,17 +11,47 @@ registerLocale("pt-BR", ptBR);
 type Props = { selectedDate: Date | null; onChange: (date: Date | null) => void };
 
 export default function AdminDatePicker({ selectedDate, onChange }: Props) {
+  const [highlightedDates, setHighlightedDates] = useState<Date[]>([]);
+
+  async function loadHighlightedDates(date: Date) {
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const year = String(date.getFullYear());
+
+    const dates = await getDatesWithVisit(month, year);
+
+    if (!Array.isArray(dates)) {
+      setHighlightedDates([]);
+      return;
+    }
+
+    const parsedDates = dates.map((d: string) => {
+      const [y, m, day] = d.split("-").map(Number);
+      return new Date(y, m - 1, day);
+    });
+
+    setHighlightedDates(parsedDates);
+  }
+
+  useEffect(() => {
+    const baseDate = selectedDate ?? new Date();
+    loadHighlightedDates(baseDate);
+  }, []);
+
   return (
     <div className="admin-date-picker">
       <DatePicker
         selected={selectedDate}
         onChange={(date: Date | null) => onChange(date)}
-        onMonthChange={() => onChange(null)}
+        onMonthChange={(date) => {
+          onChange(null);
+          loadHighlightedDates(date);
+        }}
         disabledKeyboardNavigation
         inline
         calendarStartDay={1}
         showPopperArrow={false}
         locale="pt-BR"
+        highlightDates={highlightedDates}
         renderCustomHeader={({
           monthDate,
           decreaseMonth,
