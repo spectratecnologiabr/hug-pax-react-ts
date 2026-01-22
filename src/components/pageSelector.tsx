@@ -7,7 +7,6 @@ function PageSelector(props: {title?: boolean}) {
     const user = getCookies("userData");
     const [open, setOpen] = useState(false);
     const containerRef = useRef<HTMLDivElement>(null);
-    const userRole = user.role;
 
     useEffect(() => {
         function handleClickOutside(event: MouseEvent) {

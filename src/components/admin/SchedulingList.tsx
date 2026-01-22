@@ -15,6 +15,11 @@ function SchedulingList(props: { selectedDate?: Date }) {
     const [ viewSchedulingFormOpened, setViewSchedulingFormOpened ] = useState<boolean>(false);
     const [ openedSchedulingId, setOpenedSchedulingId ] = useState(0);
     const [refreshKey, setRefreshKey] = useState(0);
+    const [range, setRange] = useState("hoje")
+
+    // VISITS FILTER POPUP STATE
+    const [filtersOpen, setFiltersOpen] = useState(false);
+    const filtersRef = React.useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         const fetchSchedulings = async () => {
@@ -39,6 +44,17 @@ function SchedulingList(props: { selectedDate?: Date }) {
 
         fetchSchedulings();
     }, [props.selectedDate, refreshKey]);
+
+    useEffect(() => {
+      function handleClickOutside(event: MouseEvent) {
+        if (filtersRef.current && !filtersRef.current.contains(event.target as Node)) {
+          setFiltersOpen(false);
+        }
+      }
+
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
 
     function viewScheduling(event: React.MouseEvent<HTMLButtonElement>) {
         setOpenedSchedulingId(Number(event.currentTarget.dataset.schedulingId));
@@ -66,6 +82,7 @@ function SchedulingList(props: { selectedDate?: Date }) {
         try {
             const data = await visitsToday();
             setSchedulings(data);
+            setRange("hoje");
         } catch (error) {
             console.error("Erro ao buscar visitas de hoje:", error);
         }
@@ -75,6 +92,7 @@ function SchedulingList(props: { selectedDate?: Date }) {
         try {
             const data = await visitsThisWeek();
             setSchedulings(data);
+            setRange("essa semana");
         } catch (error) {
             console.error("Erro ao buscar visitas da semana:", error);
         }
@@ -84,6 +102,7 @@ function SchedulingList(props: { selectedDate?: Date }) {
         try {
             const data = await visitsThisMonth();
             setSchedulings(data);
+            setRange("esse mês")
         } catch (error) {
             console.error("Erro ao buscar visitas do mês:", error);
         }
@@ -92,22 +111,40 @@ function SchedulingList(props: { selectedDate?: Date }) {
     return (
         <React.Fragment>
             <div className="scheduling-container">
-                <div className="buttons-container">
-                    <button onClick={handleVisitsToday}>
-                        Hoje
+                <div className="header-wrapper">
+                    <b>Próximos Agendamentos</b>
+                    <div>
+                        {schedulings.length} visita(s) agendada(s) para {range}
+                    </div>
+                </div>
+                
+                <div className="buttons-wrapper">
+                    <button className="show-filter" onClick={() => setFiltersOpen(prev => !prev)}>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 10 10" fill="none">
+                            <path d="M0.12781 0.97245C1.5291 2.77239 3.60084 5.43605 3.60084 5.43605V8.45608C3.60084 9.12049 4.14445 9.66409 4.80886 9.66409C5.47326 9.66409 6.01687 9.12049 6.01687 8.45608V5.43605C6.01687 5.43605 8.08861 2.77239 9.4899 0.97245C9.79795 0.573806 9.51406 0 9.0067 0H0.604975C0.10365 0 -0.180233 0.573806 0.12781 0.97245Z" fill="#323232"/>
+                        </svg>
+                        <span>Filtros</span>
                     </button>
 
-                    <button onClick={handleVisitsThisWeek}>
-                        Essa Semana
+                    <button onClick={() => setNewSchedulingFormOpened(true)} className="new-schedule">
+                        + Nova visita
+                    </button>
+                </div>
+
+                <div className="visits-filter" ref={filtersRef}>
+                  <div className={`visits-filter-popup ${filtersOpen ? "active" : ""}`}>
+                    <button onClick={() => { handleVisitsToday(); setFiltersOpen(false); }}>
+                      Hoje
                     </button>
 
-                    <button onClick={handleVisitsThisMonth}>
-                        Esse Mês
+                    <button onClick={() => { handleVisitsThisWeek(); setFiltersOpen(false); }}>
+                      Essa semana
                     </button>
 
-                    <button onClick={() => setNewSchedulingFormOpened(true)}>
-                        Novo Agendamento
+                    <button onClick={() => { handleVisitsThisMonth(); setFiltersOpen(false); }}>
+                      Esse mês
                     </button>
+                  </div>
                 </div>
                 <div className="scheduling-list">
                     {
@@ -118,76 +155,60 @@ function SchedulingList(props: { selectedDate?: Date }) {
                                     </div>
                                 </div>
                         ) : (
-                            schedulings.map((scheduling: any) => (
-                                <div className={(scheduling.status === "cancelled") ? "scheduling-item cancelled" : "scheduling-item"} key={scheduling.id}>
-                                    <div>
-                                        <b>
-                                            {scheduling.college_name} | {scheduling.city}
-                                            <span> (
-                                                {(() => {
-                                                    const statusMap: Record<string, string> = {
-                                                        scheduled: "Agendado",
-                                                        rescheduled: "Reagendado",
-                                                        "on course": "A caminho",
-                                                        "in progress": "Em andamento",
-                                                        cancelled: "Cancelado",
-                                                        completed: "Concluído",
-                                                    };
-                                                    return statusMap[scheduling.status as string] || "Desconhecido";
-                                                })()}
-                                            )</span>
-                                        </b>
-                                        <p>
-                                            {(() => {
-                                                const [year, month, day] = scheduling.visit_date.split("-").map(Number);
-                                                return new Date(year, month - 1, day).toLocaleDateString("pt-BR", {
-                                                weekday: "long",
-                                                year: "numeric",
-                                                month: "long",
-                                                day: "numeric",
-                                                });
-                                            })()} | {(() => {
-                                                const parseLocalDateTime = (dateTimeStr: string) => {
-                                                if (!dateTimeStr) return null;
-                                                const [datePart, timePart = "00:00:00"] = dateTimeStr.split(" ");
-                                                const [year, month, day] = datePart.split("-").map(Number);
-                                                const [hour, minute, second] = timePart.split(":").map(Number);
-                                                return new Date(year, month - 1, day, hour, minute, second || 0);
-                                                };
-                                                const initDate = parseLocalDateTime(scheduling.init_visit_time);
-                                                return initDate ? initDate.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }) : "";
-                                            })()} - {(() => {
-                                                const parseLocalDateTime = (dateTimeStr: string) => {
-                                                if (!dateTimeStr) return null;
-                                                const [datePart, timePart = "00:00:00"] = dateTimeStr.split(" ");
-                                                const [year, month, day] = datePart.split("-").map(Number);
-                                                const [hour, minute, second] = timePart.split(":").map(Number);
-                                                return new Date(year, month - 1, day, hour, minute, second || 0);
-                                                };
-                                                const endDate = parseLocalDateTime(scheduling.end_visit_time);
-                                                return endDate ? endDate.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }) : "";
-                                            })()}
-                                        </p>
-                                    </div>
+                            schedulings.map((scheduling: any) => {
+                              const statusMap: Record<string, { label: string; className: string }> = {
+                                scheduled: { label: "Não iniciada", className: "status-pending" },
+                                rescheduled: { label: "Reagendada", className: "status-pending" },
+                                "on course": { label: "A caminho", className: "status-pending" },
+                                "in progress": { label: "Em andamento", className: "status-progress" },
+                                cancelled: { label: "Cancelada", className: "status-cancelled" },
+                                completed: { label: "Concluída", className: "status-completed" },
+                              };
 
+                              const statusInfo = statusMap[scheduling.status] || { label: "Desconhecido", className: "status-pending" };
+
+                              const parseLocalDateTime = (dateTimeStr: string) => {
+                                if (!dateTimeStr) return null;
+                                const [datePart, timePart = "00:00:00"] = dateTimeStr.split(" ");
+                                const [year, month, day] = datePart.split("-").map(Number);
+                                const [hour, minute, second] = timePart.split(":").map(Number);
+                                return new Date(year, month - 1, day, hour, minute, second || 0);
+                              };
+
+                              const initDate = parseLocalDateTime(scheduling.init_visit_time);
+
+                              return (
+                                <div className="schedule-card" key={scheduling.id}>
+                                  <div className="schedule-time">
+                                    {initDate
+                                      ? initDate.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })
+                                      : "--:--"}
+                                  </div>
+
+                                  <div className="schedule-info">
+                                    <strong>{scheduling.college_name} | {scheduling.city}</strong>
+                                    <span>{scheduling.visit_type}</span>
+                                  </div>
+
+                                  <div className={`schedule-status ${statusInfo.className}`}>
+                                    {statusInfo.label}
+                                  </div>
+
+                                  <div className="schedule-actions">
+                                    <span className={`status-dot ${statusInfo.className}`} />
                                     {
-
-                                        scheduling.status === "in progress" ? (
-                                            <button data-scheduling-id={scheduling.id} onClick={openVisitForm}>
-                                                Abrir
-                                            </button>
-                                        ) : scheduling.status === "completed" ? (
-                                            <button data-scheduling-id={scheduling.id} onClick={openVisitPDF}>
-                                                Abrir
-                                            </button>
-                                        ) : scheduling.status !== "cancelled" ? (
-                                            <button data-scheduling-id={scheduling.id} onClick={viewScheduling}>
-                                                Ver
-                                            </button>
-                                        ) : ""
+                                      scheduling.status === "in progress" ? (
+                                        <button data-scheduling-id={scheduling.id} onClick={openVisitForm}>›</button>
+                                      ) : scheduling.status === "completed" ? (
+                                        <button data-scheduling-id={scheduling.id} onClick={openVisitPDF}>›</button>
+                                      ) : scheduling.status !== "cancelled" ? (
+                                        <button data-scheduling-id={scheduling.id} onClick={viewScheduling}>›</button>
+                                      ) : null
                                     }
+                                  </div>
                                 </div>
-                            ))
+                              );
+                            })
                         )
                     }
                 </div>
