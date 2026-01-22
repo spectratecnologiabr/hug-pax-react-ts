@@ -15,25 +15,52 @@ export default function AdminDatePicker({ selectedDate, onChange }: Props) {
       <DatePicker
         selected={selectedDate}
         onChange={(date: Date | null) => onChange(date)}
+        onMonthChange={() => onChange(null)}
+        disabledKeyboardNavigation
         inline
-        calendarStartDay={0}
+        calendarStartDay={1}
         showPopperArrow={false}
         locale="pt-BR"
         renderCustomHeader={({
           monthDate,
           decreaseMonth,
-          increaseMonth
+          increaseMonth,
         }) => (
           <div className="custom-calendar-header">
-            <button type="button" className="calendar-nav-btn" onClick={decreaseMonth}>
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"></path></svg>
-            </button>
-            <span className="calendar-month-label">
-              {monthDate.toLocaleString("pt-BR", { month: "long", year: "numeric" })}
+            <span className="main-calendar-label">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="20" viewBox="0 0 18 20" fill="none">
+                <path d="M13 11H10C9.45 11 9 11.45 9 12V15C9 15.55 9.45 16 10 16H13C13.55 16 14 15.55 14 15V12C14 11.45 13.55 11 13 11ZM13 1V2H5V1C5 0.45 4.55 0 4 0C3.45 0 3 0.45 3 1V2H2C0.89 2 0.00999999 2.9 0.00999999 4L0 18C0 19.1 0.89 20 2 20H16C17.1 20 18 19.1 18 18V4C18 2.9 17.1 2 16 2H15V1C15 0.45 14.55 0 14 0C13.45 0 13 0.45 13 1ZM15 18H3C2.45 18 2 17.55 2 17V7H16V17C16 17.55 15.55 18 15 18Z" fill="#89A626"/>
+              </svg>
+              <b>Calendário de Visitas</b>
             </span>
-            <button type="button" className="calendar-nav-btn" onClick={increaseMonth}>
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"></path></svg>
+            <b className="calendar-month-label">
+              {`${monthDate.toLocaleString("pt-BR", { month: "long" })} ${monthDate.getFullYear()}`}
+            </b>
+
+            <button
+              type="button"
+              className="today"
+              onClick={() => {
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                onChange(today);
+              }}
+            >
+              Hoje
             </button>
+
+            <div className="calendar-nav">
+              <button type="button" className="calendar-nav-btn" onClick={decreaseMonth}>
+                <svg xmlns="http://www.w3.org/2000/svg" height="10" viewBox="0 0 7 12" fill="none">
+                  <path d="M6.2925 9.4625L2.4125 5.5825L6.2925 1.7025C6.6825 1.3125 6.6825 0.6825 6.2925 0.2925C5.9025 -0.0975 5.2725 -0.0975 4.8825 0.2925L0.2925 4.8825C-0.0975 5.2725 -0.0975 5.9025 0.2925 6.2925L4.8825 10.8825C5.2725 11.2725 5.9025 11.2725 6.2925 10.8825C6.6725 10.4925 6.6825 9.8525 6.2925 9.4625Z" fill="#334155"/>
+                </svg>
+              </button>
+              <button type="button" className="calendar-nav-btn" onClick={increaseMonth}>
+                <svg xmlns="http://www.w3.org/2000/svg" height="10" viewBox="0 0 7 12" fill="none">
+                  <path d="M0.2925 9.4625L4.1725 5.5825L0.2925 1.7025C-0.0975 1.3125 -0.0975 0.6825 0.2925 0.2925C0.6825 -0.0975 1.3125 -0.0975 1.7025 0.2925L6.2925 4.8825C6.6825 5.2725 6.6825 5.9025 6.2925 6.2925L1.7025 10.8825C1.3125 11.2725 0.6825 11.2725 0.2925 10.8825C-0.0875 10.4925 -0.0975 9.8525 0.2925 9.4625Z" fill="#334155"/>
+                </svg>
+              </button>
+            </div>
           </div>
         )}
       />
