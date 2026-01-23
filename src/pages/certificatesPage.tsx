@@ -106,15 +106,17 @@ function Certificates() {
                             <span>Carga horária: {certificate.hours}h</span>
                             <span>Status: {certificate.status === "issued" ? "Emitido" : ""}</span>
                             <span>
-                              Emitido em:{' '}
+                              Data de conclusão:{' '}
                               {new Date(certificate.issuedAt).toLocaleDateString('pt-BR')}
                             </span>
                           </div>
 
                           <div className="certificate-actions">
-                            <a href={`/certificates/validate/${certificate.certificateCode}`} target="_blank" rel="noopener noreferrer">
-                              Validar
-                            </a>
+                            {
+                                //<a href={`/certificates/validate/${certificate.certificateCode}`} target="_blank" rel="noopener noreferrer">
+                                // Validar
+                                //</a>
+                            }
                             <button>
                                 <svg height="22" viewBox="0 0 19 23" fill="none" xmlns="http://www.w3.org/2000/svg">
                                     <path d="M15.7293 8.11765H13.5714V1.35294C13.5714 0.608823 12.9607 0 12.2143 0H6.78571C6.03929 0 5.42857 0.608823 5.42857 1.35294V8.11765H3.27071C2.06286 8.11765 1.45214 9.57882 2.30714 10.4312L8.53643 16.6412C9.06571 17.1688 9.92071 17.1688 10.45 16.6412L16.6793 10.4312C17.5343 9.57882 16.9371 8.11765 15.7293 8.11765ZM0 21.6471C0 22.3912 0.610714 23 1.35714 23H17.6429C18.3893 23 19 22.3912 19 21.6471C19 20.9029 18.3893 20.2941 17.6429 20.2941H1.35714C0.610714 20.2941 0 20.9029 0 21.6471Z" fill="#323232"/>
