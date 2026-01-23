@@ -13,6 +13,7 @@ import Course from './pages/course';
 import EducatorsRoom from './pages/educatorsRoom';
 import Profile from './pages/profile';
 import Notifications from './pages/notifications';
+import Certificates from './pages/certificatesPage';
 
 // Admin Routes
 import AdminDash from './pages/adminDash';
@@ -43,6 +44,7 @@ function MyRoutes() {
                 <Route path='/course/:courseSlug/lesson/:lessonId' element={<ProtectedRoute><Course /></ProtectedRoute>} />
                 <Route path='/profile' element={<ProtectedRoute><Profile/></ProtectedRoute>} />
                 <Route path='/notifications' element={<ProtectedRoute><Notifications/></ProtectedRoute>} />
+                <Route path='/certificates' element={<ProtectedRoute><Certificates/></ProtectedRoute>} />
                 
                 <Route path='/admin' element={<AdminRoute><AdminDash/></AdminRoute>} />
                 <Route path='/admin/colleges' element={<AdminRoute><CollegesPage/></AdminRoute>} />

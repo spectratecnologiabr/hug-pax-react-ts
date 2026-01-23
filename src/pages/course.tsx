@@ -21,14 +21,12 @@ import { getOverviewData } from "../controllers/dash/overview.controller";
 import AsideMenu from "../components/asideMenu";
 import Footer from "../components/footer";
 
-import notificationIcon from "../img/notification.svg";
 import alunoIcon from "../img/dash/aluno-icon.svg";
 
 import 'react-circular-progressbar/dist/styles.css';
 import "../style/course.css";
 import 'react-pdf/dist/Page/TextLayer.css';
 import 'react-pdf/dist/Page/AnnotationLayer.css';
-import PageSelector from "../components/pageSelector";
 
 GlobalWorkerOptions.workerSrc = `${process.env.PUBLIC_URL}/pdf.worker.min.js`;
 

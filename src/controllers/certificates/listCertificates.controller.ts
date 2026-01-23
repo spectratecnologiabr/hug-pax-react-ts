@@ -1,0 +1,14 @@
+import axios from 'axios'
+import { getCookies } from "../misc/cookies.controller";
+
+export async function listCertificates() {
+    const response = await axios.get(
+        `${process.env.REACT_APP_API_URL}/certificates/user`,
+        {
+            headers: {
+                Authorization: `Bearer ${getCookies("authToken")}`
+            }
+        }
+    );
+    return response.data;
+}
