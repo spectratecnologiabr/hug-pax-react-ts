@@ -99,7 +99,17 @@ function SchedulingList(props: { selectedDate?: Date }) {
         }
     }
 
+    function formatVisitDate(dateStr: string) {
+        const [year, month, day] = dateStr.split("-").map(Number);
 
+        const date = new Date(year, month - 1, day);
+
+        return date.toLocaleDateString("pt-BR", {
+            weekday: "long",
+            day: "2-digit",
+            month: "long",
+        });
+    }
 
     async function handleVisitsThisMonth() {
         try {
@@ -188,7 +198,7 @@ function SchedulingList(props: { selectedDate?: Date }) {
 
                                   <div className="schedule-info">
                                     <strong>{scheduling.college_name} | {scheduling.city}</strong>
-                                    <span>{scheduling.visit_type}</span>
+                                    <span>{scheduling.visit_type} ({formatVisitDate(scheduling.visit_date)})</span>
                                   </div>
 
                                   <div className={`schedule-status ${statusInfo.className}`}>
