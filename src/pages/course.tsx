@@ -166,6 +166,7 @@ function Course() {
     const videoRef = React.useRef<HTMLVideoElement | null>(null);
     const [isPlaying, setIsPlaying] = React.useState(false);
     const [progress, setProgress] = React.useState(0);
+    const [videoProgress, setVideoProgress] = React.useState(0);
     const [duration, setDuration] = React.useState(0);
     const [currentTime, setCurrentTime] = React.useState(0);
     const [isPdfFullscreen, setIsPdfFullscreen] = React.useState(false);
@@ -633,15 +634,41 @@ function Course() {
                                                     src={lessionData.extUrl}
                                                     onLoadedMetadata={(e) => setDuration(e.currentTarget.duration)}
                                                     onTimeUpdate={(e) => {
-                                                        setCurrentTime(e.currentTarget.currentTime)
-                                                        setProgress((e.currentTarget.currentTime / duration) * 100)
+                                                        const current = e.currentTarget.currentTime
+                                                        const total = e.currentTarget.duration || 0
+
+                                                        setCurrentTime(current)
+
+                                                        if (total > 0 && duration === 0) {
+                                                            setDuration(total)
+                                                        }
+
+                                                        if (total > 0) {
+                                                            const percent = (current / total) * 100
+                                                            setVideoProgress(percent)
+                                                            setProgress(percent)
+                                                        }
                                                     }}
                                                     controlsList="nodownload"
                                                 />
 
                                                 <div className="video-controls bar">
                                                     <div className="progress-track">
-                                                        <input type="range" min={0} max={100} value={progress} onChange={(e) => { const newTime = (Number(e.target.value) / 100) * duration; if (videoRef.current) videoRef.current.currentTime = newTime; }} />
+                                                        <input
+                                                            type="range"
+                                                            min={0}
+                                                            max={100}
+                                                            value={videoProgress}
+                                                            onChange={(e) => {
+                                                                if (!videoRef.current) return
+
+                                                                const percent = Number(e.target.value)
+                                                                const newTime = (percent / 100) * videoRef.current.duration
+
+                                                                videoRef.current.currentTime = newTime
+                                                                setVideoProgress(percent)
+                                                            }}
+                                                        />
                                                     </div>
 
                                                     <div className="controls-row">
@@ -662,8 +689,9 @@ function Course() {
                                                                 {String(Math.floor(currentTime / 60)).padStart(2, "0")}:
                                                                 {String(Math.floor(currentTime % 60)).padStart(2, "0")}
                                                                 {" / "}
-                                                                {String(Math.floor(duration / 60)).padStart(2, "0")}:
-                                                                {String(Math.floor(duration % 60)).padStart(2, "0")}
+                                                                {duration > 0
+                                                                    ? `${String(Math.floor(duration / 60)).padStart(2, "0")}:${String(Math.floor(duration % 60)).padStart(2, "0")}`
+                                                                    : "--:--"}
                                                             </span>
                                                         </div>
 
