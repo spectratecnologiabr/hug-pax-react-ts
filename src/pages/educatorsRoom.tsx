@@ -126,7 +126,7 @@ function EducatorsRoom() {
                 <div className="educators-page-wrapper">
                     <div className="educators-room-container">
                         <div className="header-wrapper">
-                            <b>Sala de educadores</b>
+                            <b>Central de Gestão Pedagógica</b>
 
                             <div className="filters-wrapper">
                                 <div className="search-wrapper">

@@ -576,6 +576,23 @@ function Course() {
         }
     }, [pendingSeek, lessionData?.id])
 
+    async function forceDownload(url: string, filename?: string) {
+        const response = await fetch(url);
+        const blob = await response.blob();
+
+        const blobUrl = window.URL.createObjectURL(blob);
+
+        const link = document.createElement("a");
+        link.href = blobUrl;
+        link.download = filename || "download";
+
+        document.body.appendChild(link);
+        link.click();
+
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(blobUrl);
+    }
+
     return (
         <React.Fragment>
             <div className="course-container">
@@ -852,20 +869,22 @@ function Course() {
                                                         <b>{lesson.title}</b>
                                                     </div>
 
-                                                    <a
-                                                        href={
-                                                            lesson.type === "attachment"
-                                                            ? lesson.extUrl
-                                                            : `/course/${courseSlug}/lesson/${lesson.id}`
-                                                        }
-                                                        {...(lesson.type === "attachment" && { download: true, target: "_blank" })}
+                                                    {lesson.type === "attachment" ? (
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => forceDownload(lesson.extUrl, lesson.title)}
+                                                            className="lesson-action-link"
                                                         >
-                                                        {lesson.type === "video"
-                                                            ? "Assistir"
-                                                            : lesson.type === "attachment"
-                                                            ? "Baixar"
-                                                            : "Ler"}
+                                                            Baixar
+                                                        </button>
+                                                    ) : (
+                                                        <a
+                                                            href={`/course/${courseSlug}/lesson/${lesson.id}`}
+                                                            className="lesson-action-link"
+                                                        >
+                                                            {lesson.type === "video" ? "Assistir" : "Ler"}
                                                         </a>
+                                                    )}
                                                 </div>
                                             ))
                                         }
