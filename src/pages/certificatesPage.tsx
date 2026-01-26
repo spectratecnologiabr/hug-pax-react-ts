@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from "react"
+import html2canvas from "html2canvas";
+import jsPDF from "jspdf";
 import { getOverviewData } from "../controllers/dash/overview.controller"
 import { getCourseById } from "../controllers/course/getCourse.controller"
 import { getCookies } from "../controllers/misc/cookies.controller"
@@ -86,7 +88,6 @@ function Certificates() {
 
     async function printCertificate(data: TCertificate) {
         const documentData = await getDocumentData(data.certificateCode);
-
         if (!documentData) return;
 
         const {
@@ -108,178 +109,156 @@ function Certificates() {
                 <head>
                     <title>Certificado</title>
                     <style>
-@page {
-    size: A4 landscape;
-    margin: 0;
-}
-
-html, body {
-    width: 100%;
-    height: 100%;
-    margin: 0;
-    padding: 0;
-}
-
-* {
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
-}
-
-body {
-    margin: 0;
-    padding: 0;
-    background: #ffffff;
-    font-family: "Poppins", Arial, sans-serif;
-    color: #2b2b2b;
-}
-
-.cert {
-    width: 1123px;
-    height: 794px;
-    display: flex;
-    flex-direction: column;
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-    overflow: hidden;
-}
-
-/* FAIXA SUPERIOR */
-.header {
-    height: 160px;
-    background-color: #f47c2c !important;
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    padding: 0 100px;
-    color: #ffffff !important;
-    font-size: 48px;
-    font-weight: 800;
-    letter-spacing: 1px;
-    box-sizing: border-box;
-    margin: 0;
-    padding-top: 0;
-    line-height: 1;
-}
-
-/* CONTEÚDO */
-.content {
-    flex: 1;
-    padding: 60px 140px 40px;
-    text-align: center;
-    box-sizing: border-box;
-    font-size: 18px;
-    line-height: 1.7;
-}
-
-/* TEXTO GUIA */
-.cert > div:first-child {
-    margin-top: 0;
-    padding-top: 0;
-}
-
-/* TEXTO GUIA */
-.content > div:first-child {
-    color: #f47c2c;
-    font-size: 18px;
-    margin-bottom: 12px;
-}
-
-/* NOME */
-.student {
-    font-size: 36px;
-    font-weight: 800;
-    margin: 6px 0 12px;
-    color: #000000;
-}
-
-/* CURSO */
-.course {
-    font-size: 26px;
-    font-weight: 700;
-    margin: 6px 0 18px;
-    color: #000000;
-}
-
-/* TEXTO CORRIDO */
-/* content font-size and line-height moved to .content above */
-
-/* TÍTULO MÓDULOS */
-.modules {
-    margin: 30px auto 0;
-    width: 80%;
-    text-align: left;
-}
-
-.modules-title {
-    font-weight: 600;
-    margin-bottom: 6px;
-}
-
-/* LISTA */
-.modules ul {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    background: #ededed !important;
-    border-radius: 10px;
-    overflow: hidden;
-}
-
-.modules li {
-    padding: 14px 18px;
-    font-size: 16px;
-    border-bottom: 1px solid #cfcfcf;
-}
-
-.modules li:last-child {
-    border-bottom: none;
-}
-
-/* RODAPÉ */
-.footer {
-    padding: 30px 100px 40px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-size: 14px;
-    color: #333;
-    box-sizing: border-box;
-}
-
-.code {
-    font-size: 13px;
-    color: #333;
-}
+                        @page {
+                            size: A4 landscape;
+                            margin: 0;
+                        }
+                        html, body {
+                            width: 100%;
+                            height: 100%;
+                            margin: 0;
+                            padding: 0;
+                        }
+                        * {
+                            -webkit-print-color-adjust: exact !important;
+                            print-color-adjust: exact !important;
+                        }
+                        body {
+                            margin: 0;
+                            padding: 0;
+                            background: #fff;
+                            font-family: 'Poppins', Arial, sans-serif;
+                            color: #2b2b2b;
+                        }
+                        .cert {
+                            width: 1123px;
+                            height: 794px;
+                            display: flex;
+                            flex-direction: column;
+                            box-sizing: border-box;
+                            margin: 0;
+                            padding: 0;
+                            overflow: hidden;
+                            background: #fff;
+                            font-family: 'Poppins', Arial, sans-serif;
+                            color: #2b2b2b;
+                        }
+                        .header {
+                            height: 160px;
+                            background-color: #f47c2c;
+                            display: flex;
+                            align-items: center;
+                            justify-content: flex-end;
+                            padding: 0 100px;
+                            color: #fff;
+                            font-size: 48px;
+                            font-weight: 800;
+                            letter-spacing: 1px;
+                            box-sizing: border-box;
+                            margin: 0;
+                            padding-top: 0;
+                            line-height: 1;
+                        }
+                        .content {
+                            flex: 1;
+                            padding: 60px 140px 40px;
+                            text-align: center;
+                            box-sizing: border-box;
+                            font-size: 18px;
+                            line-height: 1.7;
+                            display: flex;
+                            flex-direction: column;
+                            justify-content: center;
+                        }
+                        .content > .guide-text {
+                            color: #f47c2c;
+                            font-size: 18px;
+                            margin-bottom: 12px;
+                        }
+                        .student {
+                            font-size: 36px;
+                            font-weight: 800;
+                            margin: 6px 0 12px;
+                            color: #000;
+                        }
+                        .course {
+                            font-size: 26px;
+                            font-weight: 700;
+                            margin: 6px 0 18px;
+                            color: #000;
+                        }
+                        .content .sub-guide {
+                            color: #f47c2c;
+                            font-size: 18px;
+                            margin-bottom: 12px;
+                        }
+                        .modules {
+                            margin: 30px auto 0;
+                            width: 80%;
+                            text-align: left;
+                        }
+                        .modules-title {
+                            font-weight: 600;
+                            margin-bottom: 6px;
+                            display: block;
+                        }
+                        .modules ul {
+                            list-style: none;
+                            padding: 0;
+                            margin: 0;
+                            background: #ededed;
+                            border-radius: 10px;
+                            overflow: hidden;
+                        }
+                        .modules li {
+                            padding: 14px 18px;
+                            font-size: 16px;
+                            border-bottom: 1px solid #cfcfcf;
+                        }
+                        .modules li:last-child {
+                            border-bottom: none;
+                        }
+                        .footer {
+                            padding: 30px 100px 40px;
+                            display: flex;
+                            justify-content: space-between;
+                            align-items: center;
+                            font-size: 14px;
+                            color: #333;
+                            box-sizing: border-box;
+                        }
+                        .code {
+                            font-size: 13px;
+                            color: #333;
+                        }
                     </style>
                 </head>
                 <body>
                     <div class="cert">
-                        <div>
-                            <div class="header">CERTIFICADO</div>
-
-                            <div class="content">
-                                Certificamos que
-                                <div class="student">${userName}</div>
-                                participou e concluiu com êxito o curso de
-                                <div class="course">${courseTitle}</div>
-                                com carga horária total de <b>${hours} horas</b>, promovendo o desenvolvimento de competências educacionais e formativas.
-                                
-                                ${
-                                    modules?.length
-                                        ? `
-                                        <div class="modules">
-                                            Eixos e vivências trabalhadas:
-                                            <ul>
-                                                ${modules.map((m: string) => `<li>${m}</li>`).join("")}
-                                            </ul>
-                                        </div>
-                                        `
-                                        : ""
-                                }
-                            </div>
+                        <div class="header">CERTIFICADO</div>
+                        <div class="content">
+                            <div class="guide-text">Certificamos para os devidos fins que</div>
+                            <div class="student">${userName}</div>
+                            <span class="sub-guide">concluiu, com êxito, o(a):</span>
+                            <div class="course">${courseTitle}</div>
+                            <span>
+                                realizado pela Hug Education com carga horária total de <b>${hours} horas</b>
+                            </span>
+                            ${
+                                modules?.length
+                                    ? `
+                                    <div class="modules">
+                                        <span class="modules-title">Eixos e vivências trabalhadas:</span>
+                                        <ul>
+                                            ${modules.map((m: string, idx: number) =>
+                                                `<li style="border-bottom:${idx === modules.length-1 ? "none" : "1px solid #cfcfcf"};">${m}</li>`
+                                            ).join("")}
+                                        </ul>
+                                    </div>
+                                    `
+                                    : ""
+                            }
                         </div>
-
                         <div class="footer">
                             <div>
                                 Emitido em ${issuedDate}
@@ -289,7 +268,6 @@ body {
                             </div>
                         </div>
                     </div>
-
                     <script>
                         window.onload = function () {
                             window.print();
@@ -298,15 +276,191 @@ body {
                 </body>
             </html>
         `);
-
         printWindow.document.close();
     }
 
     async function downloadCertificate(data: TCertificate) {
-        window.open(
-            `${process.env.REACT_APP_API_URL}/certificates/pdf/${data.certificateCode}`,
-            "_blank"
-        )
+        const documentData = await getDocumentData(data.certificateCode);
+        if (!documentData) return;
+
+        const {
+            certificateCode,
+            userName,
+            courseTitle,
+            hours,
+            issuedAt,
+            modules
+        } = documentData;
+
+        const issuedDate = new Date(issuedAt).toLocaleDateString("pt-BR");
+
+        // criar container oculto
+        const container = document.createElement("div");
+        container.style.position = "fixed";
+        container.style.left = "-9999px";
+        container.style.top = "0";
+        container.innerHTML = `
+            <div id="certificate"
+                style="
+                    width:1123px;
+                    height:794px;
+                    display:flex;
+                    flex-direction:column;
+                    box-sizing:border-box;
+                    margin:0;
+                    padding:0;
+                    overflow:hidden;
+                    background:#fff;
+                    font-family:'Poppins', Arial, sans-serif;
+                    color:#2b2b2b;
+                "
+            >
+                <!-- Header -->
+                <div
+                    style="
+                        height:160px;
+                        background-color:#f47c2c;
+                        display:flex;
+                        align-items:center;
+                        justify-content:flex-end;
+                        padding:0 100px;
+                        color:#fff;
+                        font-size:48px;
+                        font-weight:800;
+                        letter-spacing:1px;
+                        box-sizing:border-box;
+                        margin:0;
+                        padding-top:0;
+                        line-height:1;
+                    "
+                >
+                    CERTIFICADO
+                </div>
+                <!-- Content -->
+                <div
+                    style="
+                        flex:1;
+                        padding:60px 140px 40px;
+                        text-align:center;
+                        box-sizing:border-box;
+                        font-size:18px;
+                        line-height:1.7;
+                        display:flex;
+                        flex-direction:column;
+                        justify-content:center;
+                    "
+                >
+                    <div
+                        style="
+                            color:#f47c2c;
+                            font-size:18px;
+                            margin-bottom:12px;
+                        "
+                    >
+                        Certificamos para os devidos fins que
+                    </div>
+                    <div
+                        style="
+                            font-size:36px;
+                            font-weight:800;
+                            margin:6px 0 12px;
+                            color:#000;
+                        "
+                    >
+                        ${userName}
+                    </div>
+                    <span style="
+                            color:#f47c2c;
+                            font-size:18px;
+                            margin-bottom:12px;"
+                        >
+                        concluiu, com êxito, o(a):
+                    </span>
+                    <div
+                        style="
+                            font-size:26px;
+                            font-weight:700;
+                            margin:6px 0 18px;
+                            color:#000;
+                        "
+                    >
+                        ${courseTitle}
+                    </div>
+                    <span>
+                        realizado pela Hug Education com carga horária total de <b>${hours} horas</b>
+                    </span>
+                    ${
+                        modules?.length
+                            ? `
+                            <div
+                                style="
+                                    margin:30px auto 0;
+                                    width:80%;
+                                    text-align:left;
+                                "
+                            >
+                                <span style="font-weight:600; margin-bottom:6px; display:block;">Eixos e vivências trabalhadas:</span>
+                                <ul
+                                    style="
+                                        list-style:none;
+                                        padding:0;
+                                        margin:0;
+                                        background:#ededed;
+                                        border-radius:10px;
+                                        overflow:hidden;
+                                    "
+                                >
+                                    ${modules.map((m: string, idx: number) =>
+                                        `<li style="
+                                            padding:14px 18px;
+                                            font-size:16px;
+                                            border-bottom:${idx === modules.length-1 ? "none" : "1px solid #cfcfcf"};
+                                        ">${m}</li>`
+                                    ).join("")}
+                                </ul>
+                            </div>
+                            `
+                            : ""
+                    }
+                </div>
+                <!-- Footer -->
+                <div
+                    style="
+                        padding:30px 100px 40px;
+                        display:flex;
+                        justify-content:space-between;
+                        align-items:center;
+                        font-size:14px;
+                        color:#333;
+                        box-sizing:border-box;
+                    "
+                >
+                    <div>
+                        Emitido em ${issuedDate}
+                    </div>
+                    <div
+                        style="
+                            font-size:13px;
+                            color:#333;
+                        "
+                    >
+                        Código de validação: ${certificateCode}
+                    </div>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(container);
+
+        // gerar PDF
+        const element = container.querySelector("#certificate") as HTMLElement;
+        const canvas = await html2canvas(element);
+        const imgData = canvas.toDataURL("image/png");
+
+        const pdf = new jsPDF("landscape", "pt", "a4");
+        pdf.addImage(imgData, "PNG", 0, 0, pdf.internal.pageSize.width, pdf.internal.pageSize.height);
+        pdf.save(`${userName}-${courseTitle}-certificate.pdf`);
+
+        document.body.removeChild(container);
     }
 
     return (
