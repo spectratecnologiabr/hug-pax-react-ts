@@ -231,10 +231,13 @@ function Certificates() {
                             font-size: 13px;
                             color: #333;
                         }
+                        .page-break {
+                            page-break-before: always;
+                        }
                     </style>
                 </head>
                 <body>
-                    <div class="cert">
+                    <div class="cert" id="cert-main">
                         <div class="header">CERTIFICADO</div>
                         <div class="content">
                             <div class="guide-text">Certificamos para os devidos fins que</div>
@@ -244,20 +247,6 @@ function Certificates() {
                             <span>
                                 realizado pela Hug Education com carga horária total de <b>${hours} horas</b>
                             </span>
-                            ${
-                                modules?.length
-                                    ? `
-                                    <div class="modules">
-                                        <span class="modules-title">Eixos e vivências trabalhadas:</span>
-                                        <ul>
-                                            ${modules.map((m: string, idx: number) =>
-                                                `<li style="border-bottom:${idx === modules.length-1 ? "none" : "1px solid #cfcfcf"};">${m}</li>`
-                                            ).join("")}
-                                        </ul>
-                                    </div>
-                                    `
-                                    : ""
-                            }
                         </div>
                         <div class="footer">
                             <div>
@@ -268,6 +257,32 @@ function Certificates() {
                             </div>
                         </div>
                     </div>
+                    ${
+                        modules?.length
+                            ? `
+                            <div class="cert page-break" id="cert-modules">
+                                <div class="content" style="justify-content: flex-start;">
+                                    <span class="modules-title" style="font-size:22px; margin-top:40px; margin-bottom: 18px;">Eixos e vivências trabalhadas:</span>
+                                    <div class="modules" style="margin-top:0;">
+                                        <ul>
+                                            ${modules.map((m: string, idx: number) =>
+                                                `<li style="border-bottom:${idx === modules.length-1 ? "none" : "1px solid #cfcfcf"};">${m}</li>`
+                                            ).join("")}
+                                        </ul>
+                                    </div>
+                                </div>
+                                <div class="footer">
+                                    <div>
+                                        Emitido em ${issuedDate}
+                                    </div>
+                                    <div class="code">
+                                        Código de validação: ${certificateCode}
+                                    </div>
+                                </div>
+                            </div>
+                            `
+                            : ""
+                    }
                     <script>
                         window.onload = function () {
                             window.print();
@@ -299,8 +314,12 @@ function Certificates() {
         container.style.position = "fixed";
         container.style.left = "-9999px";
         container.style.top = "0";
+        // Primeira página: certificado principal
+        const certMainId = "certificate-main";
+        // Segunda página: módulos
+        const certModulesId = "certificate-modules";
         container.innerHTML = `
-            <div id="certificate"
+            <div id="${certMainId}"
                 style="
                     width:1123px;
                     height:794px;
@@ -389,39 +408,6 @@ function Certificates() {
                     <span>
                         realizado pela Hug Education com carga horária total de <b>${hours} horas</b>
                     </span>
-                    ${
-                        modules?.length
-                            ? `
-                            <div
-                                style="
-                                    margin:30px auto 0;
-                                    width:80%;
-                                    text-align:left;
-                                "
-                            >
-                                <span style="font-weight:600; margin-bottom:6px; display:block;">Eixos e vivências trabalhadas:</span>
-                                <ul
-                                    style="
-                                        list-style:none;
-                                        padding:0;
-                                        margin:0;
-                                        background:#ededed;
-                                        border-radius:10px;
-                                        overflow:hidden;
-                                    "
-                                >
-                                    ${modules.map((m: string, idx: number) =>
-                                        `<li style="
-                                            padding:14px 18px;
-                                            font-size:16px;
-                                            border-bottom:${idx === modules.length-1 ? "none" : "1px solid #cfcfcf"};
-                                        ">${m}</li>`
-                                    ).join("")}
-                                </ul>
-                            </div>
-                            `
-                            : ""
-                    }
                 </div>
                 <!-- Footer -->
                 <div
@@ -448,18 +434,111 @@ function Certificates() {
                     </div>
                 </div>
             </div>
+            ${
+                modules?.length
+                    ? `
+                    <div id="${certModulesId}"
+                        style="
+                            width:1123px;
+                            height:794px;
+                            display:flex;
+                            flex-direction:column;
+                            box-sizing:border-box;
+                            margin:0;
+                            padding:0;
+                            overflow:hidden;
+                            background:#fff;
+                            font-family:'Poppins', Arial, sans-serif;
+                            color:#2b2b2b;
+                        "
+                    >
+                        <div
+                            style="
+                                flex:1;
+                                padding:60px 140px 40px;
+                                text-align:center;
+                                box-sizing:border-box;
+                                font-size:18px;
+                                line-height:1.7;
+                                display:flex;
+                                flex-direction:column;
+                                justify-content:flex-start;
+                            "
+                        >
+                            <span style="font-size:22px; font-weight:600; margin-top:40px; margin-bottom: 18px;">Eixos e vivências trabalhadas:</span>
+                            <div
+                                style="
+                                    margin:0 auto 0;
+                                    width:80%;
+                                    text-align:left;
+                                "
+                            >
+                                <ul
+                                    style="
+                                        list-style:none;
+                                        padding:0;
+                                        margin:0;
+                                        background:#ededed;
+                                        border-radius:10px;
+                                        overflow:hidden;
+                                    "
+                                >
+                                    ${modules.map((m: string, idx: number) =>
+                                        `<li style="
+                                            padding:14px 18px;
+                                            font-size:16px;
+                                            border-bottom:${idx === modules.length-1 ? "none" : "1px solid #cfcfcf"};
+                                        ">${m}</li>`
+                                    ).join("")}
+                                </ul>
+                            </div>
+                        </div>
+                        <div
+                            style="
+                                padding:30px 100px 40px;
+                                display:flex;
+                                justify-content:space-between;
+                                align-items:center;
+                                font-size:14px;
+                                color:#333;
+                                box-sizing:border-box;
+                            "
+                        >
+                            <div>
+                                Emitido em ${issuedDate}
+                            </div>
+                            <div
+                                style="
+                                    font-size:13px;
+                                    color:#333;
+                                "
+                            >
+                                Código de validação: ${certificateCode}
+                            </div>
+                        </div>
+                    </div>
+                    `
+                    : ""
+            }
         `;
         document.body.appendChild(container);
 
-        // gerar PDF
-        const element = container.querySelector("#certificate") as HTMLElement;
-        const canvas = await html2canvas(element);
-        const imgData = canvas.toDataURL("image/png");
-
+        // gerar PDF com DUAS páginas
+        const elementMain = container.querySelector(`#${certMainId}`) as HTMLElement;
+        const elementModules = modules?.length ? (container.querySelector(`#${certModulesId}`) as HTMLElement) : null;
         const pdf = new jsPDF("landscape", "pt", "a4");
-        pdf.addImage(imgData, "PNG", 0, 0, pdf.internal.pageSize.width, pdf.internal.pageSize.height);
+        // Página 1
+        const canvasMain = await html2canvas(elementMain);
+        const imgDataMain = canvasMain.toDataURL("image/png");
+        pdf.addImage(imgDataMain, "PNG", 0, 0, pdf.internal.pageSize.width, pdf.internal.pageSize.height);
+        // Página 2 (se houver módulos)
+        if (elementModules) {
+            pdf.addPage();
+            const canvasModules = await html2canvas(elementModules);
+            const imgDataModules = canvasModules.toDataURL("image/png");
+            pdf.addImage(imgDataModules, "PNG", 0, 0, pdf.internal.pageSize.width, pdf.internal.pageSize.height);
+        }
         pdf.save(`${userName}-${courseTitle}-certificate.pdf`);
-
         document.body.removeChild(container);
     }
 
