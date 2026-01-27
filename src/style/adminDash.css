@@ -1,3 +1,255 @@
+/* ================== Module Creation Modal & Module List ================== */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    overflow-y: auto;
+    padding: 20px;
+}
+
+.modal-overlay-lesson {
+    z-index: 1001;
+}
+
+.modal-content {
+    background-color: #fff;
+    border-radius: 10px;
+    padding: 30px;
+    max-width: 600px;
+    width: 100%;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+    animation: fadeIn 0.25s ease-in-out;
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+}
+
+.modal-content .title-wrapper b {
+    font-size: 20px;
+    font-family: 'SF UI Display Semibold';
+}
+
+.modal-content .form-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 15px;
+}
+
+.modal-content .input-wrapper {
+    display: flex;
+    flex-direction: column;
+}
+
+.modal-content .input-wrapper label {
+    font-family: 'SF UI Display Medium';
+    font-size: 14px;
+    margin-bottom: 6px;
+}
+
+.modal-content .input-wrapper input[type="text"],
+.modal-content .input-wrapper input[type="number"],
+.modal-content .input-wrapper textarea {
+    background-color: #f9fafb;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    padding: 10px;
+    font-family: 'SF UI Display Medium';
+    font-size: 14px;
+    transition: border-color 0.2s;
+}
+
+.modal-content .input-wrapper input:focus,
+.modal-content .input-wrapper textarea:focus {
+    outline: none;
+    border-color: #3696D3;
+    box-shadow: 0 0 0 2px rgba(54,150,211,0.2);
+}
+
+.modal-content .button-wrapper {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+}
+
+.modal-content .submit-button {
+    background-color: #3696D3;
+    color: #fff;
+    padding: 10px 22px;
+    border-radius: 6px;
+    font-family: 'SF UI Display Medium';
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.modal-content .submit-button:hover {
+    background-color: #5cade0;
+}
+
+.modal-content .secondary-button {
+    background-color: #e5e7eb;
+    color: #111;
+    padding: 10px 22px;
+    border-radius: 6px;
+    font-family: 'SF UI Display Medium';
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.modal-content .secondary-button:hover {
+    background-color: #d1d5db;
+}
+
+.module-list-wrapper {
+    margin-top: 25px;
+}
+
+.module-list-wrapper .title-wrapper b {
+    font-size: 18px;
+    font-family: 'SF UI Display Semibold';
+}
+
+.module-list {
+    list-style: none;
+    padding: 0;
+    margin-top: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.module-item {
+    background-color: #f5f7fa;
+    border-radius: 8px;
+    padding: 12px 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    box-shadow: 0 3px 6px rgba(0,0,0,0.05);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.module-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+}
+
+.module-item strong {
+    font-family: 'SF UI Display Semibold';
+    font-size: 15px;
+    color: #111;
+}
+
+.module-item p {
+    font-family: 'SF UI Display Medium';
+    font-size: 13px;
+    color: #4b5563;
+    margin: 0;
+}
+
+.module-item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.module-item-header > div:first-child {
+    flex: 1;
+    min-width: 0;
+}
+
+.module-item-actions {
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.action-button {
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-family: 'SF UI Display Medium';
+    cursor: pointer;
+    border: none;
+    white-space: nowrap;
+}
+
+.action-button.add-lesson {
+    background-color: #3b82f6;
+    color: #fff;
+}
+
+.action-button.add-lesson:hover {
+    background-color: #2563eb;
+}
+
+.action-button.remove-module {
+    background-color: #fef2f2;
+    color: #dc2626;
+    border: 1px solid #fecaca;
+}
+
+.action-button.remove-module:hover {
+    background-color: #fee2e2;
+}
+
+.lesson-sublist {
+    list-style: none;
+    padding: 0;
+    margin: 10px 0 0;
+    border-left: 3px solid #e5e7eb;
+    padding-left: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.lesson-sublist-item {
+    font-size: 13px;
+    color: #4b5563;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.lesson-sublist-title {
+    font-family: 'SF UI Display Semibold';
+    color: #111;
+}
+
+.lesson-sublist-sub {
+    font-family: 'SF UI Display Medium';
+    color: #6b7280;
+}
+
+.lesson-sublist-type {
+    font-size: 11px;
+    padding: 2px 6px;
+    background: #e5e7eb;
+    border-radius: 4px;
+    color: #374151;
+}
+
+.module-list-empty {
+    margin: 15px 0 0;
+    font-size: 14px;
+    color: #6b7280;
+    font-family: 'SF UI Display Medium';
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-15px); }
+    to { opacity: 1; transform: translateY(0); }
+}
 .admin-dashboard-container .admin-dashboard-wrapper {
     width: -webkit-fill-available;
     display: flex;
@@ -194,6 +446,19 @@
     margin-bottom: 15px;
     font-family: 'SF UI Display Semibold';
     font-size: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.admin-dashboard-container .admin-dashboard-wrapper .form-container .form-wrapper .title-wrapper .action-button {
+    background: #3696D3;
+    border-radius: 8px;
+    color: #fff;
+    font-family: 'SF UI Display Medium';
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
 }
 
 .admin-dashboard-container .admin-dashboard-wrapper .form-container .form-wrapper .sub-title-wrapper {
@@ -445,4 +710,100 @@
 .admin-dashboard-container .main-dash-wrapper .cards-list .card-item span {
     font-family: 'SF UI Display Medium';
     font-size: 18px;
+}
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background-color: #fff;
+    border-radius: 8px;
+    padding: 25px 30px;
+    max-width: 600px;
+    width: 90%;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    animation: fadeIn 0.2s ease-in-out;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.modal-content .title-wrapper b {
+    font-size: 18px;
+    font-family: 'SF UI Display Semibold';
+}
+
+.modal-content .form-grid {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    gap: 10px;
+}
+
+.modal-content .input-wrapper {
+    display: flex;
+    flex-direction: column;
+}
+
+.modal-content .input-wrapper label {
+    font-family: 'SF UI Display Medium';
+    font-size: 14px;
+    margin-bottom: 5px;
+}
+
+.modal-content .input-wrapper input[type="text"],
+.modal-content .input-wrapper input[type="number"] {
+    background-color: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 4px;
+    padding: 8px;
+}
+
+.modal-content .button-wrapper {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.modal-content .submit-button {
+    background-color: #3696D3;
+    color: #fff;
+    padding: 10px 20px;
+    border-radius: 4px;
+    font-family: 'SF UI Display Medium';
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+}
+
+.modal-content .submit-button:hover {
+    background-color: #5CADE0;
+}
+
+.modal-content .secondary-button {
+    background-color: #feb8b8;
+    color: #fff;
+    padding: 10px 20px;
+    border-radius: 4px;
+    font-family: 'SF UI Display Medium';
+    cursor: pointer;
+    margin-top: 20px;
+    transition: all 0.2s ease-in-out;
+}
+
+.modal-content .secondary-button:hover {
+    background-color: #d1d5db;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
 }

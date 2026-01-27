@@ -246,40 +246,75 @@ function Course() {
     },[])
     
     React.useEffect(() => {
-        async function getLessionData() {
-            await getLession(Number(lessonId))
-                .then(response => {
-                    initializedRef.current = false
-                    setPendingSeek(null)
+        // Função utilitária para converter snake_case para camelCase
+        function toCamelCase(str: string) {
+            return str.replace(/_([a-z])/g, (g) => g[1].toUpperCase());
+        }
 
-                    if (videoRef.current) {
-                        videoRef.current.currentTime = 0
+        // Converte objeto (ou array de objetos) de snake_case para camelCase recursivamente
+        function mapKeysToCamelCase(obj: any): any {
+            if (Array.isArray(obj)) {
+                return obj.map(mapKeysToCamelCase);
+            } else if (obj && typeof obj === "object" && obj.constructor === Object) {
+                const newObj: any = {};
+                for (const key in obj) {
+                    if (Object.prototype.hasOwnProperty.call(obj, key)) {
+                        newObj[toCamelCase(key)] = mapKeysToCamelCase(obj[key]);
                     }
+                }
+                return newObj;
+            }
+            return obj;
+        }
 
-                    setCurrentTime(0)
-                    setProgress(0)
-                    setDuration(0)
+        async function getLessionData() {
+            const response = await getLession(Number(lessonId));
+            initializedRef.current = false;
+            setPendingSeek(null);
 
-                    setLessionData(response)
-                })
+            if (videoRef.current) {
+                videoRef.current.currentTime = 0;
+            }
+
+            setCurrentTime(0);
+            setProgress(0);
+            setDuration(0);
+
+            // Espera o padrão { success, data, message }
+            if (response && response.success && response.data) {
+                // Mapeia todos os campos para camelCase, incluindo comentários e avaliação se vierem juntos
+                const camelData = mapKeysToCamelCase(response.data);
+                // Se vier comments ou avaliations junto, já garante camelCase
+                setLessionData(camelData);
+            } else {
+                setLessionData(null);
+            }
         }
 
         async function getComments() {
-            await listLessonComments(Number(lessonId))
-                    .then(response => {
-                        setLessonComments(response)
-                    })
+            const response = await listLessonComments(Number(lessonId));
+            // Suporta padrão { success, data, message }
+            if (response && response.success && Array.isArray(response.data)) {
+                setLessonComments(mapKeysToCamelCase(response.data));
+            } else if (Array.isArray(response)) {
+                // fallback antigo
+                setLessonComments(mapKeysToCamelCase(response));
+            } else {
+                setLessonComments([]);
+            }
         }
 
         async function getRate() {
-            await getMyRate(Number(lessonId))
-                    .then(response => {
-                        if(response) {
-                            setLessionRate(response.stars)
-                        } else {
-                            return
-                        }
-                    })
+            const response = await getMyRate(Number(lessonId));
+            // Suporta padrão { success, data, message }
+            if (response && response.success && response.data) {
+                // Permite vir como snake_case ou camelCase
+                setLessionRate(response.data.stars ?? response.data.stars);
+            } else if (response && typeof response.stars === "number") {
+                setLessionRate(response.stars);
+            } else {
+                setLessionRate(0);
+            }   
         }
 
         if (lessonId) {
@@ -413,16 +448,17 @@ function Course() {
     };
 
     React.useEffect(() => {
-        if (!lessionData || lessionData.type !== "pdf") return;
+        // Só processa se for PDF e tiver extUrl definido
+        if (!lessionData || lessionData.type !== "pdf" || !lessionData.extUrl) return;
 
         let active = true;
 
         const renderPdf = async () => {
             // Cancela render anterior
             if (renderTaskRef.current) {
-            try {
-                renderTaskRef.current.cancel();
-            } catch {}
+                try {
+                    renderTaskRef.current.cancel();
+                } catch {}
             }
 
             const pdf = await pdfjsLib.getDocument(lessionData.extUrl).promise;
@@ -458,9 +494,9 @@ function Course() {
         return () => {
             active = false;
             if (renderTaskRef.current) {
-            try {
-                renderTaskRef.current.cancel();
-            } catch {}
+                try {
+                    renderTaskRef.current.cancel();
+                } catch {}
             }
         };
     }, [lessionData, pageNumber, isPdfFullscreen]);

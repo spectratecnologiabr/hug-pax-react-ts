@@ -28,6 +28,7 @@ import ViewEducatorData from './pages/viewEducatorData';
 import VisitFormAnswers from './pages/visitFormAnswers';
 import VisitReportPreview from "./pages/visitReportPreview";
 import Courses from './pages/courses';
+import NewCoursePage from './pages/newCoursePage';
 
 function MyRoutes() {
     return (
@@ -58,6 +59,7 @@ function MyRoutes() {
                 <Route path='/admin/consultant/visit/:visitId' element={<AdminRoute><VisitFormAnswers/></AdminRoute>} />
                 <Route path='/admin/visits/:visitId/report-preview' element={<AdminRoute><VisitReportPreview /></AdminRoute>} />
                 <Route path='/admin/courses' element={<AdminRoute><Courses/></AdminRoute>} />
+                <Route path='/admin/courses/add' element={<AdminRoute><NewCoursePage/></AdminRoute>} />
             </Routes>
         </BrowserRouter>
     )
