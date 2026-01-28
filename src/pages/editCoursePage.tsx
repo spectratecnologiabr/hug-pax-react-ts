@@ -1,17 +1,20 @@
+
+
 import React, { useState, useEffect, useRef } from "react";
 import imageCompression from "browser-image-compression";
+import { useParams } from "react-router-dom";
 import { getOverviewData } from "../controllers/dash/overview.controller";
-import { createCourse, ICourseData } from "../controllers/course/admin/createCourse.controller";
 import { createModule, IModuleData } from "../controllers/course/admin/createModule.controller";
 import { deleteModule } from "../controllers/course/admin/deleteModule.controller";
 import { createLesson, ILessonData } from "../controllers/course/admin/createLesson.controller";
-
 import Menubar from "../components/admin/menubar";
-
 import "../style/adminDash.css";
 import { uploadLessonFileController } from "../controllers/course/admin/uploadFile.controller";
 import { createFile } from "../controllers/course/admin/createFile.controller";
 import { updateLessonExtUrl } from "../controllers/course/admin/updateLesson.controller";
+import { updateCourse } from "../controllers/course/admin/updateCourse.controller";
+
+import { getFullCourseData } from "../controllers/course/admin/getFullCourseData.controller";
 
 type TOverviewData = {
     completedCourses: number,
@@ -23,21 +26,29 @@ type TOverviewData = {
 type LessonInList = ILessonData & { id?: number };
 type ModuleInList = IModuleData & { id?: number; lessons?: LessonInList[] };
 
-type CreateModuleResponse = {
-    success?: boolean;
-    module?: Array<{ insertId?: number } | null>;
-    message?: string;
+type ICourseData = {
+  slug: string;
+  title: string;
+  subTitle: string;
+  cover: string;
+  workload: number;
+  series: string[];
 };
 
-function NewCoursePage() {
+function EditCoursePage() {
+    const { courseId } = useParams<{ courseId: string }>();
     const [ overviewData, setOverviewData ] = useState<TOverviewData | null>(null);
-    const [ newCourseData, setNewCoursedata ] = useState<ICourseData>({slug: "", title: "", subTitle: "", cover: "", workload: 0, series: []})
-    const [isSeriesOpen, setIsSeriesOpen] = useState(false);
+    const [ newCourseData, setNewCoursedata ] = useState<ICourseData>({slug: "", title: "", subTitle: "", cover: "", workload: 0, series: []});
     const [createdCourseId, setCreatedCourseId] = useState<number | null>(null);
+    const [modules, setModules] = useState<ModuleInList[]>([]);
     const [showModuleForm, setShowModuleForm] = useState(false);
     const [showLessonFormForModuleIndex, setShowLessonFormForModuleIndex] = useState<number | null>(null);
-    const [modules, setModules] = useState<ModuleInList[]>([]);
-    // Inclui file?: File, mimeType, size, fileName
+    const [newModuleData, setNewModuleData] = useState<IModuleData>({
+        title: "",
+        description: "",
+        courseId: 0,
+        order: 1,
+    });
     const [newLessonData, setNewLessonData] = useState<ILessonData & { file?: File; mimeType?: string; size?: number; fileName?: string }>({
         moduleId: 0,
         title: "",
@@ -53,13 +64,18 @@ function NewCoursePage() {
         fileName: undefined,
     });
     const [lessonFileUploading, setLessonFileUploading] = useState(false);
-    const [newModuleData, setNewModuleData] = useState<IModuleData>({
-        title: "",
-        description: "",
-        courseId: 0,
-        order: 1,
-    });
     const seriesRef = useRef<HTMLDivElement | null>(null);
+    const [isSeriesOpen, setIsSeriesOpen] = useState(false);
+    useEffect(() => {
+        function handleClickOutside(event: MouseEvent) {
+            if (seriesRef.current && !seriesRef.current.contains(event.target as Node)) {
+                setIsSeriesOpen(false);
+            }
+        }
+
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
 
     useEffect(() => {
         async function fetchOverviewData() {
@@ -70,9 +86,55 @@ function NewCoursePage() {
                 console.error("Error fetching overview data:", error);
             }
         }
-
-        fetchOverviewData()
+        fetchOverviewData();
     }, []);
+
+    // Busca dados do curso e módulos/aulas ao carregar
+    useEffect(() => {
+      async function fetchCourseData() {
+        if (!courseId) return;
+
+        try {
+          const data = await getFullCourseData(Number(courseId));
+
+          // Curso agora vem no root da response
+          setNewCoursedata({
+            slug: data.slug,
+            title: data.title,
+            subTitle: data.subTitle,
+            cover: "", // cover não vem mais na response
+            workload: data.workload,
+            series: Array.isArray(data.series) ? data.series : [],
+          });
+
+          setCreatedCourseId(Number(courseId));
+
+          // Módulos já vêm prontos com lessons
+          setModules(
+            Array.isArray(data.modules)
+              ? data.modules.map((mod: any, index: number) => ({
+                  id: mod.id,
+                  title: mod.title,
+                  order: index + 1,
+                  lessons: Array.isArray(mod.lessons) ? mod.lessons : [],
+                }))
+              : []
+          );
+
+          setNewModuleData(prev => ({
+            ...prev,
+            courseId: Number(courseId),
+            order: Array.isArray(data.modules) ? data.modules.length + 1 : 1,
+          }));
+        } catch (err) {
+          console.error(err);
+          alert("Erro ao buscar dados do curso.");
+        }
+      }
+
+      fetchCourseData();
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [courseId]);
 
     const segments = [
         { value: "EDUCACAO_INFANTIL", label: "Educação Infantil" },
@@ -103,38 +165,10 @@ function NewCoursePage() {
             .replace(/-+/g, "-");
     };
 
-
-    // Função para criar curso
-    async function handleCreateCourse() {
-        try {
-            const payload = {
-                ...newCourseData,
-                slug: newCourseData.slug || generateSlug(newCourseData.title),
-            };
-            const response = await createCourse(payload) as { success?: boolean; data?: { id?: Array<{ insertId?: number }> }; id?: Array<{ insertId?: number }>; message?: string };
-            const courseId = response?.data?.id?.[0]?.insertId ?? response?.id?.[0]?.insertId;
-            if (response.success && courseId) {
-                alert("Curso criado com sucesso. Agora adicione o primeiro módulo.");
-                setCreatedCourseId(courseId);
-                setNewModuleData(prev => ({
-                    ...prev,
-                    courseId,
-                    order: 1,
-                }));
-                setShowModuleForm(true);
-            } else {
-                alert(response.message ?? "Erro ao criar o curso.");
-            }
-        } catch (error) {
-            console.error("Erro ao criar curso:", error);
-            alert("Erro ao criar o curso");
-        }
-    }
-
     // Função para criar módulo
     async function handleCreateModule() {
         try {
-            const response = await createModule(newModuleData) as CreateModuleResponse;
+            const response = await createModule(newModuleData) as { success?: boolean; module?: Array<{ insertId?: number } | null>; message?: string };
             if (response.success) {
                 alert("Módulo criado com sucesso");
                 const first = response.module?.[0];
@@ -162,20 +196,18 @@ function NewCoursePage() {
         }
     }
 
-    // Nova versão de handleCreateLesson: cria a aula primeiro, depois faz upload e registro do arquivo, e atualiza a aula com extUrl via PUT usando id do CDN
+    // Criação de aula (igual newCoursePage)
     async function handleCreateLesson(idx: number) {
         if (!newLessonData.title?.trim()) {
             alert("Informe o título da aula.");
             return;
         }
-
         const targetModule = modules[idx];
         const moduleId = targetModule?.id;
         if (!moduleId) {
             alert("Este módulo ainda não possui ID. Feche o modal de módulos e tente novamente.");
             return;
         }
-
         setLessonFileUploading(true);
         try {
             // 1️⃣ Cria a aula primeiro (sem extUrl)
@@ -186,21 +218,16 @@ function NewCoursePage() {
                 extUrl: undefined,
             };
             const lessonResponse = await createLesson(lessonPayload);
-            console.log("createLesson response:", lessonResponse);
-
             const insertResult = lessonResponse.data?.[0];
             if (!insertResult || !("insertId" in insertResult)) {
                 alert("Erro ao criar a aula.");
                 return;
             }
             const lessonId = insertResult.insertId;
-
             let extUrlFromFileId: string | undefined;
-
             // 2️⃣ Se tiver arquivo, faz upload no CDN
             if (newLessonData.file) {
                 const fileMeta = await uploadLessonFileController(newLessonData.file);
-
                 // 3️⃣ Cria registro na tabela files com lessonId correto
                 await createFile({
                   lessonId,
@@ -210,12 +237,10 @@ function NewCoursePage() {
                   mimeType: newLessonData.file.type,
                   size: newLessonData.file.size,
                 });
-
                 // 4️⃣ Atualiza a aula via PUT em /lessons/:id para setar extUrl = id do CDN
                 await updateLessonExtUrl(lessonId, fileMeta.id);
                 extUrlFromFileId = fileMeta.id;
             }
-
             // Atualiza o estado dos módulos, usando extUrl = id do CDN se houver arquivo
             setModules(prev =>
                 prev.map((m, i) =>
@@ -224,9 +249,7 @@ function NewCoursePage() {
                         : m
                 )
             );
-
             alert("Aula criada com sucesso");
-
             // Reseta o state do form
             setNewLessonData({
                 moduleId: 0,
@@ -243,12 +266,36 @@ function NewCoursePage() {
                 fileName: undefined,
             });
             setShowLessonFormForModuleIndex(null);
-
         } catch (error) {
             console.error("Erro ao criar aula:", error);
             alert("Erro ao criar a aula");
         } finally {
             setLessonFileUploading(false);
+        }
+    }
+
+    async function handleSaveCourse() {
+        if (!courseId) return;
+
+        try {
+            const payload: any = {
+                title: newCourseData.title,
+                subTitle: newCourseData.subTitle,
+                workload: newCourseData.workload,
+                series: newCourseData.series,
+            };
+
+            // Só envia a capa se o usuário tiver alterado
+            if (newCourseData.cover) {
+                payload.cover = newCourseData.cover;
+            }
+
+            await updateCourse(Number(courseId), payload);
+
+            alert("Curso atualizado com sucesso");
+        } catch (error) {
+            console.error("Erro ao atualizar curso:", error);
+            alert("Erro ao salvar alterações do curso");
         }
     }
 
@@ -259,12 +306,15 @@ function NewCoursePage() {
                 <div className="admin-dashboard-wrapper">
                     <div className="form-container">
                         <div className="title-wrapper">
-                            <b>Cadastrar novo curso</b>
+                            <b>Editar curso</b>
                             <button onClick={() => {window.history.back()}}>Voltar</button>
                         </div>
                         <div className="form-wrapper">
                             <div className="title-wrapper">
                                 <b>Informações gerais do curso</b>
+                                <button className="action-button" onClick={handleSaveCourse}>
+                                    Salvar alterações
+                                </button>
                             </div>
                             <div className="form-grid">
                                 <div className="input-wrapper">
@@ -274,14 +324,12 @@ function NewCoursePage() {
                                         id="title"
                                         name="title"
                                         value={newCourseData.title}
-                                        onChange={e => {
-                                            const title = e.target.value;
+                                        onChange={e =>
                                             setNewCoursedata(prev => ({
-                                                ...prev!,
-                                                title,
-                                                slug: generateSlug(title),
-                                            }));
-                                        }}
+                                                ...prev,
+                                                title: e.target.value,
+                                            }))
+                                        }
                                     />
                                 </div>
                                 <div className="input-wrapper">
@@ -293,7 +341,7 @@ function NewCoursePage() {
                                         value={newCourseData.subTitle}
                                         onChange={e =>
                                             setNewCoursedata(prev => ({
-                                                ...prev!,
+                                                ...prev,
                                                 subTitle: e.target.value,
                                             }))
                                         }
@@ -322,7 +370,7 @@ function NewCoursePage() {
                                                 const base64 = await fileToBase64(compressedFile);
 
                                                 setNewCoursedata(prev => ({
-                                                    ...prev!,
+                                                    ...prev,
                                                     cover: base64,
                                                 }));
                                             } catch (error) {
@@ -331,6 +379,9 @@ function NewCoursePage() {
                                             }
                                         }}
                                     />
+                                    {newCourseData.cover && (
+                                        <img src={newCourseData.cover} alt="Capa" style={{maxWidth: 100, marginTop: 6}} />
+                                    )}
                                 </div>
                                 <div className="input-wrapper">
                                     <label htmlFor="workload">Carga horária:*</label>
@@ -341,7 +392,7 @@ function NewCoursePage() {
                                         value={newCourseData.workload}
                                         onChange={e =>
                                             setNewCoursedata(prev => ({
-                                                ...prev!,
+                                                ...prev,
                                                 workload: Number(e.target.value),
                                             }))
                                         }
@@ -359,37 +410,28 @@ function NewCoursePage() {
                                                 const seriesArray = Array.isArray(newCourseData?.series)
                                                     ? newCourseData.series
                                                     : [];
-
                                                 return seriesArray.length
                                                     ? `${seriesArray.length} segmento(s) selecionado(s)`
                                                     : "Selecionar segmentos";
                                             })()}
                                         </button>
-
                                         {isSeriesOpen && (
                                             <div className="multiselect-popup">
                                                 {segments.map(segment => (
                                                     <label key={segment.value} className="multiselect-option">
                                                         <input
                                                             type="checkbox"
-                                                            checked={
-                                                                Array.isArray(newCourseData?.series)
-                                                                    ? newCourseData.series.includes(segment.value)
-                                                                    : false
-                                                            }
+                                                            checked={newCourseData.series.includes(segment.value)}
                                                             onChange={() => {
-                                                                const current: string[] = Array.isArray(newCourseData?.series)
-                                                                    ? newCourseData.series
-                                                                    : [];
-
-                                                                const updated: string[] = current.includes(segment.value)
-                                                                    ? current.filter(v => v !== segment.value)
-                                                                    : [...current, segment.value];
-
-                                                                setNewCoursedata(prev => ({
-                                                                    ...prev!,
-                                                                    series: updated,
-                                                                }));
+                                                                setNewCoursedata(prev => {
+                                                                    const exists = prev.series.includes(segment.value);
+                                                                    return {
+                                                                        ...prev,
+                                                                        series: exists
+                                                                            ? prev.series.filter(s => s !== segment.value)
+                                                                            : [...prev.series, segment.value],
+                                                                    };
+                                                                });
                                                             }}
                                                         />
                                                         <span>{segment.label}</span>
@@ -400,17 +442,8 @@ function NewCoursePage() {
                                     </div>
                                 </div>
                             </div>
-                            <div className="button-wrapper">
-                                <button
-                                    className="submit-button"
-                                    disabled={createdCourseId != null}
-                                    onClick={handleCreateCourse}
-                                >
-                                    Continuar
-                                </button>
-                            </div>
                         </div>
-                        {/* Listagem de módulos: visível assim que o curso é criado */}
+                        {/* Listagem de módulos: sempre visível */}
                         {createdCourseId != null && (
                             <div className="form-wrapper">
                                 <div className="title-wrapper">
@@ -700,4 +733,4 @@ function NewCoursePage() {
     )
 }
 
-export default NewCoursePage
+export default EditCoursePage;

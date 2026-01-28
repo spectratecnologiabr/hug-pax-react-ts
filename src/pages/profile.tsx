@@ -6,7 +6,6 @@ import updatePassword from "../controllers/user/updatePassword.controller";
 import { getOverviewData } from "../controllers/dash/overview.controller";
 
 import AsideMenu from "../components/asideMenu";
-import PageSelector from "../components/pageSelector";
 import Footer from "../components/footer";
 
 import "../style/profile.css";
@@ -327,8 +326,6 @@ function Profile() {
                     </div>
                 </div>
             </div>
-
-            <PageSelector />
             <Footer />
         </React.Fragment>
     )

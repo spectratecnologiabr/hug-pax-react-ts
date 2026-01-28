@@ -463,7 +463,16 @@ function Course() {
                 } catch {}
             }
 
-            const pdf = await pdfjsLib.getDocument(lessionData.extUrl).promise;
+            const pdfUrl = lessionData.extUrl.startsWith("https://")
+                ? lessionData.extUrl
+                : `${process.env.REACT_APP_CDN_URL}/api/stream/${lessionData.extUrl}`;
+
+            const pdf = await pdfjsLib.getDocument({
+                url: pdfUrl,
+                httpHeaders: lessionData.extUrl.startsWith("https://")
+                    ? undefined
+                    : { Authorization: `Bearer ${getCookies("authToken")}` }
+            }).promise;
             if (!active) return;
 
             setNumPages(pdf.numPages);
@@ -614,29 +623,58 @@ function Course() {
     }, [pendingSeek, lessionData?.id])
 
     async function forceDownload(url: string, filename?: string) {
-        const response = await fetch(url);
-        const blob = await response.blob();
+        try {
+            let downloadUrl = url;
+            let headers: HeadersInit | undefined = undefined;
 
-        const blobUrl = window.URL.createObjectURL(blob);
+            // Se não for URL absoluta, passa pelo CDN com autenticação
+            if (!url.startsWith("https://")) {
+                downloadUrl = `${process.env.REACT_APP_CDN_URL}/api/stream/${url}`;
+                headers = {
+                    Authorization: `Bearer ${getCookies("authToken")}`,
+                };
+            }
 
-        const link = document.createElement("a");
-        link.href = blobUrl;
-        link.download = filename || "download";
+            const response = await fetch(downloadUrl, { headers });
 
-        document.body.appendChild(link);
-        link.click();
+            if (!response.ok) {
+                throw new Error("Erro ao baixar anexo");
+            }
 
-        document.body.removeChild(link);
-        window.URL.revokeObjectURL(blobUrl);
+            const blob = await response.blob();
+
+            const blobUrl = window.URL.createObjectURL(blob);
+            const link = document.createElement("a");
+
+            link.href = blobUrl;
+            link.download = filename || "download";
+
+            document.body.appendChild(link);
+            link.click();
+
+            document.body.removeChild(link);
+            window.URL.revokeObjectURL(blobUrl);
+        } catch (err) {
+            console.error("Erro no download do anexo:", err);
+            alert("Não foi possível baixar o anexo");
+        }
     }
 
     React.useEffect(() => {
         async function getVideo() {
             if (!lessionData?.extUrl) return;
 
+            // Se já for uma URL absoluta (https), usa direto sem passar pelo CDN
+            if (lessionData.extUrl.startsWith("https://")) {
+                setVideoSrc(lessionData.extUrl);
+                return;
+            }
+
+            // Caso contrário, passa pelo CDN com autenticação
             const res = await fetch(`${process.env.REACT_APP_CDN_URL}/api/stream/${lessionData.extUrl}`, {
-            headers: { Authorization: `Bearer ${getCookies("authToken")}` }
+                headers: { Authorization: `Bearer ${getCookies("authToken")}` }
             });
+
             const blob = await res.blob();
             setVideoSrc(URL.createObjectURL(blob));
         }
