@@ -17,6 +17,7 @@ import { updatePlayback } from "../controllers/user/updatePlayback.controller";
 import { getPlayback } from "../controllers/user/getPlayback.controller";
 import { globalSearch } from "../controllers/dash/globalSearch.controller";
 import { getOverviewData } from "../controllers/dash/overview.controller";
+import { getCookies } from "../controllers/misc/cookies.controller";
 
 import AsideMenu from "../components/asideMenu";
 import Footer from "../components/footer";
@@ -160,6 +161,7 @@ function Course() {
         history: any[]
     }
 
+    const [videoSrc, setVideoSrc] = React.useState<string>();
     const [playbackMemory, setPlaybackMemory] = React.useState<PlaybackMemory | null>(null)
     const [numPages, setNumPages] = React.useState(0);
     const [pageNumber, setPageNumber] = React.useState(1);
@@ -628,6 +630,19 @@ function Course() {
         window.URL.revokeObjectURL(blobUrl);
     }
 
+    React.useEffect(() => {
+        async function getVideo() {
+            if (!lessionData?.extUrl) return;
+
+            const res = await fetch(`${process.env.REACT_APP_CDN_URL}/api/stream/${lessionData.extUrl}`, {
+            headers: { Authorization: `Bearer ${getCookies("authToken")}` }
+            });
+            const blob = await res.blob();
+            setVideoSrc(URL.createObjectURL(blob));
+        }
+        getVideo();
+    }, [lessionData?.extUrl]);
+
     return (
         <React.Fragment>
             <div className="course-container">
@@ -667,7 +682,7 @@ function Course() {
                                             <div className="video-player-wrapper">
                                                 <video
                                                     ref={videoRef}
-                                                    src={lessionData.extUrl}
+                                                    src={videoSrc}
                                                     onLoadedMetadata={(e) => setDuration(e.currentTarget.duration)}
                                                     onTimeUpdate={(e) => {
                                                         const current = e.currentTarget.currentTime

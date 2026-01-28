@@ -10,6 +10,7 @@ import Menubar from "../components/admin/menubar";
 
 import "../style/adminDash.css";
 import axios from "axios";
+import { getCookies } from "../controllers/misc/cookies.controller";
 
 type TOverviewData = {
     completedCourses: number,
@@ -35,7 +36,8 @@ function NewCoursePage() {
     const [showModuleForm, setShowModuleForm] = useState(false);
     const [showLessonFormForModuleIndex, setShowLessonFormForModuleIndex] = useState<number | null>(null);
     const [modules, setModules] = useState<ModuleInList[]>([]);
-    const [newLessonData, setNewLessonData] = useState<ILessonData>({
+    // Inclui file?: File, mimeType, size, fileName
+    const [newLessonData, setNewLessonData] = useState<ILessonData & { file?: File; mimeType?: string; size?: number; fileName?: string }>({
         moduleId: 0,
         title: "",
         slug: "",
@@ -44,6 +46,10 @@ function NewCoursePage() {
         code: undefined,
         cover: undefined,
         isActive: 1,
+        file: undefined,
+        mimeType: undefined,
+        size: undefined,
+        fileName: undefined,
     });
     const [lessonFileUploading, setLessonFileUploading] = useState(false);
     const [newModuleData, setNewModuleData] = useState<IModuleData>({
@@ -96,24 +102,210 @@ function NewCoursePage() {
             .replace(/-+/g, "-");
     };
 
-    // Função para upload do arquivo de aula
-    async function uploadLessonFile(file: File): Promise<{ fileUrl: string; fileName: string }> {
-        // Ajuste o endpoint conforme sua API
+    // Função para upload do arquivo de aula (usa path do CDN como fileKey)
+    // Atualizado: uploadLessonFile agora retorna também o id do arquivo do CDN (uploadResponse.data.file.id)
+    async function uploadLessonFile(file: File): Promise<{
+        fileUrl: string;
+        fileKey: string;
+        mimeType: string;
+        size: number;
+        id?: string;
+    }> {
         const formData = new FormData();
         formData.append("file", file);
-        // Exemplo: endpoint: /api/upload
-        const response = await axios.post(`${process.env.REACT_APP_CDN_URL}/api/upload`, formData, {
+
+        const uploadResponse = await axios.post(`${process.env.REACT_APP_CDN_URL}/api/upload`, formData, {
             headers: {
                 Authorization: `Bearer ${process.env.REACT_APP_CDN_TOKEN}`,
             },
         });
-        // O endpoint retorna um objeto completo de upload conforme descrito no novo schema
-        // Pegamos os campos relevantes para consumir no restante do sistema
-        const { path, fileName } = response.data.file;
+
+        const { path, id } = uploadResponse.data.file; // pega o path e o id retornados pelo CDN
+        const fileUrl = `${process.env.REACT_APP_CDN_URL}/${path}`;
+        const fileKey = path.split("/").pop()!; // pega só o nome/uuid do arquivo
+
         return {
-            fileUrl: `${process.env.REACT_APP_CDN_URL}/${path}`,
-            fileName: fileName
+            fileUrl,
+            fileKey,
+            mimeType: file.type,
+            size: file.size,
+            id,
         };
+    }
+
+    // Função para criar curso
+    async function handleCreateCourse() {
+        try {
+            const payload = {
+                ...newCourseData,
+                slug: newCourseData.slug || generateSlug(newCourseData.title),
+            };
+            const response = await createCourse(payload) as { success?: boolean; data?: { id?: Array<{ insertId?: number }> }; id?: Array<{ insertId?: number }>; message?: string };
+            const courseId = response?.data?.id?.[0]?.insertId ?? response?.id?.[0]?.insertId;
+            if (response.success && courseId) {
+                alert("Curso criado com sucesso. Agora adicione o primeiro módulo.");
+                setCreatedCourseId(courseId);
+                setNewModuleData(prev => ({
+                    ...prev,
+                    courseId,
+                    order: 1,
+                }));
+                setShowModuleForm(true);
+            } else {
+                alert(response.message ?? "Erro ao criar o curso.");
+            }
+        } catch (error) {
+            console.error("Erro ao criar curso:", error);
+            alert("Erro ao criar o curso");
+        }
+    }
+
+    // Função para criar módulo
+    async function handleCreateModule() {
+        try {
+            const response = await createModule(newModuleData) as CreateModuleResponse;
+            if (response.success) {
+                alert("Módulo criado com sucesso");
+                const first = response.module?.[0];
+                const moduleId = first != null && typeof first === "object" && typeof first.insertId === "number"
+                    ? first.insertId
+                    : undefined;
+                const moduleToAdd: ModuleInList = {
+                    ...newModuleData,
+                    id: moduleId,
+                    lessons: [],
+                };
+                setModules(prev => [...prev, moduleToAdd]);
+                setNewModuleData(prev => ({
+                    ...prev,
+                    title: "",
+                    description: "",
+                    order: prev.order + 1,
+                }));
+            } else {
+                alert(response.message ?? "Erro ao criar o módulo.");
+            }
+        } catch (error) {
+            console.error("Erro ao criar módulo:", error);
+            alert("Erro ao criar o módulo");
+        }
+    }
+
+    // Nova versão de handleCreateLesson: cria a aula primeiro, depois faz upload e registro do arquivo, e atualiza a aula com extUrl via PUT usando id do CDN
+    async function handleCreateLesson(idx: number) {
+        if (!newLessonData.title?.trim()) {
+            alert("Informe o título da aula.");
+            return;
+        }
+
+        const targetModule = modules[idx];
+        const moduleId = targetModule?.id;
+        if (!moduleId) {
+            alert("Este módulo ainda não possui ID. Feche o modal de módulos e tente novamente.");
+            return;
+        }
+
+        setLessonFileUploading(true);
+        try {
+            // 1️⃣ Cria a aula primeiro (sem extUrl)
+            const lessonPayload: ILessonData = {
+                ...newLessonData,
+                moduleId,
+                slug: newLessonData.slug || generateSlug(newLessonData.title),
+                extUrl: undefined,
+            };
+            const lessonResponse = await createLesson(lessonPayload);
+            console.log("createLesson response:", lessonResponse);
+
+            const insertResult = lessonResponse.data?.[0];
+            if (!insertResult || !("insertId" in insertResult)) {
+                alert("Erro ao criar a aula.");
+                return;
+            }
+            const lessonId = insertResult.insertId;
+
+            let extUrlFromFileId: string | undefined;
+
+            // 2️⃣ Se tiver arquivo, faz upload no CDN
+            if (newLessonData.file) {
+                const fileMeta = await uploadLessonFile(newLessonData.file);
+
+                // 3️⃣ Cria registro na tabela files com lessonId correto
+                const filePayload = {
+                    lessonId: lessonId,
+                    courseId: createdCourseId!,  // id do curso
+                    fileKey: fileMeta.id,   // ESSENCIAL: id retornado pelo CDN
+                    fileType: newLessonData.type, // "video" | "pdf" | "attachment"
+                    mimeType: fileMeta.mimeType || "application/octet-stream",
+                    size: fileMeta.size || 0,
+                };
+                console.log("Enviando payload para /files:", filePayload);
+                try {
+                    await axios.post(`${process.env.REACT_APP_API_URL}/files`, filePayload, {
+                        headers: {
+                            Authorization: `Bearer ${getCookies("authToken")}`,
+                        },
+                    });
+                    console.log("Registro de file criado com sucesso, fileKey:", fileMeta.id);
+                } catch (err) {
+                    console.error("Erro ao criar registro na tabela files:", err);
+                    alert("Erro ao criar registro do arquivo");
+                    return;
+                }
+
+                // 4️⃣ Atualiza a aula via PUT em /lessons/:id para setar extUrl = id do CDN
+                if (fileMeta && fileMeta.id) {
+                    try {
+                        // Atualiza a aula via PUT com extUrl = id do CDN
+                        await axios.put(`${process.env.REACT_APP_API_URL}/lessons/${lessonId}`, { extUrl: fileMeta.id }, {
+                            headers: {
+                                Authorization: `Bearer ${getCookies("authToken")}`,
+                            },
+                        });
+                        console.log(`Aula ${lessonId} atualizada com extUrl = ${fileMeta.id}`);
+                        extUrlFromFileId = fileMeta.id;
+                    } catch (err) {
+                        console.error("Erro ao atualizar extUrl da aula:", err);
+                        alert("Erro ao atualizar a aula com o arquivo");
+                        return;
+                    }
+                }
+            }
+
+            // Atualiza o estado dos módulos, usando extUrl = id do CDN se houver arquivo
+            setModules(prev =>
+                prev.map((m, i) =>
+                    i === idx
+                        ? { ...m, lessons: [...(m.lessons ?? []), { ...lessonPayload, id: lessonId, extUrl: extUrlFromFileId }] }
+                        : m
+                )
+            );
+
+            alert("Aula criada com sucesso");
+
+            // Reseta o state do form
+            setNewLessonData({
+                moduleId: 0,
+                title: "",
+                slug: "",
+                type: "video",
+                extUrl: undefined,
+                code: undefined,
+                cover: undefined,
+                isActive: 1,
+                file: undefined,
+                mimeType: undefined,
+                size: undefined,
+                fileName: undefined,
+            });
+            setShowLessonFormForModuleIndex(null);
+
+        } catch (error) {
+            console.error("Erro ao criar aula:", error);
+            alert("Erro ao criar a aula");
+        } finally {
+            setLessonFileUploading(false);
+        }
     }
 
     return (
@@ -268,34 +460,7 @@ function NewCoursePage() {
                                 <button
                                     className="submit-button"
                                     disabled={createdCourseId != null}
-                                    onClick={async () => {
-                                        try {
-                                            const payload = {
-                                                ...newCourseData,
-                                                slug: newCourseData.slug || generateSlug(newCourseData.title),
-                                            };
-                                                    await createCourse(payload)
-                                                    .then((response: { success?: boolean; data?: { id?: Array<{ insertId?: number }> }; id?: Array<{ insertId?: number }>; message?: string }) => {
-                                                        const courseId = response?.data?.id?.[0]?.insertId ?? response?.id?.[0]?.insertId;
-                                                        if (response.success && courseId) {
-                                                            alert("Curso criado com sucesso. Agora adicione o primeiro módulo.");
-
-                                                            setCreatedCourseId(courseId);
-                                                            setNewModuleData(prev => ({
-                                                                ...prev,
-                                                                courseId,
-                                                                order: 1,
-                                                            }));
-                                                            setShowModuleForm(true);
-                                                        } else {
-                                                            alert(response.message ?? "Erro ao criar o curso.");
-                                                        }
-                                                    })
-                                        } catch (error) {
-                                            console.error("Erro ao criar curso:", error);
-                                            alert("Erro ao criar o curso");
-                                        }
-                                    }}
+                                    onClick={handleCreateCourse}
                                 >
                                     Continuar
                                 </button>
@@ -435,35 +600,7 @@ function NewCoursePage() {
                                     <div className="button-wrapper">
                                         <button
                                             className="submit-button"
-                                            onClick={async () => {
-                                                try {
-                                                    const response = await createModule(newModuleData) as CreateModuleResponse;
-                                                    if (response.success) {
-                                                        alert("Módulo criado com sucesso");
-                                                        const first = response.module?.[0];
-                                                        const moduleId = first != null && typeof first === "object" && typeof first.insertId === "number"
-                                                            ? first.insertId
-                                                            : undefined;
-                                                        const moduleToAdd: ModuleInList = {
-                                                            ...newModuleData,
-                                                            id: moduleId,
-                                                            lessons: [],
-                                                        };
-                                                        setModules(prev => [...prev, moduleToAdd]);
-                                                        setNewModuleData(prev => ({
-                                                            ...prev,
-                                                            title: "",
-                                                            description: "",
-                                                            order: prev.order + 1,
-                                                        }));
-                                                    } else {
-                                                        alert(response.message ?? "Erro ao criar o módulo.");
-                                                    }
-                                                } catch (error) {
-                                                    console.error("Erro ao criar módulo:", error);
-                                                    alert("Erro ao criar o módulo");
-                                                }
-                                            }}
+                                            onClick={handleCreateModule}
                                         >
                                             Adicionar módulo
                                         </button>
@@ -556,33 +693,18 @@ function NewCoursePage() {
                                                             : "*"
                                                     }
                                                     disabled={lessonFileUploading}
-                                                    onChange={async e => {
+                                                    onChange={e => {
                                                         const file = e.target.files?.[0];
                                                         if (!file) return;
-                                                        setLessonFileUploading(true);
-                                                        try {
-                                                            const { fileUrl } = await uploadLessonFile(file);
-                                                            setNewLessonData(prev => ({
-                                                                ...prev,
-                                                                extUrl: fileUrl,
-                                                            }));
-                                                        } catch (err) {
-                                                            alert("Erro ao fazer upload do arquivo.");
-                                                            setNewLessonData(prev => ({
-                                                                ...prev,
-                                                                extUrl: undefined
-                                                            }));
-                                                        }
-                                                        setLessonFileUploading(false);
+                                                        setNewLessonData(prev => ({
+                                                            ...prev,
+                                                            file,
+                                                        }));
                                                     }}
                                                 />
-                                                {lessonFileUploading && <div style={{ marginTop: 4 }}>Enviando arquivo...</div>}
-                                                {newLessonData.extUrl && (
+                                                {newLessonData.file && (
                                                     <div style={{ marginTop: 4 }}>
-                                                        Arquivo enviado:{" "}
-                                                        <a href={newLessonData.extUrl} target="_blank" rel="noopener noreferrer">
-                                                            {newLessonData.extUrl}
-                                                        </a>
+                                                        Arquivo selecionado: {newLessonData.file.name}
                                                     </div>
                                                 )}
                                             </div>
@@ -592,76 +714,9 @@ function NewCoursePage() {
                                         <button
                                             className="submit-button"
                                             disabled={lessonFileUploading}
-                                            onClick={async () => {
-                                                if (!newLessonData.title?.trim()) {
-                                                    alert("Informe o título da aula.");
-                                                    return;
-                                                }
-                                                // Se for PDF, Anexo ou Vídeo, exige upload de arquivo
-                                                if (
-                                                    (newLessonData.type === "pdf" ||
-                                                        newLessonData.type === "attachment" ||
-                                                        newLessonData.type === "video") &&
-                                                    (!newLessonData.extUrl)
-                                                ) {
-                                                    alert("Envie o arquivo antes de cadastrar a aula.");
-                                                    return;
-                                                }
-                                                const targetModule = modules[showLessonFormForModuleIndex];
-                                                const moduleId = targetModule?.id;
-                                                if (moduleId == null || moduleId === 0) {
-                                                    alert("Este módulo ainda não possui ID. Feche o modal de módulos, verifique a lista e tente \"Adicionar aula\" novamente.");
-                                                    return;
-                                                }
-                                                try {
-                                                    const payload: ILessonData & { fileUrl?: string; fileName?: string } = {
-                                                        ...newLessonData,
-                                                        moduleId: moduleId,
-                                                        slug: newLessonData.slug || generateSlug(newLessonData.title),
-                                                    };
-                                                    const serverResponse = await createLesson(payload);
-                                                    // Expecting: [insertResult, null]
-                                                    const insertResult = Array.isArray(serverResponse) ? serverResponse[0] : null;
-                                                    const response = {
-                                                        success: insertResult && typeof insertResult === "object" && "insertId" in insertResult ? true : false,
-                                                        data: insertResult && typeof insertResult === "object" && "insertId" in insertResult
-                                                            ? { ...payload, id: insertResult.insertId }
-                                                            : undefined,
-                                                        message: insertResult && typeof insertResult === "object" && "insertId" in insertResult
-                                                            ? undefined
-                                                            : "Erro ao criar a aula.",
-                                                    };
-                                                    if (response.success) {
-                                                        alert("Aula criada com sucesso");
-                                                        const lessonToAdd: LessonInList = response.data && typeof response.data === "object"
-                                                            ? { ...payload, ...response.data }
-                                                            : { ...payload };
-                                                        const idx = showLessonFormForModuleIndex;
-                                                        setModules(prev =>
-                                                            prev.map((m, i) =>
-                                                                i === idx
-                                                                    ? { ...m, lessons: [...(m.lessons ?? []), lessonToAdd] }
-                                                                    : m
-                                                            )
-                                                        );
-                                                        setNewLessonData(prev => ({
-                                                            ...prev,
-                                                            title: "",
-                                                            subTitle: "",
-                                                            slug: "",
-                                                            type: "video",
-                                                            extUrl: undefined,
-                                                            code: undefined,
-                                                            cover: undefined,
-                                                            isActive: 1,
-                                                        }));
-                                                        setShowLessonFormForModuleIndex(null);
-                                                    } else {
-                                                        alert(response.message ?? "Erro ao criar a aula.");
-                                                    }
-                                                } catch (error) {
-                                                    console.error("Erro ao criar aula:", error);
-                                                    alert("Erro ao criar a aula");
+                                            onClick={() => {
+                                                if (showLessonFormForModuleIndex !== null) {
+                                                    handleCreateLesson(showLessonFormForModuleIndex);
                                                 }
                                             }}
                                         >
@@ -681,6 +736,10 @@ function NewCoursePage() {
                                                     code: undefined,
                                                     cover: undefined,
                                                     isActive: 1,
+                                                    file: undefined,
+                                                    mimeType: undefined,
+                                                    size: undefined,
+                                                    fileName: undefined,
                                                 }));
                                             }}
                                         >
