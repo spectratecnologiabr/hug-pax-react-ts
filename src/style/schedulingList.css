@@ -1,8 +1,9 @@
 .scheduling-container {
-    grid-column: span 4;
+    min-width: 600px;
     display: flex;
     flex-direction: column;
     gap: 16px;
+    align-self: flex-end;
 }
 
 .scheduling-container .header-wrapper {

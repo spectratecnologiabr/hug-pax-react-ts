@@ -1,5 +1,5 @@
 .admin-date-picker {
-  grid-column: span 3;
+  min-width: 400px;
 }
 
 .react-datepicker {
