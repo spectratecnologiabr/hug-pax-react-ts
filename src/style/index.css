@@ -76,6 +76,21 @@ body, * {
     src: url('../fonts/sf-ui-display/sf-ui-display-black-58646a6b80d5a.woff') format('woff');
 }
 
+@font-face {
+    font-family: 'Kit Black';
+    src: url('../fonts/kit-rounded/KitRounded_Black.otf');
+}
+
+@font-face {
+    font-family: 'Kit Bold';
+    src: url('../fonts/kit-rounded/KitRounded_ExtraBold.otf');
+}
+
+@font-face {
+    font-family: 'Kit ExtraBold';
+    src: url('../fonts/kit-rounded/KitRounded_ExtraBold.otf');
+}
+
 .warning-container {
     z-index: 1000;
     position: fixed ;

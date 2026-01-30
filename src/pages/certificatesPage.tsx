@@ -1,15 +1,21 @@
 import React, { useState, useEffect } from "react"
+import QRCode from "qrcode";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 import { getOverviewData } from "../controllers/dash/overview.controller"
 import { getCourseById } from "../controllers/course/getCourse.controller"
 import { getCookies } from "../controllers/misc/cookies.controller"
 import { getDocumentData } from "../controllers/certificates/getDocumentData.controller"
+import { listCertificates } from "../controllers/certificates/listCertificates.controller"
 
 import AsideMenu from "../components/asideMenu"
 import Footer from "../components/footer"
 
-import { listCertificates } from "../controllers/certificates/listCertificates.controller"
+import certHeaderBg from "../img/cert-header-bg.svg"
+import certSigil from "../img/cert-sigil.svg"
+import certWatermark from "../img/cert-watermark.svg"
+
+import kitBoldFont from "../fonts/kit-rounded/KitRounded_ExtraBold.otf"
 
 import "../style/certificates.css"
 
@@ -38,7 +44,6 @@ function Certificates() {
     const [ overviewData, setOverviewData ] = useState<TOverviewData | null>(null);
     const [ certificates, setCertificates ] = useState<TCertificate[]>([]);
     const [ coursesMap, setCoursesMap ] = useState<Record<number, string>>({});
-    const userData = getCookies("userData");
 
     useEffect(() => {
         async function fetchOverviewData() {
@@ -99,6 +104,12 @@ function Certificates() {
             modules
         } = documentData;
 
+        const validationUrl = `${window.location.origin}/auth-certificate/${certificateCode}`;
+        const qrCodeDataUrl = await QRCode.toDataURL(validationUrl, {
+            width: 140,
+            margin: 1,
+        });
+
         const issuedDate = new Date(issuedAt).toLocaleDateString("pt-BR");
 
         const printWindow = window.open("", "_blank");
@@ -123,6 +134,10 @@ function Certificates() {
                             -webkit-print-color-adjust: exact !important;
                             print-color-adjust: exact !important;
                         }
+                        @font-face {
+                            font-family: 'Kit Bold';
+                            src: url('${kitBoldFont}') format('opentype');
+                        }
                         body {
                             margin: 0;
                             padding: 0;
@@ -142,13 +157,22 @@ function Certificates() {
                             background: #fff;
                             font-family: 'Poppins', Arial, sans-serif;
                             color: #2b2b2b;
+                            position: relative;
+                        }
+                        .cert-bg {
+                            position: absolute;
+                            top: 0;
+                            left: 0;
+                            width: 100%;
+                            height: 100%;
+                            pointer-events: none;
+                            z-index: -1;
                         }
                         .header {
                             height: 160px;
-                            background-color: #f47c2c;
                             display: flex;
                             align-items: center;
-                            justify-content: flex-end;
+                            justify-content: space-between;
                             padding: 0 100px;
                             color: #fff;
                             font-size: 48px;
@@ -158,10 +182,21 @@ function Certificates() {
                             margin: 0;
                             padding-top: 0;
                             line-height: 1;
+                            position: relative;
+                            z-index: 1;
+                            background-image: url(${certHeaderBg});
+                            background-size: cover;
+                            background-position: bottom;
+                        }
+                        .header img {
+                            height: 80%;
+                        }
+                        .header span {
+                            font-family: 'Kit Bold';
                         }
                         .content {
                             flex: 1;
-                            padding: 60px 140px 40px;
+                            padding: 40px 140px 40px;
                             text-align: center;
                             box-sizing: border-box;
                             font-size: 18px;
@@ -169,6 +204,9 @@ function Certificates() {
                             display: flex;
                             flex-direction: column;
                             justify-content: center;
+                            align-items: center;
+                            position: relative;
+                            z-index: 1;
                         }
                         .content > .guide-text {
                             color: #f47c2c;
@@ -226,6 +264,8 @@ function Certificates() {
                             font-size: 14px;
                             color: #333;
                             box-sizing: border-box;
+                            position: relative;
+                            z-index: 1;
                         }
                         .code {
                             font-size: 13px;
@@ -238,8 +278,12 @@ function Certificates() {
                 </head>
                 <body>
                     <div class="cert" id="cert-main">
-                        <div class="header">CERTIFICADO</div>
+                        <div class="header">
+                            <img src="${certSigil}" />
+                            <span>CERTIFICADO</span>
+                        </div>
                         <div class="content">
+                            <img src="${certWatermark}" style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); width:350px; height:350px; opacity:0.6; z-index:0;" />
                             <div class="guide-text">Certificamos para os devidos fins que</div>
                             <div class="student">${userName}</div>
                             <span class="sub-guide">concluiu, com êxito, o(a):</span>
@@ -247,37 +291,114 @@ function Certificates() {
                             <span>
                                 realizado pela Hug Education com carga horária total de <b>${hours} horas</b>
                             </span>
+                            <div
+                                style="
+                                    margin-top:80px;
+                                    display:flex;
+                                    justify-content:center;
+                                "
+                            >
+                                <div style="text-align:center; width:320px;">
+                                    <div
+                                        style="
+                                            border-top:1px solid #000;
+                                            padding-top:8px;
+                                            font-size:14px;
+                                        "
+                                    >
+                                        Coordenador(a) Responsável
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        <div class="footer">
-                            <div>
-                                Emitido em ${issuedDate}
-                            </div>
-                            <div class="code">
-                                Código de validação: ${certificateCode}
-                            </div>
+                        <div class="footer" style="position:relative;">
+                            <img
+                                src="${qrCodeDataUrl}"
+                                style="
+                                    width:110px;
+                                    height:110px;
+                                    position:absolute;
+                                    right:100px;
+                                    bottom:40px;
+                                "
+                            />
                         </div>
                     </div>
                     ${
-                        modules?.length
-                            ? `
-                            <div class="cert page-break" id="cert-modules">
-                                <div class="content" style="justify-content: flex-start;">
-                                    <span class="modules-title" style="font-size:22px; margin-top:40px; margin-bottom: 18px;">Eixos e vivências trabalhadas:</span>
-                                    <div class="modules" style="margin-top:0;">
-                                        <ul>
-                                            ${modules.map((m: string, idx: number) =>
-                                                `<li style="border-bottom:${idx === modules.length-1 ? "none" : "1px solid #cfcfcf"};">${m}</li>`
-                                            ).join("")}
-                                        </ul>
-                                    </div>
+                        modules?.length ? `
+                            <div class="cert page-break" id="cert-modules"
+                                style="
+                                    display:flex;
+                                    align-items:center;
+                                    justify-content:center;
+                                ">
+                            <div style="
+                                width:100%;
+                                max-width:900px;
+                                margin:auto;
+                                display:flex;
+                                flex-direction:column;
+                                border-radius:16px;
+                                overflow:hidden;
+                                font-family:'Poppins', Arial, sans-serif;
+                            ">
+                                <div style="
+                                    width:100%;
+                                    background:#f47c2c;
+                                    color:#fff;
+                                    padding:22px 60px;
+                                    font-size:20px;
+                                    font-weight:800;
+                                    text-align:center;
+                                    box-sizing:border-box;
+                                ">
+                                    FORMAÇÃO DE EDUCADORES: EDUCAÇÃO SOCIOEMOCIONAL
                                 </div>
-                                <div class="footer">
-                                    <div>
-                                        Emitido em ${issuedDate}
-                                    </div>
-                                    <div class="code">
-                                        Código de validação: ${certificateCode}
-                                    </div>
+
+                                <div style="
+                                    flex:1;
+                                    padding:0;
+                                    box-sizing:border-box;
+                                    display:flex;
+                                    flex-direction:column;
+                                    justify-content:flex-start;
+                                    align-items:center;
+                                ">
+                                    <ul style="
+                                        list-style:none;
+                                        padding:0;
+                                        margin:0;
+                                        width:100%;
+                                    ">
+                                        ${modules.map((m: string) => `
+                                            <li style="
+                                                background:#ededed;
+                                                padding:14px 18px;
+                                                font-size:15px;
+                                                color:#333;
+                                                border-bottom:1px solid #cfcfcf;
+                                            ">
+                                                ${m}
+                                            </li>
+                                        `).join("")}
+                                    </ul>
+                                </div>
+
+                                <div style="
+                                    width:100%;
+                                    background:#f47c2c;
+                                    color:#fff;
+                                    padding:18px 60px;
+                                    display:flex;
+                                    justify-content:space-between;
+                                    align-items:center;
+                                    font-size:14px;
+                                    font-weight:700;
+                                    box-sizing:border-box;
+                                ">
+                                    <span>CARGA HORÁRIA TOTAL</span>
+                                    <span>${hours} HORAS</span>
+                                </div>
                                 </div>
                             </div>
                             `
@@ -307,6 +428,12 @@ function Certificates() {
             modules
         } = documentData;
 
+        const validationUrl = `${window.location.origin}/auth-certificate/${certificateCode}`;
+        const qrCodeDataUrl = await QRCode.toDataURL(validationUrl, {
+            width: 140,
+            margin: 1,
+        });
+
         const issuedDate = new Date(issuedAt).toLocaleDateString("pt-BR");
 
         // criar container oculto
@@ -332,16 +459,19 @@ function Certificates() {
                     background:#fff;
                     font-family:'Poppins', Arial, sans-serif;
                     color:#2b2b2b;
+                    position:relative;
                 "
             >
+                <!-- Background images -->
+                <img src="${certHeaderBg}" style="position:absolute; top:0; left:0; width:100%; height:160px; z-index:-1;" />
+                
                 <!-- Header -->
                 <div
                     style="
                         height:160px;
-                        background-color:#f47c2c;
                         display:flex;
                         align-items:center;
-                        justify-content:flex-end;
+                        justify-content:space-between;
                         padding:0 100px;
                         color:#fff;
                         font-size:48px;
@@ -351,9 +481,12 @@ function Certificates() {
                         margin:0;
                         padding-top:0;
                         line-height:1;
+                        position:relative;
+                        z-index:1;
                     "
                 >
-                    CERTIFICADO
+                    <img src="${certSigil}" style="height:80%;" />
+                    <span style="font-family:'Kit Bold';">CERTIFICADO</span>
                 </div>
                 <!-- Content -->
                 <div
@@ -367,8 +500,12 @@ function Certificates() {
                         display:flex;
                         flex-direction:column;
                         justify-content:center;
+                        align-items:center;
+                        position:relative;
+                        z-index:1;
                     "
                 >
+                    <img src="${certWatermark}" style="position:absolute; top: 50%; left:50%; transform:translate(-50%, -50%); width:450px; height:450px; z-index:-1; opacity:0.8;" />
                     <div
                         style="
                             color:#f47c2c;
@@ -408,115 +545,138 @@ function Certificates() {
                     <span>
                         realizado pela Hug Education com carga horária total de <b>${hours} horas</b>
                     </span>
+                    <div
+                        style="
+                            margin-top:80px;
+                            display:flex;
+                            justify-content:center;
+                        "
+                    >
+                        <div style="text-align:center; width:320px;">
+                            <div
+                                style="
+                                    border-top:1px solid #000;
+                                    padding-top:8px;
+                                    font-size:14px;
+                                "
+                            >
+                                Coordenador(a) Responsável
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 <!-- Footer -->
                 <div
                     style="
-                        padding:30px 100px 40px;
-                        display:flex;
-                        justify-content:space-between;
-                        align-items:center;
-                        font-size:14px;
-                        color:#333;
-                        box-sizing:border-box;
+                        padding:0;
+                        position:relative;
+                        height:0;
                     "
                 >
-                    <div>
-                        Emitido em ${issuedDate}
-                    </div>
-                    <div
+                    <img
+                        src="${qrCodeDataUrl}"
                         style="
-                            font-size:13px;
-                            color:#333;
+                            width:110px;
+                            height:110px;
+                            position:absolute;
+                            right:100px;
+                            bottom:40px;
                         "
-                    >
-                        Código de validação: ${certificateCode}
-                    </div>
+                    />
                 </div>
             </div>
             ${
                 modules?.length
                     ? `
-                    <div id="${certModulesId}"
-                        style="
-                            width:1123px;
-                            height:794px;
-                            display:flex;
-                            flex-direction:column;
-                            box-sizing:border-box;
-                            margin:0;
-                            padding:0;
-                            overflow:hidden;
-                            background:#fff;
-                            font-family:'Poppins', Arial, sans-serif;
-                            color:#2b2b2b;
-                        "
-                    >
-                        <div
-                            style="
-                                flex:1;
-                                padding:60px 140px 40px;
-                                text-align:center;
-                                box-sizing:border-box;
-                                font-size:18px;
-                                line-height:1.7;
-                                display:flex;
-                                flex-direction:column;
-                                justify-content:flex-start;
-                            "
-                        >
-                            <span style="font-size:22px; font-weight:600; margin-top:40px; margin-bottom: 18px;">Eixos e vivências trabalhadas:</span>
-                            <div
-                                style="
-                                    margin:0 auto 0;
-                                    width:80%;
-                                    text-align:left;
-                                "
-                            >
-                                <ul
-                                    style="
-                                        list-style:none;
-                                        padding:0;
-                                        margin:0;
-                                        background:#ededed;
-                                        border-radius:10px;
-                                        overflow:hidden;
-                                    "
-                                >
-                                    ${modules.map((m: string, idx: number) =>
-                                        `<li style="
-                                            padding:14px 18px;
-                                            font-size:16px;
-                                            border-bottom:${idx === modules.length-1 ? "none" : "1px solid #cfcfcf"};
-                                        ">${m}</li>`
-                                    ).join("")}
-                                </ul>
-                            </div>
-                        </div>
-                        <div
-                            style="
-                                padding:30px 100px 40px;
-                                display:flex;
-                                justify-content:space-between;
-                                align-items:center;
-                                font-size:14px;
-                                color:#333;
-                                box-sizing:border-box;
-                            "
-                        >
-                            <div>
-                                Emitido em ${issuedDate}
-                            </div>
-                            <div
-                                style="
-                                    font-size:13px;
-                                    color:#333;
-                                "
-                            >
-                                Código de validação: ${certificateCode}
-                            </div>
-                        </div>
-                    </div>
+<div id="${certModulesId}"
+     style="
+        width:1123px;
+        height:794px;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        box-sizing:border-box;
+        font-family:'Poppins', Arial, sans-serif;
+        background:#fff;
+     ">
+    <div style="
+        width:100%;
+        max-width:900px;
+        margin:auto;
+        display:flex;
+        flex-direction:column;
+        border-radius:16px;
+        overflow:hidden;
+    ">
+    <div
+        style="
+            width:100%;
+            background:#f47c2c;
+            color:#fff;
+            padding:22px 60px;
+            font-size:20px;
+            font-weight:800;
+            text-align:center;
+            box-sizing:border-box;
+        "
+    >
+        FORMAÇÃO DE EDUCADORES: EDUCAÇÃO SOCIOEMOCIONAL
+    </div>
+
+    <div
+        style="
+            flex:1;
+            padding:0;
+            box-sizing:border-box;
+            display:flex;
+            flex-direction:column;
+            justify-content:flex-start;
+            align-items:center;
+        "
+    >
+        <ul
+            style="
+                list-style:none;
+                padding:0;
+                margin:0;
+                width:100%;
+            "
+        >
+            ${modules.map((m: string) => `
+                <li
+                    style="
+                        background:#ededed;
+                        padding:14px 18px;
+                        font-size:15px;
+                        color:#333;
+                        border-bottom:1px solid #cfcfcf;
+                    "
+                >
+                    ${m}
+                </li>
+            `).join("")}
+        </ul>
+    </div>
+
+    <div
+        style="
+            width:100%;
+            background:#f47c2c;
+            color:#fff;
+            padding:18px 60px;
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            font-size:14px;
+            font-weight:700;
+            box-sizing:border-box;
+        "
+    >
+        <span>CARGA HORÁRIA TOTAL</span>
+        <span>${hours} HORAS</span>
+    </div>
+    </div>
+</div>
                     `
                     : ""
             }
@@ -538,7 +698,7 @@ function Certificates() {
             const imgDataModules = canvasModules.toDataURL("image/png");
             pdf.addImage(imgDataModules, "PNG", 0, 0, pdf.internal.pageSize.width, pdf.internal.pageSize.height);
         }
-        pdf.save(`${userName}-${courseTitle}-certificate.pdf`);
+        pdf.save(`${userName} - ${courseTitle} - certificate.pdf`);
         document.body.removeChild(container);
     }
 
