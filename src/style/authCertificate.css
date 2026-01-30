@@ -1,0 +1,82 @@
+.auth-cert-page {
+    min-height: 100vh;
+    background: #f3f5f9;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px 20px;
+    font-family: Inter, Arial, sans-serif;
+}
+
+.auth-cert-header {
+    width: 100%;
+    max-width: 900px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 40px;
+}
+
+.auth-cert-header .logo {
+    font-weight: 700;
+    font-size: 22px;
+}
+
+.auth-cert-header h1 {
+    font-size: 18px;
+    font-weight: 600;
+    color: #222;
+}
+
+.auth-cert-card {
+    background: #fff;
+    width: 100%;
+    max-width: 700px;
+    border-radius: 14px;
+    box-shadow: 0 30px 60px rgba(0,0,0,0.15);
+    padding: 32px 36px;
+}
+
+.auth-cert-status {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 600;
+    color: #1a7f37;
+    margin-bottom: 24px;
+}
+
+.status-icon {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: #1a7f37;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+}
+
+.auth-cert-info {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    font-size: 14px;
+    color: #333;
+}
+
+.auth-cert-info strong {
+    display: inline-block;
+    width: 200px;
+    color: #555;
+}
+
+.auth-cert-description {
+    background: #f6f7fb;
+    border-radius: 8px;
+    padding: 16px;
+    margin-top: 24px;
+    font-size: 13px;
+    color: #444;
+}
