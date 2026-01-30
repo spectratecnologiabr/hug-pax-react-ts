@@ -1,6 +1,7 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { getCookies } from "../../controllers/misc/cookies.controller";
 import { doLogout } from "../../controllers/user/logout.controller";
+import { checkSession } from "../../controllers/user/checkSession.controller";
 
 import PageSelector from "../pageSelector";
 
@@ -11,9 +12,25 @@ import personIcon from "../../img/menu/person.svg";
 
 import "../../style/menubar.css";
 
+type TRole = 'consultant' | 'coordinator' | 'admin'
+
 function Menubar(props: {notificationCount: number}) {
     const userName = (getCookies("userData")).firstName;
     const pathname = window.location.pathname;
+    const [ userRole, setUserRole ] = useState<TRole | null>(null);
+
+    useEffect(() => {
+        async function fetchUserRole() {
+            try {
+                const sessionData = await checkSession();
+                setUserRole(sessionData.session.role);
+            } catch (error) {
+                console.error("Error fetching userData:", error)
+            }
+        }
+
+        fetchUserRole();
+    }, []); 
 
     return (
         <div className="admin-menubar">
@@ -44,27 +61,34 @@ function Menubar(props: {notificationCount: number}) {
                     <span>Educadores</span>
                 </a>
 
-                <a href="/admin/courses" className={pathname.includes("/admin/courses") ? "menu-link selected" : "menu-link"}>
-                    <img src={hatIcon} />
-                    <span>Cursos</span>
-                </a>
+                {
+                    (userRole !== "consultant") ?
+                    <React.Fragment>
+                        <a href="/admin/courses" className={pathname.includes("/admin/courses") ? "menu-link selected" : "menu-link"}>
+                            <img src={hatIcon} />
+                            <span>Cursos</span>
+                        </a>
 
-                <a href="#" className={pathname.includes("/admin/reports") ? "menu-link selected" : "menu-link"}>
-                    <svg width="16" height="20" viewBox="0 0 16 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M5 3H3C2.46957 3 1.96086 3.21071 1.58579 3.58579C1.21071 3.96086 1 4.46957 1 5V17C1 17.5304 1.21071 18.0391 1.58579 18.4142C1.96086 18.7893 2.46957 19 3 19H13C13.5304 19 14.0391 18.7893 14.4142 18.4142C14.7893 18.0391 15 17.5304 15 17V5C15 4.46957 14.7893 3.96086 14.4142 3.58579C14.0391 3.21071 13.5304 3 13 3H11" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                        <path d="M9 1H7C5.89543 1 5 1.89543 5 3C5 4.10457 5.89543 5 7 5H9C10.1046 5 11 4.10457 11 3C11 1.89543 10.1046 1 9 1Z" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                        <path d="M5 15V10" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                        <path d="M8 15V14" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                        <path d="M11 15V12" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
+                        <a href="#" className={pathname.includes("/admin/reports") ? "menu-link selected" : "menu-link"}>
+                            <svg width="16" height="20" viewBox="0 0 16 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M5 3H3C2.46957 3 1.96086 3.21071 1.58579 3.58579C1.21071 3.96086 1 4.46957 1 5V17C1 17.5304 1.21071 18.0391 1.58579 18.4142C1.96086 18.7893 2.46957 19 3 19H13C13.5304 19 14.0391 18.7893 14.4142 18.4142C14.7893 18.0391 15 17.5304 15 17V5C15 4.46957 14.7893 3.96086 14.4142 3.58579C14.0391 3.21071 13.5304 3 13 3H11" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M9 1H7C5.89543 1 5 1.89543 5 3C5 4.10457 5.89543 5 7 5H9C10.1046 5 11 4.10457 11 3C11 1.89543 10.1046 1 9 1Z" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M5 15V10" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M8 15V14" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M11 15V12" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
 
 
-                    <span>Relatórios</span>
-                </a>
+                            <span>Relatórios</span>
+                        </a>
+                    </React.Fragment>
+                    : ""
+                    
+                }
 
                 <PageSelector/>
 
-                 <a href="#" className="menu-link">
+                 <a href="/notifications" className="menu-link">
                     <svg height="20" viewBox="0 0 24 26" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M23.0209 11.6458C22.5724 11.6458 22.2084 11.2818 22.2084 10.8333C22.2084 7.72192 20.9974 4.79803 18.7981 2.59777C18.4807 2.28039 18.4807 1.76583 18.7981 1.44845C19.1155 1.13107 19.63 1.13107 19.9476 1.44845C22.4534 3.95518 23.8334 7.28869 23.8334 10.8333C23.8334 11.2818 23.4694 11.6458 23.0209 11.6458Z" fill="#ffffff"/>
                     <path d="M0.8125 11.6458C0.363998 11.6458 0 11.2818 0 10.8333C0 7.28869 1.38022 3.95518 3.88695 1.44944C4.20433 1.13206 4.71909 1.13206 5.03647 1.44944C5.35385 1.76682 5.35385 2.28158 5.03647 2.59896C2.83621 4.79803 1.625 7.72192 1.625 10.8333C1.625 11.2818 1.261 11.6458 0.8125 11.6458Z" fill="#ffffff"/>
