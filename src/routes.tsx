@@ -16,7 +16,7 @@ import Notifications from './pages/notifications';
 import Certificates from './pages/certificatesPage';
 import AuthCertificate from './pages/authCertificate';
 
-// Admin Routes
+// Consultant Routes
 import ConsultantDash from './pages/consultantDash';
 import CollegesPage from './pages/collegesPage';
 import NewCollegePage from './pages/newCollegePage';
@@ -32,6 +32,8 @@ import VisitReportPreview from "./pages/visitReportPreview";
 import Courses from './pages/courses';
 import NewCoursePage from './pages/newCoursePage';
 import EditCoursePage from './pages/editCoursePage';
+
+import AdminDash from './pages/adminDash';
 
 function MyRoutes() {
     return (
@@ -65,6 +67,8 @@ function MyRoutes() {
                 <Route path='/consultant/courses' element={<AdminRoute><Courses/></AdminRoute>} />
                 <Route path='/consultant/courses/add' element={<AdminRoute><NewCoursePage/></AdminRoute>} />
                 <Route path='/consultant/courses/edit/:courseId' element={<AdminRoute><EditCoursePage/></AdminRoute>} />
+
+                <Route path='/admin' element={<AdminRoute><AdminDash/></AdminRoute>} />
             </Routes>
         </BrowserRouter>
     )

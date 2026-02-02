@@ -1,0 +1,45 @@
+.admin-header-wrapper {
+    display: flex;
+    margin: 0 20px;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.admin-header-wrapper div {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.admin-header-wrapper div b {
+    font-family: 'SF UI Display Semibold';
+    color: #000;
+    font-size: 30px;
+}
+
+.admin-header-wrapper div span {
+    font-family: 'SF UI Display Light';
+    color: #747474;
+    font-size: 18px;
+}
+
+.admin-header-wrapper button {  
+    text-decoration: none;
+    padding: 10px;
+    border-radius: 10px;
+    background: #228BC3;
+    border: 1px solid #228BC3;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-family: 'SF UI Display Light';
+    color: #ffffff;
+    transition: ease-in-out .3s all;
+    cursor: pointer;
+}
+
+.admin-header-wrapper button:hover {
+    background-color: #ffffff;
+    color: #228BC3;
+    border: 1px solid #228BC3;
+}
