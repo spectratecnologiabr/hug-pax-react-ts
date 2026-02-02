@@ -5,6 +5,7 @@ import { getConsultanOverviewData } from "../controllers/dash/consultantOverview
 import Menubar from "../components/admin/menubar";
 import AdminDatePicker from "../components/admin/AdminDatePicker";
 import SchedulingList from "../components/admin/SchedulingList";
+import EvolutionRadar from "../components/admin/evolutionRadar";
 
 import "../style/adminDash.css";
 
@@ -140,8 +141,10 @@ function AdminDash() {
                             </div>
                             <AdminDatePicker selectedDate={selectedDate} onChange={handleDateChange} />
                         </div>
-                        
-                        <SchedulingList selectedDate={selectedDate}/>
+                        <div className="row">
+                            <EvolutionRadar />
+                            <SchedulingList selectedDate={selectedDate}/>
+                        </div>
                     </div>
                 </div>
             </div>

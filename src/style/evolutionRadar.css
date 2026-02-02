@@ -1,0 +1,127 @@
+.radar-list {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.radar-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #f9fafb;
+    border-radius: 12px;
+    padding: 12px 14px;
+}
+
+.radar-college {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.radar-college strong {
+    font-family: "SF UI Display Medium";
+    font-size: 14px;
+    color: #111827;
+}
+
+.radar-college span {
+    font-family: "SF UI Display Light";
+    font-size: 12px;
+    color: #6b7280;
+}
+
+.radar-status-group {
+    display: flex;
+    gap: 8px;
+}
+
+.radar-status {
+    font-size: 12px;
+    padding: 6px 10px;
+    border-radius: 999px;
+    font-family: "SF UI Display Medium";
+    white-space: nowrap;
+}
+
+.radar-status.evolved {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.radar-status.stable {
+    background: #e0e7ff;
+    color: #3730a3;
+}
+
+.radar-status.regressed {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.evolution-radar-card {
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+    width: -webkit-fill-available;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    font-family: "SF UI Display Regular", "SF UI Display Medium", sans-serif;
+}
+
+.radar-header h3 {
+    margin: 0;
+    font-size: 18px;
+    font-family: "SF UI Display Semibold";
+    font-weight: normal;
+    color: #1f2937;
+}
+
+.radar-subtitle {
+    font-size: 13px;
+    font-family: "SF UI Display Light";
+    color: #6b7280;
+}
+
+.radar-body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 24px 0;
+}
+
+.radar-placeholder {
+    width: 220px;
+    height: 220px;
+    border-radius: 50%;
+    border: 2px dashed #c7d2fe;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #6366f1;
+    font-weight: 500;
+    background: #eef2ff;
+}
+
+.radar-footer {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.radar-action {
+    background: #6366f1;
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    padding: 8px 14px;
+    font-size: 14px;
+    font-family: "SF UI Display Semibold";
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.radar-action:hover {
+    background: #4f46e5;
+}
