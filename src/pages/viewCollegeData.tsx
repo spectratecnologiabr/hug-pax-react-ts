@@ -5,7 +5,7 @@ import { getOverviewData } from "../controllers/dash/overview.controller";
 import { findCollege } from "../controllers/college/findCollege.controller";
 import { ICollegeProps } from "../controllers/college/createCollege.controller";
 
-import Menubar from "../components/admin/menubar";
+import Menubar from "../components/consultant/menubar";
 
 import "../style/adminDash.css";
 

@@ -5,7 +5,7 @@ import { listColleges } from "../controllers/college/listColleges.controller";
 import { findUser } from "../controllers/user/findUser.controller";
 import updateUser from "../controllers/user/updateUser.controller";
 
-import Menubar from "../components/admin/menubar";
+import Menubar from "../components/consultant/menubar";
 
 import "../style/adminDash.css";
 

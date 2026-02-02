@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { getOverviewData } from "../controllers/dash/overview.controller";
 import { listCourses } from "../controllers/course/admin/listCourses.controller";
 
-import Menubar from "../components/admin/menubar";
+import Menubar from "../components/consultant/menubar";
 
 type TOverviewData = {
     completedCourses: number,

@@ -39,13 +39,14 @@ function Menubar(props: {notificationCount: number}) {
                 <b>Olá {userName}!</b>
             </div>
 
+
             <div className="menu-wrapper">
-                <a href="/admin" className={pathname.endsWith("/admin") ? "menu-link selected" : "menu-link"}>
+                <a href="/consultant" className={pathname.endsWith("/consultant") ? "menu-link selected" : "menu-link"}>
                     <img src={homeIcon} />
                     <span>Início</span>
                 </a>
 
-                <a href="/admin/colleges" className={pathname.includes("/admin/colleges") ? "menu-link selected" : "menu-link"}>
+                <a href="/consultant/colleges" className={pathname.includes("/consultant/colleges") ? "menu-link selected" : "menu-link"}>
                     <svg height="18" viewBox="0 0 22 16" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M21 5L11 1L1 5L11 9L21 5ZM21 5V11" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
                         <path d="M5 6.60001V12C5 12.7957 5.63214 13.5587 6.75736 14.1213C7.88258 14.6839 9.4087 15 11 15C12.5913 15 14.1174 14.6839 15.2426 14.1213C16.3679 13.5587 17 12.7957 17 12V6.60001" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
@@ -55,7 +56,7 @@ function Menubar(props: {notificationCount: number}) {
                     <span>Escolas</span>
                 </a>
 
-                <a href="/admin/educators" className={pathname.includes("/admin/educators") ? "menu-link selected" : "menu-link"}>
+                <a href="/consultant/educators" className={pathname.includes("/consultant/educators") ? "menu-link selected" : "menu-link"}>
                      <img src={personIcon} />
 
                     <span>Educadores</span>
@@ -64,12 +65,12 @@ function Menubar(props: {notificationCount: number}) {
                 {
                     (userRole !== "consultant") ?
                     <React.Fragment>
-                        <a href="/admin/courses" className={pathname.includes("/admin/courses") ? "menu-link selected" : "menu-link"}>
+                        <a href="/consultant/courses" className={pathname.includes("/consultant/courses") ? "menu-link selected" : "menu-link"}>
                             <img src={hatIcon} />
                             <span>Cursos</span>
                         </a>
 
-                        <a href="#" className={pathname.includes("/admin/reports") ? "menu-link selected" : "menu-link"}>
+                        <a href="#" className={pathname.includes("/consultant/reports") ? "menu-link selected" : "menu-link"}>
                             <svg width="16" height="20" viewBox="0 0 16 20" fill="none" xmlns="http://www.w3.org/2000/svg">
                                 <path d="M5 3H3C2.46957 3 1.96086 3.21071 1.58579 3.58579C1.21071 3.96086 1 4.46957 1 5V17C1 17.5304 1.21071 18.0391 1.58579 18.4142C1.96086 18.7893 2.46957 19 3 19H13C13.5304 19 14.0391 18.7893 14.4142 18.4142C14.7893 18.0391 15 17.5304 15 17V5C15 4.46957 14.7893 3.96086 14.4142 3.58579C14.0391 3.21071 13.5304 3 13 3H11" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
                                 <path d="M9 1H7C5.89543 1 5 1.89543 5 3C5 4.10457 5.89543 5 7 5H9C10.1046 5 11 4.10457 11 3C11 1.89543 10.1046 1 9 1Z" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>

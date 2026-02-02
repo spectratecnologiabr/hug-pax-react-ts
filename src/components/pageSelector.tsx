@@ -1,12 +1,29 @@
 import React, { useState, useEffect, useRef } from "react";
 import { getCookies } from "../controllers/misc/cookies.controller";
+import { checkSession } from "../controllers/user/checkSession.controller";
 
 import "../style/pageSelector.css";
+
+type TRole = 'consultant' | 'coordinator' | 'admin'
 
 function PageSelector(props: {title?: boolean}) {
     const user = getCookies("userData");
     const [open, setOpen] = useState(false);
     const containerRef = useRef<HTMLDivElement>(null);
+    const [ userRole, setUserRole ] = useState<TRole | null>(null);
+
+    useEffect(() => {
+        async function fetchUserRole() {
+            try {
+                const sessionData = await checkSession();
+                setUserRole(sessionData.session.role);
+            } catch (error) {
+                console.error("Error fetching userData:", error)
+            }
+        }
+
+        fetchUserRole();
+    }, []); 
 
     useEffect(() => {
         function handleClickOutside(event: MouseEvent) {
@@ -25,7 +42,15 @@ function PageSelector(props: {title?: boolean}) {
         }
 
         if (target === "admin") {
-        window.location.href = "/admin";
+            switch(userRole) {
+                case "consultant":
+                     window.location.href = "/consultant";
+                     break;
+                default:
+                    window.location.href = "/admin";
+                    break;
+
+            }
         }
     }
 

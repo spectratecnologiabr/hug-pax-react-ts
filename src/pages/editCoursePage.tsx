@@ -7,7 +7,7 @@ import { getOverviewData } from "../controllers/dash/overview.controller";
 import { createModule, IModuleData } from "../controllers/course/admin/createModule.controller";
 import { deleteModule } from "../controllers/course/admin/deleteModule.controller";
 import { createLesson, ILessonData } from "../controllers/course/admin/createLesson.controller";
-import Menubar from "../components/admin/menubar";
+import Menubar from "../components/consultant/menubar";
 import "../style/adminDash.css";
 import { uploadLessonFileController } from "../controllers/course/admin/uploadFile.controller";
 import { createFile } from "../controllers/course/admin/createFile.controller";

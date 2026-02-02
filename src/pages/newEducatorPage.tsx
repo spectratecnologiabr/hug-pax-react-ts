@@ -3,7 +3,7 @@ import { getOverviewData } from "../controllers/dash/overview.controller";
 import { listColleges } from "../controllers/college/listColleges.controller";
 import { createUser, ICreateUserData } from "../controllers/user/createUser.controller";
 
-import Menubar from "../components/admin/menubar";
+import Menubar from "../components/consultant/menubar";
 
 import "../style/adminDash.css";
 

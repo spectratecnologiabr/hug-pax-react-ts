@@ -3,7 +3,7 @@ import { getOverviewData } from "../controllers/dash/overview.controller";
 import { listColleges } from "../controllers/college/listColleges.controller";
 import { checkSession } from "../controllers/user/checkSession.controller";
 
-import Menubar from "../components/admin/menubar";
+import Menubar from "../components/consultant/menubar";
 
 import "../style/adminDash.css";
 
@@ -76,14 +76,14 @@ function CollegesPage() {
     function handleEditCollege(event: React.MouseEvent<HTMLButtonElement>) {
         const collegeId = event.currentTarget.getAttribute("data-college-id");
         if (collegeId) {
-            window.location.href = `/admin/colleges/edit/${collegeId}`;
+            window.location.href = `/consultant/colleges/edit/${collegeId}`;
         }
     }
 
     function handleViewCollege(event: React.MouseEvent<HTMLButtonElement>) {
         const collegeId = event.currentTarget.getAttribute("data-college-id");
         if (collegeId) {
-            window.location.href = `/admin/colleges/${collegeId}`;
+            window.location.href = `/consultant/colleges/${collegeId}`;
         }
     }
 
@@ -96,7 +96,7 @@ function CollegesPage() {
                         {
                             (userRole !== "consultant") ?
                                 <div className="buttons-wrapper">
-                                    <a href="/admin/colleges/add" className="new-college-button">Nova Escola</a>
+                                    <a href="/consultant/colleges/add" className="new-college-button">Nova Escola</a>
                                 </div>
                             : ""
                         }

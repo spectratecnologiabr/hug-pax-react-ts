@@ -65,7 +65,7 @@ function SchedulingList(props: { selectedDate?: Date }) {
     function openVisitForm(event: React.MouseEvent<HTMLButtonElement>) {
         const visitId = event.currentTarget.dataset.schedulingId;
 
-        window.location.pathname = `/admin/consultant/visit/${visitId}`
+        window.location.pathname = `/consultant/visit/${visitId}`
     }
 
     function openVisitPDF(event: React.MouseEvent<HTMLButtonElement>) {
@@ -73,7 +73,7 @@ function SchedulingList(props: { selectedDate?: Date }) {
         if (!visitId) return;
 
         window.open(
-            `/admin/visits/${visitId}/report-preview`,
+            `/consultant/visits/${visitId}/report-preview`,
             "_blank",
             "noopener,noreferrer"
         );

@@ -3,7 +3,7 @@ import { getOverviewData } from "../controllers/dash/overview.controller";
 import { createCollege, ICollegeProps } from "../controllers/college/createCollege.controller";
 import { listConsultants } from "../controllers/user/listConsultants.controller";
 
-import Menubar from "../components/admin/menubar";
+import Menubar from "../components/consultant/menubar";
 
 import "../style/adminDash.css";
 
@@ -208,7 +208,7 @@ function NewCollegePage() {
             alert("Informações gravadas com sucesso.")
 
             setTimeout(() => {
-                window.location.href = "/admin/colleges";
+                window.location.href = "/consultant/colleges";
             }, 1000);
         }
     }

@@ -2,10 +2,10 @@ import React, { useState, useEffect } from "react";
 import { getOverviewData } from "../controllers/dash/overview.controller";
 import { getConsultanOverviewData } from "../controllers/dash/consultantOverview.controller";
 
-import Menubar from "../components/admin/menubar";
-import AdminDatePicker from "../components/admin/AdminDatePicker";
-import SchedulingList from "../components/admin/SchedulingList";
-import EvolutionRadar from "../components/admin/evolutionRadar";
+import Menubar from "../components/consultant/menubar";
+import AdminDatePicker from "../components/consultant/AdminDatePicker";
+import SchedulingList from "../components/consultant/SchedulingList";
+import EvolutionRadar from "../components/consultant/evolutionRadar";
 
 import "../style/adminDash.css";
 
@@ -25,7 +25,7 @@ type TConsultantOverviewData = {
     completedThisMonth: number
 }
 
-function AdminDash() {
+function ConsultantDash() {
     const [selectedDate, setSelectedDate] = useState<Date>(new Date());
     const [overviewData, setOverviewData] = useState<TOverviewData | null>(null);
     const [consultantOverviewData, setConsultantOverviewData] = useState<TConsultantOverviewData | null>(null);
@@ -152,4 +152,4 @@ function AdminDash() {
     )
 }
 
-export default AdminDash
+export default ConsultantDash

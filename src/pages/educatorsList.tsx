@@ -4,7 +4,7 @@ import { listEducators } from "../controllers/user/listEducators.controller";
 import { findCollege } from "../controllers/college/findCollege.controller";
 import { checkSession } from "../controllers/user/checkSession.controller";
 
-import Menubar from "../components/admin/menubar";
+import Menubar from "../components/consultant/menubar";
 
 import "../style/adminDash.css";
 
@@ -93,14 +93,14 @@ function EducatorsList() {
     function handleEditEducator(event: React.MouseEvent<HTMLButtonElement>) {
         const educatorId = event.currentTarget.getAttribute("data-educator-id");
         if (educatorId) {
-            window.location.href = `/admin/educators/edit/${educatorId}`;
+            window.location.href = `/consultant/educators/edit/${educatorId}`;
         }
     }
 
     function handleViewEducator(event: React.MouseEvent<HTMLButtonElement>) {
         const educatorId = event.currentTarget.getAttribute("data-educator-id");
         if (educatorId) {
-            window.location.href = `/admin/educators/${educatorId}`;
+            window.location.href = `/consultant/educators/${educatorId}`;
         }
     }
 
@@ -113,7 +113,7 @@ function EducatorsList() {
                     {   
                         (userRole !== "consultant") ?
                             <div className="buttons-wrapper">
-                                <a href="/admin/educators/add" className="new-college-button">Novo Educador</a>
+                                <a href="/consultant/educators/add" className="new-college-button">Novo Educador</a>
                             </div>
                         : ""
                     }

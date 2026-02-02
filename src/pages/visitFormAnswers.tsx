@@ -4,7 +4,7 @@ import { getOverviewData } from "../controllers/dash/overview.controller";
 import { findVisit } from "../controllers/consultant/findVisit.controller";
 import { updateVisit } from "../controllers/consultant/updateVisit.controller";
 
-import Menubar from "../components/admin/menubar";
+import Menubar from "../components/consultant/menubar";
 
 import "../style/adminDash.css";
 
