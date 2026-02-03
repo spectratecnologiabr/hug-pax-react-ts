@@ -6,7 +6,8 @@ body, * {
 }
 
 .pax-protected {
-
+  filter: blur(16px) brightness(0.7);
+  transition: 0.1s;
 }
 
 .hidden {
