@@ -351,20 +351,312 @@
 }
 
 .schedules-card {
+    border: 1px solid #E0E5EB;
+    border-radius: 12px;
+    background: #FFFFFF;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+
+.schedules-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 24px 12px;
+}
+
+.schedules-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: "Inter";
+    font-size: 16px;
+    font-weight: 600;
+    color: #29303D;
+}
+
+.schedules-actions {
+    display: flex;
+    gap: 12px;
+}
+
+.schedules-filter {
+    height: 32px;
+    padding: 0 36px 0 12px;
+    border-radius: 8px;
+    border: 1px solid #E0E5EB;
+    background-color: #FFFFFF;
+    font-family: "Inter";
+    font-size: 12px;
+    font-weight: 400;
+    color: #29303D;
+    cursor: pointer;
+
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%239CA3AF' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 14px;
+    min-width: 200px;
+}
+
+.schedules-filter:hover {
+    border-color: #228BC3;
+}
+
+.schedules-filter:focus {
+    outline: none;
+    border-color: #228BC3;
+    box-shadow: 0 0 0 2px rgba(34, 139, 195, 0.15);
+}
+
+.schedules-link {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    color: #228BC3;
+    background: none;
+    border: none;
+    cursor: pointer;
+}
+
+.schedules-grid {
+    padding: 16px 24px 24px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 12px;
+}
+
+.schedule-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 16px;
+    border-radius: 12px;
+    border: 1px solid #E5E7EB;
+    background: #FFFFFF;
+    transition: background .2s ease, box-shadow .2s ease, transform .15s ease;
+    font-family: "Inter";
+}
+
+.schedule-item:hover {
+    background: #F9FAFB;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+    transform: translateY(-1px);
+}
+
+.schedule-item:hover .schedule-time {
+    background: #F9FAFB;
+}
+
+.schedule-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: rgba(34,139,195,0.12);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #228BC3;
+}
+
+.schedule-content {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    line-height: normal;
+}
+
+.schedule-title {
+    font-family: "Inter";
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 18px;
+    color: #29303D;
+    white-space: normal;
+    word-break: break-word;
+}
+
+.schedule-user {
+    font-family: "Inter";
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 16px;
+    color: #6B7280;
+    white-space: normal;
+    word-break: break-word;
+}
+
+.schedule-time {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 6px;
+    font-family: "Inter";
+    font-size: 11px;
+    font-weight: 400;
+    line-height: 14px;
+    border: none;
+    box-shadow: none;
+    color: #6B7280;
+}
+
+.schedule-time svg {
+    width: 14px;
+    height: 14px;
+    stroke: #9CA3AF;
+    flex-shrink: 0;
+}
+
+.schedule-item:hover .schedule-time svg {
+    stroke: #228BC3;
+}
+
+.splitted-container {
+    grid-column: span 3;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+/* === Communications Card === */
+
+.communications-card {
+    border: 1px solid #E0E5EB;
+    border-radius: 12px;
+    background: #FFFFFF;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+
+.communications-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 24px 12px;
+}
+
+.communications-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: "Inter";
+    font-size: 16px;
+    font-weight: 600;
+    color: #29303D;
+}
+
+.communications-link {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: "Inter";
+    font-size: 13px;
+    font-weight: 500;
+    color: #228BC3;
+    background: none;
+    border: none;
+    cursor: pointer;
+}
+
+.communications-list {
+    padding: 16px 24px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.communication-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px;
+    border-radius: 10px;
+    background: rgba(243, 245, 247, 0.30);
+    transition: background .2s ease;
+}
+
+.communication-item:hover {
+    background: #F3F4F6;
+}
+
+.communication-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.communication-title {
+    font-family: "Inter";
+    font-size: 14px;
+    font-weight: 500;
+    color: #111827;
+}
+
+.communication-target {
+    font-family: "Inter";
+    font-size: 12px;
+    color: #6B7280;
+}
+
+.communication-meta {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.communication-time {
+    font-family: "Inter";
+    font-size: 11px;
+    color: #6B7280;
+}
+
+.communication-status {
+    font-family: "Inter";
+    font-size: 11px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 999px;
+}
+
+.communication-status.status-success {
+    border: 1px solid rgba(16, 183, 127, 0.20);
+    background: rgba(16, 183, 127, 0.10);
+    color: #10B77F;
+}
+
+.communication-status.status-info {
+    border: 1px solid rgba(16, 181, 203, 0.20);
+    background: rgba(16, 181, 203, 0.10);
+    color: #10B5CB;
+}
+
+.communication-status.status-warning {
+    border: 1px solid rgba(248, 198, 48, 0.20);
+    background: rgba(248, 198, 48, 0.10);
+    color: #F8C630;
+}
+
+/* === Activities / Ações Recentes === */
+
+.activities-card {
   border: 1px solid #E0E5EB;
   border-radius: 12px;
   background: #FFFFFF;
   box-shadow: 0 1px 2px rgba(0,0,0,0.05);
 }
 
-.schedules-header {
+.activities-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 20px 24px 12px;
 }
 
-.schedules-title {
+.activities-title {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -374,48 +666,17 @@
   color: #29303D;
 }
 
-.schedules-actions {
-  display: flex;
-  gap: 12px;
+.activities-title svg {
+  width: 16px;
+  height: 16px;
+  stroke: #228BC3;
 }
 
-.schedules-filter {
-  height: 32px;
-  padding: 0 36px 0 12px;
-  border-radius: 8px;
-  border: 1px solid #E0E5EB;
-  background-color: #FFFFFF;
-  font-family: "Inter";
-  font-size: 12px;
-  font-weight: 400;
-  color: #29303D;
-  cursor: pointer;
-
-  appearance: none;
-  -webkit-appearance: none;
-  -moz-appearance: none;
-
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%239CA3AF' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 12px center;
-  background-size: 14px;
-  min-width: 200px;
-}
-
-.schedules-filter:hover {
-  border-color: #228BC3;
-}
-
-.schedules-filter:focus {
-  outline: none;
-  border-color: #228BC3;
-  box-shadow: 0 0 0 2px rgba(34, 139, 195, 0.15);
-}
-
-.schedules-link {
+.activities-link {
   display: flex;
   align-items: center;
   gap: 6px;
+  font-family: "Inter";
   font-size: 13px;
   font-weight: 500;
   color: #228BC3;
@@ -424,94 +685,70 @@
   cursor: pointer;
 }
 
-.schedules-grid {
+.activities-list {
   padding: 16px 24px 24px;
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 12px;
-}
-
-.schedule-item {
   display: flex;
-  align-items: flex-start;
+  flex-direction: column;
   gap: 14px;
-  padding: 16px;
-  border-radius: 12px;
-  border: 1px solid #E5E7EB;
-  background: #FFFFFF;
-  transition: background .2s ease, box-shadow .2s ease, transform .15s ease;
-  font-family: "Inter";
 }
 
-.schedule-item:hover {
-  background: #F9FAFB;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.06);
-  transform: translateY(-1px);
+.activity-item {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
 }
 
-.schedule-item:hover .schedule-time {
-  background: #F9FAFB;
-}
-
-.schedule-icon {
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
+.activity-icon {
+  position: relative;
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
   background: rgba(34,139,195,0.12);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #228BC3;
 }
 
-.schedule-content {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  line-height: normal;
+.activity-icon svg {
+  width: 16px;
+  height: 16px;
+  stroke: #228BC3;
+  stroke-width: 2;
 }
 
-.schedule-title {
+.activity-line {
+  position: absolute;
+  top: 30px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 1px;
+  height: 18px;
+  background: #E5E7EB;
+}
+
+.activity-content {
+  flex: 1;
+  padding-top: 2px;
+}
+
+.activity-title {
   font-family: "Inter";
   font-size: 14px;
-  font-weight: 600;
-  line-height: 18px;
+  font-weight: 500;
   color: #29303D;
-  white-space: normal;
-  word-break: break-word;
 }
 
-.schedule-user {
+.activity-meta {
+  display: flex;
+  gap: 6px;
+  margin-top: 4px;
   font-family: "Inter";
   font-size: 12px;
-  font-weight: 400;
-  line-height: 16px;
-  color: #6B7280;
-  white-space: normal;
-  word-break: break-word;
-}
-
-.schedule-time {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  margin-top: 6px;
-  font-family: "Inter";
-  font-size: 11px;
-  font-weight: 400;
-  line-height: 14px;
-  border: none;
-  box-shadow: none;
   color: #6B7280;
 }
 
-.schedule-time svg {
+.activities-link svg {
   width: 14px;
   height: 14px;
-  stroke: #9CA3AF;
-  flex-shrink: 0;
-}
-
-.schedule-item:hover .schedule-time svg {
-  stroke: #228BC3;
+  stroke: currentColor;
 }
