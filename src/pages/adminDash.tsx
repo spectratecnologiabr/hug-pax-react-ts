@@ -468,16 +468,13 @@ function AdminDash() {
                                     <div className="activity-item">
                                         <div className="activity-icon">
                                             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18" fill="none">
-                                                <path d="M11.9094 15.6287V14.1402C11.9094 13.3507 11.5957 12.5935 11.0375 12.0352C10.4792 11.477 9.722 11.1633 8.93248 11.1633H4.46713C3.67761 11.1633 2.92042 11.477 2.36215 12.0352C1.80387 12.5935 1.49023 13.3507 1.49023 14.1402V15.6287" stroke="#228BC3" stroke-width="1.48845" stroke-linecap="round" stroke-linejoin="round"/>
-                                                <path d="M6.69955 8.18646C8.34365 8.18646 9.67645 6.85366 9.67645 5.20956C9.67645 3.56547 8.34365 2.23267 6.69955 2.23267C5.05546 2.23267 3.72266 3.56547 3.72266 5.20956C3.72266 6.85366 5.05546 8.18646 6.69955 8.18646Z" stroke="#228BC3" stroke-width="1.48845" stroke-linecap="round" stroke-linejoin="round"/>
-                                                <path d="M14.1406 5.95374V10.4191" stroke="#228BC3" stroke-width="1.48845" stroke-linecap="round" stroke-linejoin="round"/>
-                                                <path d="M16.3716 8.18652H11.9062" stroke="#228BC3" stroke-width="1.48845" stroke-linecap="round" stroke-linejoin="round"/>
+                                                    <path d="M15.6285 11.1634C15.6285 11.5581 15.4716 11.9367 15.1925 12.2159C14.9134 12.495 14.5348 12.6518 14.14 12.6518H5.20932L2.23242 15.6287V3.72111C2.23242 3.32635 2.38924 2.94776 2.66838 2.66862C2.94752 2.38948 3.32611 2.23267 3.72087 2.23267H14.14C14.5348 2.23267 14.9134 2.38948 15.1925 2.66862C15.4716 2.94776 15.6285 3.32635 15.6285 3.72111V11.1634Z" stroke="#228BC3" stroke-width="1.48845" stroke-linecap="round" stroke-linejoin="round"/>
                                             </svg>
                                             <span className="activity-line" />
                                         </div>
 
                                         <div className="activity-content">
-                                            <p className="activity-title">Novo aluno cadastrado</p>
+                                            <p className="activity-title">Comunicação enviada</p>
                                             <div className="activity-meta">
                                             <span>Admin</span>
                                             <span>•</span>

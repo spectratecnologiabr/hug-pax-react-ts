@@ -34,6 +34,7 @@ import NewCoursePage from './pages/newCoursePage';
 import EditCoursePage from './pages/editCoursePage';
 
 import AdminDash from './pages/adminDash';
+import AgendaAdminPage from './pages/agendaAdminPage';
 
 function MyRoutes() {
     return (
@@ -69,6 +70,7 @@ function MyRoutes() {
                 <Route path='/consultant/courses/edit/:courseId' element={<AdminRoute><EditCoursePage/></AdminRoute>} />
 
                 <Route path='/admin' element={<AdminRoute><AdminDash/></AdminRoute>} />
+                <Route path='/admin/agenda' element={<AdminRoute><AgendaAdminPage/></AdminRoute>} />
             </Routes>
         </BrowserRouter>
     )
