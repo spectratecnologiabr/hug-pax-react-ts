@@ -6,8 +6,7 @@ body, * {
 }
 
 .pax-protected {
-  filter: blur(16px) brightness(0.7);
-  transition: 0.1s;
+
 }
 
 .hidden {
@@ -89,6 +88,11 @@ body, * {
 @font-face {
     font-family: 'Kit ExtraBold';
     src: url('../fonts/kit-rounded/KitRounded_ExtraBold.otf');
+}
+
+@font-face {
+    font-family: 'Inter';
+    src: url('../fonts/Inter-Variable.ttf');
 }
 
 .warning-container {
