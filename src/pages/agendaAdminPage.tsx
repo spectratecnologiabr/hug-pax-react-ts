@@ -9,6 +9,7 @@ import { listVisitsByWeekRange } from "../controllers/admin/listVisitsByWeekRang
 import Menubar from "../components/admin/menubar";
 import NewSchedulingForm from "../components/admin/NewSchedulingForm";
 import AdminDatePicker from "../components/admin/AdminDatePicker";
+import ViewSchedulingForm from "../components/admin/ViewSchedulingForm";
 
 import "../style/agendaAdminPage.css"
 
@@ -115,11 +116,22 @@ function AgendaAdminPage() {
     const [ visits, setVisits ] = useState<TVisit[]>([])
     const [ selectedDate, setSelectedDate ] = useState(new Date());
 
+    // === ViewSchedulingForm state ===
+    const [viewSchedulingFormOpen, setViewSchedulingFormOpen] = useState(false);
+    const [openedVisitId, setOpenedVisitId] = useState<number>(0);
+    // === Refresh control state ===
+    const [refreshKey, setRefreshKey] = useState(0);
+
     // === Semanal view state ===
     const [weekVisits, setWeekVisits] = useState<Record<string, TVisit[]>>({});
     const [weekRange, setWeekRange] = useState<{ start: Date; end: Date }>(() =>
       getWeekRange(new Date())
     );
+    // Função para abrir o modal de visualização de agendamento
+    function openViewScheduling(visitId: number) {
+      setOpenedVisitId(visitId);
+      setViewSchedulingFormOpen(true);
+    }
 
     useEffect(() => {
         async function fetchConsultants() {
@@ -143,7 +155,7 @@ function AgendaAdminPage() {
         }
       }
       loadVisits();
-    }, [presetFilter, selectedConsultantId]);
+    }, [presetFilter, selectedConsultantId, refreshKey]);
 
     function handleSelectConsultant(event: React.ChangeEvent<HTMLSelectElement>) {
         const consultantId = Number(event.currentTarget.value || undefined);
@@ -168,7 +180,7 @@ function AgendaAdminPage() {
         setWeekRange(getWeekRange(resolvedDate));
     }
 
-    // === Load week visits when selectedDate, selectedConsultantId or tabOpen changes ===
+    // === Load week visits when selectedDate, selectedConsultantId, tabOpen, or refreshKey changes ===
     useEffect(() => {
       async function fetchWeekVisits() {
         try {
@@ -191,7 +203,7 @@ function AgendaAdminPage() {
       if (tabOpen === "calendar") {
         fetchWeekVisits();
       }
-    }, [selectedDate, selectedConsultantId, tabOpen]);
+    }, [selectedDate, selectedConsultantId, tabOpen, refreshKey]);
 
     function handlePrevWeek() {
       const newDate = addDays(selectedDate, -7);
@@ -303,7 +315,11 @@ function AgendaAdminPage() {
                                         {
                                             visits.map((visit) => (
 
-                                            <div className="agenda-item" key={visit.id}>
+                                            <div
+                                              className="agenda-item"
+                                              key={visit.id}
+                                              onClick={() => openViewScheduling(visit.id)}
+                                            >
                                                 <div className="agenda-item-main">
                                                     <div className="agenda-item-icon">
                                                         <svg xmlns="http://www.w3.org/2000/svg" width="23" height="23" viewBox="0 0 23 23" fill="none">
@@ -437,6 +453,7 @@ function AgendaAdminPage() {
                                                   key={visit.id}
                                                   className="agenda-week-event"
                                                   title={`(${visit.visit_type}) ${visit.college_name} - ${consultantName}`}
+                                                  onClick={() => openViewScheduling(visit.id)}
                                                 >
                                                   <strong>{time}</strong>
                                                   <span>{visit.visit_type}</span>
@@ -456,6 +473,16 @@ function AgendaAdminPage() {
                 </div>
             </div>
             <NewSchedulingForm opened={newSchedFormOpen} onClose={() => setNewSchedFormOpen(false)} />
+            <ViewSchedulingForm
+              opened={viewSchedulingFormOpen}
+              onClose={() => {
+                setViewSchedulingFormOpen(false);
+                setRefreshKey(prev => prev + 1);
+              }}
+              visitId={openedVisitId}
+              onCancelled={() => setRefreshKey(prev => prev + 1)}
+              onRescheduled={() => setRefreshKey(prev => prev + 1)}
+            />
         </React.Fragment>
     )
 }
