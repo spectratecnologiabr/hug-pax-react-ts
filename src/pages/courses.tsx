@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { getOverviewData } from "../controllers/dash/overview.controller";
 import { listCourses } from "../controllers/course/admin/listCourses.controller";
 
-import Menubar from "../components/consultant/menubar";
+import Menubar from "../components/admin/menubar";
 
 type TOverviewData = {
     completedCourses: number,
@@ -24,19 +24,9 @@ type TCourse = {
 }
 
 function Courses() {
-    const [ overviewData, setOverviewData ] = useState<TOverviewData | null>(null);
     const [ courses, setCourses ] = useState<TCourse[]>([]);
 
     useEffect(() => {
-        async function fetchOverviewData() {
-            try {
-                const overviewData = await getOverviewData();
-                setOverviewData(overviewData);
-            } catch (error) {
-                console.error("Error fetching overview data:", error);
-            }
-        }
-
         async function fetchCourses() {
             try {
                 const coursesList = await listCourses();
@@ -47,7 +37,6 @@ function Courses() {
         }
 
         fetchCourses()
-        fetchOverviewData()
     }, []);
 
     const formatDate = (date: string) => {
@@ -73,11 +62,17 @@ function Courses() {
     return (
         <React.Fragment>
             <div className="admin-dashboard-container">
-                <Menubar notificationCount={Number(overviewData?.unreadNotifications)}/>
+                <Menubar/>
                 <div className="admin-dashboard-wrapper">
+                    <div className="admin-header-wrapper">
+                        <div>
+                            <b>Trilhas</b>
+                            <span>Gerencie trilhas e conteúdos</span>
+                        </div>
+                    </div>
                     <div className="listing-container">
                         <div className="buttons-wrapper">
-                            <a href="/admin/courses/add" className="new-course-button">Novo Curso</a>
+                            <a href="/admin/courses/add" className="new-course-button">Nova trilha</a>
                         </div>
                         <div className="listing-table-container">
                             <table className="listing-table">

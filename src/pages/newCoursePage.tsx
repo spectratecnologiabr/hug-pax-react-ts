@@ -6,7 +6,7 @@ import { createModule, IModuleData } from "../controllers/course/admin/createMod
 import { deleteModule } from "../controllers/course/admin/deleteModule.controller";
 import { createLesson, ILessonData } from "../controllers/course/admin/createLesson.controller";
 
-import Menubar from "../components/consultant/menubar";
+import Menubar from "../components/admin/menubar";
 
 import "../style/adminDash.css";
 import { uploadLessonFileController } from "../controllers/course/admin/uploadFile.controller";
@@ -30,7 +30,6 @@ type CreateModuleResponse = {
 };
 
 function NewCoursePage() {
-    const [ overviewData, setOverviewData ] = useState<TOverviewData | null>(null);
     const [ newCourseData, setNewCoursedata ] = useState<ICourseData>({slug: "", title: "", subTitle: "", cover: "", workload: 0, series: []})
     const [isSeriesOpen, setIsSeriesOpen] = useState(false);
     const [createdCourseId, setCreatedCourseId] = useState<number | null>(null);
@@ -60,19 +59,6 @@ function NewCoursePage() {
         order: 1,
     });
     const seriesRef = useRef<HTMLDivElement | null>(null);
-
-    useEffect(() => {
-        async function fetchOverviewData() {
-            try {
-                const overviewData = await getOverviewData();
-                setOverviewData(overviewData);
-            } catch (error) {
-                console.error("Error fetching overview data:", error);
-            }
-        }
-
-        fetchOverviewData()
-    }, []);
 
     const segments = [
         { value: "EDUCACAO_INFANTIL", label: "Educação Infantil" },
@@ -255,7 +241,7 @@ function NewCoursePage() {
     return (
         <React.Fragment>
             <div className="admin-dashboard-container">
-                <Menubar notificationCount={Number(overviewData?.unreadNotifications)}/>
+                <Menubar/>
                 <div className="admin-dashboard-wrapper">
                     <div className="form-container">
                         <div className="title-wrapper">

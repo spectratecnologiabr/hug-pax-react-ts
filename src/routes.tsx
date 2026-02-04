@@ -35,6 +35,7 @@ import EditCoursePage from './pages/editCoursePage';
 
 import AdminDash from './pages/adminDash';
 import AgendaAdminPage from './pages/agendaAdminPage';
+import SeriesAdminPage from './pages/seriesAdminPage';
 
 function MyRoutes() {
     return (
@@ -65,12 +66,13 @@ function MyRoutes() {
                 <Route path='/consultant/educators/:educatorId' element={<AdminRoute><ViewEducatorData/></AdminRoute>} />
                 <Route path='/consultant/visit/:visitId' element={<AdminRoute><VisitFormAnswers/></AdminRoute>} />
                 <Route path='/consultant/visits/:visitId/report-preview' element={<AdminRoute><VisitReportPreview /></AdminRoute>} />
-                <Route path='/consultant/courses' element={<AdminRoute><Courses/></AdminRoute>} />
-                <Route path='/consultant/courses/add' element={<AdminRoute><NewCoursePage/></AdminRoute>} />
-                <Route path='/consultant/courses/edit/:courseId' element={<AdminRoute><EditCoursePage/></AdminRoute>} />
 
                 <Route path='/admin' element={<AdminRoute><AdminDash/></AdminRoute>} />
                 <Route path='/admin/agenda' element={<AdminRoute><AgendaAdminPage/></AdminRoute>} />
+                <Route path='/admin/courses' element={<AdminRoute><Courses/></AdminRoute>} />
+                <Route path='/admin/courses/add' element={<AdminRoute><NewCoursePage/></AdminRoute>} />
+                <Route path='/admin/courses/edit/:courseId' element={<AdminRoute><EditCoursePage/></AdminRoute>} />
+                <Route path='/admin/series' element={<AdminRoute><SeriesAdminPage/></AdminRoute>} />
             </Routes>
         </BrowserRouter>
     )

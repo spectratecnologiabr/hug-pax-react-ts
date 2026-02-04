@@ -7,7 +7,7 @@ import { getOverviewData } from "../controllers/dash/overview.controller";
 import { createModule, IModuleData } from "../controllers/course/admin/createModule.controller";
 import { deleteModule } from "../controllers/course/admin/deleteModule.controller";
 import { createLesson, ILessonData } from "../controllers/course/admin/createLesson.controller";
-import Menubar from "../components/consultant/menubar";
+import Menubar from "../components/admin/menubar";
 import "../style/adminDash.css";
 import { uploadLessonFileController } from "../controllers/course/admin/uploadFile.controller";
 import { createFile } from "../controllers/course/admin/createFile.controller";
@@ -37,7 +37,6 @@ type ICourseData = {
 
 function EditCoursePage() {
     const { courseId } = useParams<{ courseId: string }>();
-    const [ overviewData, setOverviewData ] = useState<TOverviewData | null>(null);
     const [ newCourseData, setNewCoursedata ] = useState<ICourseData>({slug: "", title: "", subTitle: "", cover: "", workload: 0, series: []});
     const [createdCourseId, setCreatedCourseId] = useState<number | null>(null);
     const [modules, setModules] = useState<ModuleInList[]>([]);
@@ -75,18 +74,6 @@ function EditCoursePage() {
 
         document.addEventListener("mousedown", handleClickOutside);
         return () => document.removeEventListener("mousedown", handleClickOutside);
-    }, []);
-
-    useEffect(() => {
-        async function fetchOverviewData() {
-            try {
-                const overviewData = await getOverviewData();
-                setOverviewData(overviewData);
-            } catch (error) {
-                console.error("Error fetching overview data:", error);
-            }
-        }
-        fetchOverviewData();
     }, []);
 
     // Busca dados do curso e módulos/aulas ao carregar
@@ -302,7 +289,7 @@ function EditCoursePage() {
     return (
         <React.Fragment>
             <div className="admin-dashboard-container">
-                <Menubar notificationCount={Number(overviewData?.unreadNotifications)}/>
+                <Menubar />
                 <div className="admin-dashboard-wrapper">
                     <div className="form-container">
                         <div className="title-wrapper">
