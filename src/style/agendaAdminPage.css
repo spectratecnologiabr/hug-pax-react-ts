@@ -272,19 +272,27 @@
   font-size: 11px;
 }
 
-.agenda-badge.is-presencial {
-  background: #228BC31A;
+/* === Agenda Status Badges === */
+
+.agenda-status-scheduled {
+  background: rgba(34, 139, 195, 0.12);
   color: #228BC3;
 }
 
-.agenda-badge.is-online {
-  background: #F59F0A1A;
-  color: #F59F0A;
+.agenda-status-completed {
+  background: rgba(34, 197, 94, 0.15);
+  color: #16A34A;
 }
-.agenda-badge.is-online {
-  background: #F59F0A1A;
-  color: #F59F0A;
+
+.agenda-status-canceled {
+  background: rgba(239, 68, 68, 0.15);
+  color: #DC2626;
 }
+
+.agenda-status-rescheduled {
+  background: rgba(245, 158, 11, 0.18);
+  color: #D97706;
+} 
 
 /* === Agenda Calendar (Weekly View) === */
 
@@ -296,7 +304,7 @@
 /* === Agenda Calendar Grid === */
 .agenda-calendar-grid {
   display: grid;
-  grid-template-columns: minmax(260px, 1fr) minmax(0, 3fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 20px;
   align-items: start;
   margin-top: 16px;
@@ -306,16 +314,20 @@
   .agenda-calendar-grid {
     grid-template-columns: 1fr;
   }
+  .agenda-calendar-month,
+  .agenda-calendar-week {
+    grid-column: span 1;
+  }
 }
 
 /* Mantém apenas grid-column padrão para desktop, sem sobrescrever em media queries */
 .agenda-calendar-month {
-  grid-column: 1;
+  grid-column: span 1;
   align-self: flex-start;
 }
 
 .agenda-calendar-week {
-  grid-column: 2;
+  grid-column: span 3;
   min-width: 0;
   align-self: flex-start;
 }

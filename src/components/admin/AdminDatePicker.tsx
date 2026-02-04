@@ -2,22 +2,30 @@ import React, { useEffect, useState } from "react";
 import DatePicker from "react-datepicker";
 import { ptBR } from "date-fns/locale";
 import { registerLocale } from "react-datepicker";
-import { getDatesWithVisit } from "../../controllers/consultant/getDatesWithVisits.controller";
+import { listDatesWithVisits} from "../../controllers/admin/listDatesWithVisits.controller";
 import "react-datepicker/dist/react-datepicker.css";
 import "../../style/adminDatePicker.css";
 
 registerLocale("pt-BR", ptBR);
 
-type Props = { selectedDate: Date | null; onChange: (date: Date | null) => void };
+type Props = {
+  selectedDate: Date | null;
+  onChange: (date: Date | null) => void;
+  consultantId?: number;
+};
 
-export default function AdminDatePicker({ selectedDate, onChange }: Props) {
+export default function AdminDatePicker({
+  selectedDate,
+  onChange,
+  consultantId,
+}: Props) {
   const [highlightedDates, setHighlightedDates] = useState<Date[]>([]);
 
   async function loadHighlightedDates(date: Date) {
     const month = String(date.getMonth() + 1).padStart(2, "0");
     const year = String(date.getFullYear());
 
-    const dates = await getDatesWithVisit(month, year);
+    const dates = await listDatesWithVisits(year, month, consultantId);
 
     if (!Array.isArray(dates)) {
       setHighlightedDates([]);
@@ -35,7 +43,8 @@ export default function AdminDatePicker({ selectedDate, onChange }: Props) {
   useEffect(() => {
     const baseDate = selectedDate ?? new Date();
     loadHighlightedDates(baseDate);
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [consultantId]);
 
   return (
     <div className="admin-date-picker admin">

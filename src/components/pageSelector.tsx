@@ -75,7 +75,7 @@ function PageSelector(props: {title?: boolean}) {
                 </div>
 
                 <div className="popup-option" onClick={() => handleRedirect("admin")}>
-                    🛠️ Painel Admin
+                    🛠️ Painel {userRole === "consultant" ? "Consultor" : userRole === "coordinator" ? "Coordenador" : userRole === "admin" ? "Administrador" : ""}
                     <span>Área administrativa</span>
                 </div>
             </div>

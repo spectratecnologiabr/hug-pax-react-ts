@@ -1,4 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { listConsultants } from "../controllers/user/listConsultants.controller";
+import { listLast30Visits } from "../controllers/admin/listLast30Visits.controller";
+import { listVistsToday } from "../controllers/admin/listVisitsToday.controller";
+import { listVistsThisWeek } from "../controllers/admin/listVisitsThisWeek.controller";
+import { listVistsThisMonth } from "../controllers/admin/listVisitsThisMonth.controller";
+import { listVisitsByWeekRange } from "../controllers/admin/listVisitsByWeekRange.controller";
 
 import Menubar from "../components/admin/menubar";
 import NewSchedulingForm from "../components/admin/NewSchedulingForm";
@@ -6,9 +12,215 @@ import AdminDatePicker from "../components/admin/AdminDatePicker";
 
 import "../style/agendaAdminPage.css"
 
+type TVisit = {
+    id: number,
+    college_id: number,
+    creator_id: number,
+    institution_profile: string,
+    visit_type: string,
+    college_name: string,
+    college_address: string,
+    college_number: number,
+    city: string,
+    manager: string,
+    visit_date: string,
+    lastVisit_date: string,
+    last_rescheduling_reason: string,
+    rescheduling_amount: string,
+    cancel_reason: string,
+    guest_consultants: any[],
+    init_route_time: string,
+    init_route_coordinates: string,
+    end_route_time: string,
+    end_route_coordinates: string,
+    init_visit_time: string,
+    end_visit_time: string,
+    visit_observations: string,
+    scheduling_observations: string,
+    form_answers: any[],
+    photos: any[],
+    status: string,
+    created_at: string,
+    updated_at: string
+}
+
+type TConsultant = {
+    id: number;
+    firstName: string;
+    lastName: string;
+}
+
+// ===== Helpers for week range and grouping visits =====
+function getWeekRange(date: Date) {
+  const base = new Date(date);
+  const day = base.getDay(); // 0 = domingo
+  const diffToMonday = day === 0 ? -6 : 1 - day;
+
+  const start = new Date(base);
+  start.setDate(base.getDate() + diffToMonday);
+  start.setHours(0, 0, 0, 0);
+
+  const end = new Date(start);
+  end.setDate(start.getDate() + 6);
+  end.setHours(23, 59, 59, 999);
+
+  return { start, end };
+}
+
+function groupVisitsByDay(visits: TVisit[]) {
+  return visits.reduce<Record<string, TVisit[]>>((acc, visit) => {
+    const [y, m, d] = visit.visit_date.split("-").map(Number);
+    const key = new Date(y, m - 1, d).toISOString().slice(0, 10);
+    acc[key] = acc[key] || [];
+    acc[key].push(visit);
+    return acc;
+  }, {});
+}
+
+
+const parsedStatus: Record<string, string> = {
+  scheduled: "Agendado",
+  canceled: "Cancelado",
+  completed: "Concluído",
+  rescheduled: "Reagendado",
+}
+
+function formatWeekRange(range: { start: Date; end: Date }) {
+  const start = range.start.toLocaleDateString("pt-BR", {
+    day: "2-digit",
+    month: "short",
+  });
+
+  const end = range.end.toLocaleDateString("pt-BR", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+
+  return `${start} - ${end}`;
+}
+
+function addDays(date: Date, days: number) {
+  const d = new Date(date);
+  d.setDate(d.getDate() + days);
+  return d;
+}
+
 function AgendaAdminPage() {
-    const [ newSchedFormOpen, setNewSchedFormOpen ] = useState(false);
+    const [ newSchedFormOpen, setNewSchedFormOpen ] = useState(false)
     const [ tabOpen, setTabOpen ] = useState<"list" | "calendar">("list")
+    const [ consultants, setConsultants ] = useState<TConsultant[]>([])
+    const [ selectedConsultantId, setSelectedConsultantId ] = useState<number | undefined>(undefined);
+    const [ presetFilter, setPresetFilter ] = useState<"all" | "today" | "week" | "month">("all")
+    const [ visits, setVisits ] = useState<TVisit[]>([])
+    const [ selectedDate, setSelectedDate ] = useState(new Date());
+
+    // === Semanal view state ===
+    const [weekVisits, setWeekVisits] = useState<Record<string, TVisit[]>>({});
+    const [weekRange, setWeekRange] = useState<{ start: Date; end: Date }>(() =>
+      getWeekRange(new Date())
+    );
+
+    useEffect(() => {
+        async function fetchConsultants() {
+            try {
+                const consultantsData = await listConsultants();
+                setConsultants(consultantsData);
+            } catch (error) {
+                console.error("Error fetching consultants:", error);
+            }
+        }
+        fetchConsultants()
+    }, [selectedConsultantId])
+
+    useEffect(() => {
+      async function loadVisits() {
+        try {
+          const data = await fetchVisitsByPreset(presetFilter, selectedConsultantId);
+          setVisits(data);
+        } catch (error) {
+          console.error("Erro ao buscar visitas:", error);
+        }
+      }
+      loadVisits();
+    }, [presetFilter, selectedConsultantId]);
+
+    function handleSelectConsultant(event: React.ChangeEvent<HTMLSelectElement>) {
+        const consultantId = Number(event.currentTarget.value || undefined);
+        setSelectedConsultantId(consultantId);
+    }
+
+    function handleSelectPresetFilter(event: React.MouseEvent<HTMLButtonElement>) {
+        const filter = event.currentTarget.dataset.filter as
+            | "all"
+            | "today"
+            | "week"
+            | "month"
+            | undefined;
+
+        const resolvedFilter = filter ?? "all";
+        setPresetFilter(resolvedFilter);
+    }
+
+    function handleDateChange(date: Date | null) {
+        const resolvedDate = date || new Date();
+        setSelectedDate(resolvedDate);
+        setWeekRange(getWeekRange(resolvedDate));
+    }
+
+    // === Load week visits when selectedDate, selectedConsultantId or tabOpen changes ===
+    useEffect(() => {
+      async function fetchWeekVisits() {
+        try {
+          const dateBase = selectedDate.toISOString().split("T")[0];
+
+          const data = await listVisitsByWeekRange(
+            dateBase,
+            selectedConsultantId
+          );
+
+          const range = getWeekRange(selectedDate);
+          setWeekRange(range);
+
+          setWeekVisits(groupVisitsByDay(data));
+        } catch (error) {
+          console.error("Erro ao buscar visitas da semana:", error);
+        }
+      }
+
+      if (tabOpen === "calendar") {
+        fetchWeekVisits();
+      }
+    }, [selectedDate, selectedConsultantId, tabOpen]);
+
+    function handlePrevWeek() {
+      const newDate = addDays(selectedDate, -7);
+      setSelectedDate(newDate);
+      setWeekRange(getWeekRange(newDate));
+    }
+
+    function handleNextWeek() {
+      const newDate = addDays(selectedDate, 7);
+      setSelectedDate(newDate);
+      setWeekRange(getWeekRange(newDate));
+    }
+
+    // ===== Helper to fetch visits by preset =====
+    async function fetchVisitsByPreset(preset: "all" | "today" | "week" | "month", consultantId?: number) {
+        if (preset === "today") {
+            return listVistsToday(consultantId);
+        }
+
+        if (preset === "week") {
+            return listVistsThisWeek(consultantId);
+        }
+
+        if (preset === "month") {
+            return listVistsThisMonth(consultantId);
+        }
+
+        return listLast30Visits(consultantId);
+    }
 
     return (
         <React.Fragment>
@@ -29,20 +241,27 @@ function AgendaAdminPage() {
                                 <path d="M15.6286 0.744141H0.744141L6.69794 7.7845V12.6517L9.67483 14.1402V7.7845L15.6286 0.744141Z" stroke="#737B8C" stroke-width="1.48845" stroke-linecap="round" stroke-linejoin="round"/>
                             </svg>
 
-                            <select className="agenda-consultant-select">
-                                <option value="all">Todos os Consultores</option>
-                                <option value="ana">Ana Paula</option>
-                                <option value="carlos">Carlos Eduardo</option>
-                                <option value="fernanda">Fernanda Costa</option>
+                            <select className="agenda-consultant-select" onChange={handleSelectConsultant}>
+                                <option value="">Todos os Consultores</option>
+                                {
+                                    consultants.map(consultant => (
+                                        <option value={consultant.id}>{consultant.firstName} {consultant.lastName}</option>
+                                    ))
+                                }
                             </select>
                         </div>
 
-                        <div className="agenda-quick-filters">
-                            <button className="agenda-filter-btn">Hoje</button>
-                            <button className="agenda-filter-btn">Esta Semana</button>
-                            <button className="agenda-filter-btn">Este Mês</button>
-                            <button className="agenda-filter-btn is-active">Todos</button>
-                        </div>
+                        {
+                            tabOpen === "list" ?
+                            <div className="agenda-quick-filters">
+                                <button className={presetFilter === "today" ? "agenda-filter-btn is-active" : "agenda-filter-btn"} data-filter="today" onClick={handleSelectPresetFilter}>Hoje</button>
+                                <button className={presetFilter === "week" ? "agenda-filter-btn is-active" : "agenda-filter-btn"} data-filter="week" onClick={handleSelectPresetFilter}>Esta Semana</button>
+                                <button className={presetFilter === "month" ? "agenda-filter-btn is-active" : "agenda-filter-btn"} data-filter="month" onClick={handleSelectPresetFilter}>Este Mês</button>
+                                <button className={presetFilter === "all" ? "agenda-filter-btn is-active" : "agenda-filter-btn"} data-filter="all" onClick={handleSelectPresetFilter}>Todos</button>
+                            </div>
+                            : ""
+                        }
+                        
                       </div>
                     </div>
                     
@@ -77,43 +296,85 @@ function AgendaAdminPage() {
                             <div className="agenda-list-panel">
                                 <div className="agenda-list-card">
                                     <div className="agenda-list-header">
-                                    <h3>7 agendamentos encontrados</h3>
+                                    <h3>{visits.length} agendamentos encontrados</h3>
                                     </div>
 
                                     <div className="agenda-list">
-                                    <div className="agenda-item">
-                                        <div className="agenda-item-main">
-                                        <div className="agenda-item-icon">
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="23" height="23" viewBox="0 0 23 23" fill="none">
-                                                <path d="M17.6546 19.5122V17.6539C17.6546 16.6682 17.2631 15.7228 16.5661 15.0258C15.8691 14.3288 14.9237 13.9373 13.938 13.9373H8.3631C7.37739 13.9373 6.43205 14.3288 5.73505 15.0258C5.03805 15.7228 4.64648 16.6682 4.64648 17.6539V19.5122" stroke="#228BC3" stroke-width="1.85831" stroke-linecap="round" stroke-linejoin="round"/>
-                                                <path d="M11.1502 10.2206C13.2028 10.2206 14.8668 8.5566 14.8668 6.50397C14.8668 4.45134 13.2028 2.78735 11.1502 2.78735C9.09758 2.78735 7.43359 4.45134 7.43359 6.50397C7.43359 8.5566 9.09758 10.2206 11.1502 10.2206Z" stroke="#228BC3" stroke-width="1.85831" stroke-linecap="round" stroke-linejoin="round"/>
-                                            </svg>
-                                        </div>
+                                        {
+                                            visits.map((visit) => (
 
-                                        <div className="agenda-item-info">
-                                            <p className="agenda-item-title">Orientação Pedagógica</p>
-                                            <p className="agenda-item-sub">Ana Paula Mendes</p>
-                                            <p className="agenda-item-sub">Escola Municipal São José</p>
-                                        </div>
-                                        </div>
+                                            <div className="agenda-item" key={visit.id}>
+                                                <div className="agenda-item-main">
+                                                    <div className="agenda-item-icon">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="23" height="23" viewBox="0 0 23 23" fill="none">
+                                                            <path d="M17.6546 19.5122V17.6539C17.6546 16.6682 17.2631 15.7228 16.5661 15.0258C15.8691 14.3288 14.9237 13.9373 13.938 13.9373H8.3631C7.37739 13.9373 6.43205 14.3288 5.73505 15.0258C5.03805 15.7228 4.64648 16.6682 4.64648 17.6539V19.5122" stroke="#228BC3" stroke-width="1.85831" stroke-linecap="round" stroke-linejoin="round"/>
+                                                            <path d="M11.1502 10.2206C13.2028 10.2206 14.8668 8.5566 14.8668 6.50397C14.8668 4.45134 13.2028 2.78735 11.1502 2.78735C9.09758 2.78735 7.43359 4.45134 7.43359 6.50397C7.43359 8.5566 9.09758 10.2206 11.1502 10.2206Z" stroke="#228BC3" stroke-width="1.85831" stroke-linecap="round" stroke-linejoin="round"/>
+                                                        </svg>
+                                                    </div>
 
-                                        <div className="agenda-item-meta">
-                                        <div className="agenda-item-date">
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18" fill="none">
-                                                <path d="M8.9137 16.353C13.019 16.353 16.3469 13.0251 16.3469 8.9198C16.3469 4.81454 13.019 1.48657 8.9137 1.48657C4.80844 1.48657 1.48047 4.81454 1.48047 8.9198C1.48047 13.0251 4.80844 16.353 8.9137 16.353Z" stroke="#737B8C" stroke-width="1.48665" stroke-linecap="round" stroke-linejoin="round"/>
-                                                <path d="M8.91797 4.45996V8.9199L11.8913 10.4065" stroke="#737B8C" stroke-width="1.48665" stroke-linecap="round" stroke-linejoin="round"/>
-                                            </svg>
-                                            <span>02/02/2026 às 09:00</span>
-                                        </div>
+                                                    <div className="agenda-item-info">
+                                                        <p className="agenda-item-title">{visit.visit_type}</p>
+                                                        <p className="agenda-item-sub">{
+                                                            (() => {
+                                                                const consultant = consultants.find(c => c.id === visit.creator_id);
+                                                                return consultant ? `${consultant.firstName} ${consultant.lastName}` : "Consultor desconhecido";
+                                                            })()
+                                                        }</p>
+                                                        <p className="agenda-item-sub">{visit.college_name}</p>
+                                                    </div>
+                                                </div>
 
-                                        <div className="agenda-item-extra">
-                                            <span>Duração: 1h</span>
-                                            <span className="agenda-badge is-presencial">Presencial</span>
-                                        </div>
-                                        </div>
-                                    </div>
+                                                <div className="agenda-item-meta">
+                                                <div className="agenda-item-date">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18" fill="none">
+                                                    <path d="M8.9137 16.353C13.019 16.353 16.3469 13.0251 16.3469 8.9198C16.3469 4.81454 13.019 1.48657 8.9137 1.48657C4.80844 1.48657 1.48047 4.81454 1.48047 8.9198C1.48047 13.0251 4.80844 16.353 8.9137 16.353Z" stroke="#737B8C" stroke-width="1.48665" stroke-linecap="round" stroke-linejoin="round"/>
+                                                    <path d="M8.91797 4.45996V8.9199L11.8913 10.4065" stroke="#737B8C" stroke-width="1.48665" stroke-linecap="round" stroke-linejoin="round"/>
+                                                    </svg>
+                                                    <span>{
+                                                        (() => {
+                                                            const [year, month, day] = visit.visit_date.split('-').map(Number);
+                                                            const date = new Date(year, month - 1, day);
+                                                            const time = new Date(visit.init_visit_time)
+                                                            const formattedDate = date.toLocaleDateString('pt-BR');
+                                                            const formattedTime = time.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+                                                            return `${formattedDate} às ${formattedTime}`;
+                                                        })()
+                                                    }</span>
+                                                </div>
 
-                                    {/* Repete agenda-item */}
+                                                <div className="agenda-item-extra">
+                                                    <span>
+                                                      Duração: {
+                                                        (() => {
+                                                          if (!visit.init_visit_time || !visit.end_visit_time) return "—";
+
+                                                          const start = new Date(visit.init_visit_time);
+                                                          const end = new Date(visit.end_visit_time);
+
+                                                          if (isNaN(start.getTime()) || isNaN(end.getTime())) return "—";
+
+                                                          const diffMs = end.getTime() - start.getTime();
+                                                          if (diffMs <= 0) return "—";
+
+                                                          const minutes = Math.floor(diffMs / 60000);
+                                                          const hours = Math.floor(minutes / 60);
+                                                          const remainingMinutes = minutes % 60;
+
+                                                          return hours > 0
+                                                            ? `${hours}h ${remainingMinutes}min`
+                                                            : `${minutes}min`;
+                                                        })()
+                                                      }
+                                                    </span>
+                                                    <span className={`agenda-badge agenda-status-${visit.status}`}>
+                                                      {parsedStatus[visit.status] || visit.status}
+                                                    </span>
+                                                </div>
+                                                </div>
+                                            </div>
+                                            ))
+                                        }
+                                        
                                     </div>
                                 </div>
                             </div>
@@ -123,7 +384,11 @@ function AgendaAdminPage() {
                                 {/* CALENDÁRIO MENSAL */}
 
                                 <div className="agenda-calendar-card agenda-calendar-month">
-                                    <AdminDatePicker selectedDate={new Date()} onChange={() => {}} />
+                                    <AdminDatePicker
+                                      selectedDate={selectedDate}
+                                      onChange={handleDateChange}
+                                      consultantId={selectedConsultantId}
+                                    />
                                 </div>
 
                                 {/* VISÃO SEMANAL */}
@@ -132,103 +397,55 @@ function AgendaAdminPage() {
                                     <h3>Visão Semanal</h3>
 
                                     <div className="agenda-week-nav">
-                                        <button>‹</button>
-                                        <span>02 fev - 08 fev 2026</span>
-                                        <button>›</button>
+                                        <button onClick={handlePrevWeek}>‹</button>
+                                        <span>{formatWeekRange(weekRange)}</span>
+                                        <button onClick={handleNextWeek}>›</button>
                                     </div>
                                     </div>
 
                                     <div className="agenda-week-grid">
+                                      {Array.from({ length: 7 }).map((_, index) => {
+                                        const dayDate = new Date(weekRange.start);
+                                        dayDate.setDate(weekRange.start.getDate() + index);
 
-                                    <div className="agenda-week-day">
-                                        <div className="agenda-week-day-header">
-                                        <span>segunda</span>
-                                        <strong>02</strong>
-                                        </div>
-                                    </div>
+                                        const dayKey = dayDate.toISOString().slice(0, 10);
+                                        const dayVisits = weekVisits[dayKey] || [];
 
-                                    <div className="agenda-week-day is-today">
-                                        <div className="agenda-week-day-header">
-                                        <span>terça</span>
-                                        <strong>03</strong>
-                                        </div>
+                                        return (
+                                          <div
+                                            key={dayKey}
+                                            className={`agenda-week-day ${
+                                              dayKey === new Date().toISOString().slice(0, 10) ? "is-today" : ""
+                                            }`}
+                                          >
+                                            <div className="agenda-week-day-header">
+                                              <span>
+                                                {dayDate.toLocaleDateString("pt-BR", { weekday: "long" })}
+                                              </span>
+                                              <strong>{dayDate.getDate()}</strong>
+                                            </div>
 
-                                        <div
-                                        className="agenda-week-event"
-                                        title="Workshop de Metodologias - Fernanda Costa"
-                                        >
-                                        <strong>10:00</strong>
-                                        <span>Workshop de Metodologias</span>
-                                        </div>
-                                    </div>
-
-                                    <div className="agenda-week-day">
-                                        <div className="agenda-week-day-header">
-                                        <span>quarta</span>
-                                        <strong>04</strong>
-                                        </div>
-
-                                        <div
-                                        className="agenda-week-event"
-                                        title="Acompanhamento Mensal - Ana Paula Mendes"
-                                        >
-                                        <strong>08:30</strong>
-                                        <span>Acompanhamento Mensal</span>
-                                        </div>
-                                    </div>
-
-                                    <div className="agenda-week-day">
-                                        <div className="agenda-week-day-header">
-                                        <span>quinta</span>
-                                        <strong>05</strong>
-                                        </div>
-
-                                        <div
-                                        className="agenda-week-event"
-                                        title="Consultoria Administrativa - Ricardo Almeida"
-                                        >
-                                        <strong>11:00</strong>
-                                        <span>Consultoria Administrativa</span>
-                                        </div>
-                                    </div>
-
-                                    <div className="agenda-week-day">
-                                        <div className="agenda-week-day-header">
-                                        <span>sexta</span>
-                                        <strong>06</strong>
-                                        </div>
-
-                                        <div
-                                        className="agenda-week-event"
-                                        title="Avaliação de Resultados - Juliana Santos"
-                                        >
-                                        <strong>15:00</strong>
-                                        <span>Avaliação de Resultados</span>
-                                        </div>
-                                    </div>
-
-                                    <div className="agenda-week-day">
-                                        <div className="agenda-week-day-header">
-                                        <span>sábado</span>
-                                        <strong>07</strong>
-                                        </div>
-
-                                        <div
-                                        className="agenda-week-event"
-                                        title="Treinamento de Equipe - Carlos Eduardo Silva"
-                                        >
-                                        <strong>09:30</strong>
-                                        <span>Treinamento de Equipe</span>
-                                        </div>
-                                    </div>
-
-                                    <div className="agenda-week-day">
-                                        <div className="agenda-week-day-header">
-                                        <span>domingo</span>
-                                        <strong>08</strong>
-                                        </div>
-                                    </div>
-
+                                            {dayVisits.map((visit) => {
+                                              const time = new Date(visit.init_visit_time).toLocaleTimeString(
+                                                "pt-BR",
+                                                { hour: "2-digit", minute: "2-digit" }
+                                              );
+                                              const consultant = consultants.find(c => c.id === visit.creator_id);
+                                              const consultantName = consultant ? `${consultant.firstName} ${consultant.lastName}` : "Consultor desconhecido";
+                                              return (
+                                                <div
+                                                  key={visit.id}
+                                                  className="agenda-week-event"
+                                                  title={`(${visit.visit_type}) ${visit.college_name} - ${consultantName}`}
+                                                >
+                                                  <strong>{time}</strong>
+                                                  <span>{visit.visit_type}</span>
+                                                </div>
+                                              );
+                                            })}
+                                          </div>
+                                        );
+                                      })}
                                     </div>
                                 </div>
 

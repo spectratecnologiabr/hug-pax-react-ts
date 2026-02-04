@@ -45,7 +45,19 @@ function Login() {
                         setCookie({ name: "authToken", value: data.token });
                         setCookie({ name: "userData", value: JSON.stringify(userWithoutPic) });
                         localStorage.setItem("profilePic", profilePic);
-                        window.location.href = "/dashboard";
+
+                        // Redireciona conforme o role
+                        let redirectUrl = "/dashboard";
+                        if (userWithoutPic.role === "consultant") {
+                            redirectUrl = "/consultant";
+                        } else if (userWithoutPic.role === "coordinator") {
+                            redirectUrl = "/coordinator";
+                        } else if (userWithoutPic.role === "admin") {
+                            redirectUrl = "/admin";
+                        } else if (userWithoutPic.role === "educator") {
+                            redirectUrl = "/dashboard";
+                        }
+                        window.location.href = redirectUrl;
                     } else {
                         console.error("Login failed:", data.message);
                         handleModalMessage({
