@@ -1,4 +1,7 @@
-import React from "react";
+import { useEffect, useState } from "react";
+import { listConsultants } from "../controllers/user/listConsultants.controller";
+import ViewSchedulingForm from "../components/admin/ViewSchedulingForm";
+import { listLast30Visits } from "../controllers/admin/listLast30Visits.controller";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, TooltipProps } from "recharts";
 import { PieChart, Pie, Cell, Legend } from "recharts";
 
@@ -84,9 +87,65 @@ const CustomPieTooltip = ({ active, payload }: any) => {
   );
 };
 
+type TConsultant = {
+    id: number;
+    firstName: string;
+    lastName: string;
+}
+
 function AdminDash() {
+    const [lastVisits, setLastVisits] = useState<any[]>([]);
+    // === ViewSchedulingForm state ===
+    const [viewSchedulingFormOpen, setViewSchedulingFormOpen] = useState(false);
+    const [openedVisitId, setOpenedVisitId] = useState<number>(0);
+    // ===== Consultor selector states (igual agendaAdminPage) =====
+    const [consultants, setConsultants] = useState<any[]>([]);
+    const [selectedConsultantId, setSelectedConsultantId] = useState<number | undefined>(undefined);
+    // === Refresh control state ===
+    const [refreshKey, setRefreshKey] = useState(0);
+
+    // Função para abrir o modal de visualização de agendamento
+    function openViewScheduling(visitId: number) {
+      setOpenedVisitId(visitId);
+      setViewSchedulingFormOpen(true);
+    }
+
+    // === Buscar consultores (igual agendaAdminPage) ===
+    useEffect(() => {
+      async function loadConsultants() {
+        try {
+          const data = await listConsultants();
+          setConsultants(data);
+        } catch (err) {
+          console.error("Erro ao carregar consultores", err);
+        }
+      }
+      loadConsultants();
+    }, []);
+
+    // === Buscar agendas respeitando consultor (igual agendaAdminPage) ===
+    useEffect(() => {
+      async function loadLastVisits() {
+        try {
+          const data = await listLast30Visits(selectedConsultantId);
+          setLastVisits(data);
+        } catch (err) {
+          console.error("Erro ao carregar últimas agendas", err);
+        }
+      }
+      loadLastVisits();
+    }, [selectedConsultantId, refreshKey]);
+
+    // === Função do seletor de consultor (igual agendaAdminPage) ===
+    function handleSelectConsultant(
+      event: React.ChangeEvent<HTMLSelectElement>
+    ) {
+      const consultantId = Number(event.currentTarget.value || undefined);
+      setSelectedConsultantId(consultantId);
+    }
+
     return (
-        <React.Fragment>
+        <div>
             <div className="admin-dashboard-container">
                 <Menubar/>
                 <div className="admin-dashboard-wrapper">
@@ -216,14 +275,21 @@ function AdminDash() {
                               </h3>
 
                               <div className="schedules-actions">
-                                <select className="schedules-filter">
-                                  <option value="all">Todos os consultores</option>
-                                  <option value="ana-paula-mendes">Ana Paula Mendes</option>
-                                  <option value="carlos-eduardo-silva">Carlos Eduardo Silva</option>
-                                  <option value="fernanda-costa">Fernanda Costa</option>
-                                  <option value="ricardo-almeida">Ricardo Almeida</option>
+                                <select
+                                  className="schedules-filter"
+                                  value={selectedConsultantId ?? ""}
+                                  onChange={handleSelectConsultant}
+                                >
+                                  <option value="">Todos os consultores</option>
+                                  {consultants.map((consultant) => (
+                                    <option key={consultant.id} value={consultant.id}>
+                                      {consultant.firstName
+                                        ? `${consultant.firstName} ${consultant.lastName}`
+                                        : consultant.name}
+                                    </option>
+                                  ))}
                                 </select>
-                                <button className="schedules-link">
+                                <button className="schedules-link" onClick={() => window.location.href = "/admin/agenda"}>
                                   Ver agenda completa
                                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                     <path d="m9 18 6-6-6-6"></path>
@@ -233,85 +299,52 @@ function AdminDash() {
                             </div>
 
                             <div className="schedules-grid">
-                              <div className="schedule-item">
-                                <div className="schedule-icon">
-                                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                    <circle cx="12" cy="7" r="4"></circle>
-                                    <path d="M5.5 21a6.5 6.5 0 0 1 13 0"></path>
-                                  </svg>
-                                </div>
-                                <div className="schedule-content">
-                                  <b className="schedule-title">Orientação Pedagógica</b>
-                                  <span className="schedule-user">Ana Paula Mendes</span>
-                                  <div className="schedule-time">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                              {lastVisits.slice(0, 4).map(visit => (
+                                <div
+                                  className="schedule-item"
+                                  key={visit.id}
+                                  onClick={() => openViewScheduling(visit.id)}
+                                >
+                                  <div className="schedule-icon">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                      <circle cx="12" cy="7" r="4"></circle>
+                                      <path d="M5.5 21a6.5 6.5 0 0 1 13 0"></path>
+                                    </svg>
+                                  </div>
+                                  <div className="schedule-content">
+                                    <b className="schedule-title">{visit.visit_type}</b>
+                                    <span className="schedule-user">{visit.college_name}</span>
+                                    <span className="schedule-user">{
+                                        (() => {
+                                            const consultant = consultants.find(c => c.id === visit.creator_id);
+                                            return consultant
+                                              ? (consultant.firstName
+                                                  ? `${consultant.firstName} ${consultant.lastName}`
+                                                  : consultant.name)
+                                              : "Consultor desconhecido";
+                                        })()
+                                    }</span>
+                                    <div className="schedule-time">
+                                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                         <circle cx="12" cy="12" r="10"></circle>
                                         <polyline points="12 6 12 12 16 14"></polyline>
-                                    </svg>
-                                    <span>02/02 às 09:00</span>
+                                      </svg>
+                                      <span>
+                                        {
+                                            (() => {
+                                                const [year, month, day] = visit.visit_date.split('-').map(Number);
+                                                const date = new Date(year, month - 1, day);
+                                                const time = new Date(visit.init_visit_time)
+                                                const formattedDate = date.toLocaleDateString('pt-BR');
+                                                const formattedTime = time.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+                                                return `${formattedDate} às ${formattedTime}`;
+                                            })()
+                                        }
+                                      </span>
+                                    </div>
                                   </div>
                                 </div>
-                              </div>
-
-                              <div className="schedule-item">
-                                <div className="schedule-icon">
-                                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                    <circle cx="12" cy="7" r="4"></circle>
-                                    <path d="M5.5 21a6.5 6.5 0 0 1 13 0"></path>
-                                  </svg>
-                                </div>
-                                <div className="schedule-content">
-                                  <b className="schedule-title">Orientação Pedagógica</b>
-                                  <span className="schedule-user">Ana Paula Mendes</span>
-                                  <div className="schedule-time">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                        <circle cx="12" cy="12" r="10"></circle>
-                                        <polyline points="12 6 12 12 16 14"></polyline>
-                                    </svg>
-                                    <span>02/02 às 09:00</span>
-                                  </div>
-                                </div>
-                              </div>
-
-                              <div className="schedule-item">
-                                <div className="schedule-icon">
-                                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                    <circle cx="12" cy="7" r="4"></circle>
-                                    <path d="M5.5 21a6.5 6.5 0 0 1 13 0"></path>
-                                  </svg>
-                                </div>
-                                <div className="schedule-content">
-                                  <b className="schedule-title">Orientação Pedagógica</b>
-                                  <span className="schedule-user">Ana Paula Mendes</span>
-                                  <div className="schedule-time">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                        <circle cx="12" cy="12" r="10"></circle>
-                                        <polyline points="12 6 12 12 16 14"></polyline>
-                                    </svg>
-                                    <span>02/02 às 09:00</span>
-                                  </div>
-                                </div>
-                              </div>
-
-                              <div className="schedule-item">
-                                <div className="schedule-icon">
-                                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                    <circle cx="12" cy="7" r="4"></circle>
-                                    <path d="M5.5 21a6.5 6.5 0 0 1 13 0"></path>
-                                  </svg>
-                                </div>
-                                <div className="schedule-content">
-                                  <b className="schedule-title">Orientação Pedagógica</b>
-                                  <span className="schedule-user">Ana Paula Mendes</span>
-                                  <div className="schedule-time">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                        <circle cx="12" cy="12" r="10"></circle>
-                                        <polyline points="12 6 12 12 16 14"></polyline>
-                                    </svg>
-                                    <span>02/02 às 09:00</span>
-                                  </div>
-                                </div>
-                              </div>
+                              ))}
                             </div>
                           </div>
                         </div>
@@ -490,8 +523,18 @@ function AdminDash() {
                     </div>
                 </div>
             </div>
+            <ViewSchedulingForm
+              opened={viewSchedulingFormOpen}
+              onClose={() => {
+                setViewSchedulingFormOpen(false);
+                setRefreshKey(prev => prev + 1);
+              }}
+              visitId={openedVisitId}
+              onCancelled={() => setRefreshKey(prev => prev + 1)}
+              onRescheduled={() => setRefreshKey(prev => prev + 1)}
+            />
             <Footer />
-        </React.Fragment>
+        </div>
     )
 }
 
