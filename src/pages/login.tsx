@@ -51,7 +51,7 @@ function Login() {
                         if (userWithoutPic.role === "consultant") {
                             redirectUrl = "/consultant";
                         } else if (userWithoutPic.role === "coordinator") {
-                            redirectUrl = "/coordinator";
+                            redirectUrl = "/consultant";
                         } else if (userWithoutPic.role === "admin") {
                             redirectUrl = "/admin";
                         } else if (userWithoutPic.role === "educator") {

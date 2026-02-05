@@ -5,6 +5,9 @@ import { getOverviewData } from "../controllers/dash/overview.controller";
 import { findCollege } from "../controllers/college/findCollege.controller";
 import { ICollegeProps } from "../controllers/college/createCollege.controller";
 
+import { listTeachingModalitiesAdmin } from "../controllers/education/listTeachingModalitiesAdmin.controller";
+import { listTeachingGradesAdmin } from "../controllers/education/listTeachingGradesAdmin.controller";
+
 import Menubar from "../components/consultant/menubar";
 
 import "../style/adminDash.css";
@@ -21,6 +24,9 @@ type TConsultant = {
     firstName: string;
     lastName: string;
 }
+
+type TeachingModality = { id: number; name: string; slug: string; isActive?: boolean };
+type TeachingGrade = { id: number; modalityId: number; name: string; order: number; isActive?: boolean };
 
 function normalizeContractSeries(value: unknown): string[] {
     if (Array.isArray(value)) return value;
@@ -48,52 +54,42 @@ function ViewCollegeData() {
     const segmentRef = useRef<HTMLDivElement | null>(null);
     const seriesRef = useRef<HTMLDivElement | null>(null);
 
-    const segments = [
-        { value: "EDUCACAO_INFANTIL", label: "Educação Infantil" },
-        { value: "ENSINO_FUNDAMENTAL_I", label: "Ensino Fundamental I" },
-        { value: "ENSINO_FUNDAMENTAL_II", label: "Ensino Fundamental II" },
-        { value: "ENSINO_MEDIO", label: "Ensino Médio" },
-        { value: "EDUCACAO_PROFISSIONAL", label: "Educação Profissional" },
-        { value: "EJA", label: "Educação de Jovens e Adultos" },
-    ];
+    const [segments, setSegments] = useState<{ value: string; label: string }[]>([]);
+    const [SERIES_BY_SEGMENT, setSeriesBySegment] = useState<Record<string, { value: string; label: string }[]>>({});
 
-    const SERIES_BY_SEGMENT = {
-        EDUCACAO_INFANTIL: [
-            { value: "CRECHE_0_3", label: "Creche (0 a 3 anos)" },
-            { value: "PRE_ESCOLA_4_5", label: "Pré-escola (4 a 5 anos)" },
-        ],
-
-        ENSINO_FUNDAMENTAL_I: [
-            { value: "FUND_I_1", label: "1º ano" },
-            { value: "FUND_I_2", label: "2º ano" },
-            { value: "FUND_I_3", label: "3º ano" },
-            { value: "FUND_I_4", label: "4º ano" },
-            { value: "FUND_I_5", label: "5º ano" },
-        ],
-
-        ENSINO_FUNDAMENTAL_II: [
-            { value: "FUND_II_6", label: "6º ano" },
-            { value: "FUND_II_7", label: "7º ano" },
-            { value: "FUND_II_8", label: "8º ano" },
-            { value: "FUND_II_9", label: "9º ano" },
-        ],
-
-        ENSINO_MEDIO: [
-            { value: "MEDIO_1", label: "1ª série" },
-            { value: "MEDIO_2", label: "2ª série" },
-            { value: "MEDIO_3", label: "3ª série" },
-        ],
-
-        EDUCACAO_PROFISSIONAL: [
-            { value: "TECNICO_NIVEL_MEDIO", label: "Técnico de Nível Médio" },
-            { value: "TECNOLOGO_SUPERIOR", label: "Tecnólogo (Nível Superior)" },
-        ],
-
-        EJA: [
-            { value: "EJA_FUNDAMENTAL", label: "EJA Ensino Fundamental (1º ao 9º ano)" },
-            { value: "EJA_MEDIO", label: "EJA Ensino Médio (1ª à 3ª série)" },
-        ],
-    }
+    useEffect(() => {
+      let alive = true;
+      (async () => {
+        try {
+          const modalitiesResp = await listTeachingModalitiesAdmin();
+          const modalities: TeachingModality[] = Array.isArray(modalitiesResp?.data) ? modalitiesResp.data : modalitiesResp;
+          const activeModalities = (modalities || []).filter((m) => m.isActive !== false);
+          const segmentOptions = activeModalities.map((m) => ({ value: String(m.id), label: m.name }));
+          const gradesEntries = await Promise.all(
+            activeModalities.map(async (m) => {
+              const gradesResp = await listTeachingGradesAdmin(m.id);
+              const grades: TeachingGrade[] = Array.isArray(gradesResp?.data) ? gradesResp.data : gradesResp;
+              const options = (grades || []).filter((g) => g.isActive !== false).slice().sort((a, b) => (a.order ?? 0) - (b.order ?? 0)).map((g) => ({ value: String(g.id), label: g.name }));
+              return [String(m.id), options] as const;
+            })
+          );
+          const bySeg: Record<string, { value: string; label: string }[]> = {};
+          gradesEntries.forEach(([segId, opts]) => {
+            bySeg[segId] = opts;
+          });
+          if (!alive) return;
+          setSegments(segmentOptions);
+          setSeriesBySegment(bySeg);
+        } catch {
+          if (!alive) return;
+          setSegments([]);
+          setSeriesBySegment({});
+        }
+      })();
+      return () => {
+        alive = false;
+      };
+    }, []);
 
     function getAvailableSeriesBySelectedSegments(selectedSegments: unknown) {
         const segmentsArray: string[] = Array.isArray(selectedSegments)
@@ -101,9 +97,8 @@ function ViewCollegeData() {
             : typeof selectedSegments === "string" && selectedSegments.length
                 ? selectedSegments.split(",").map(v => v.trim()).filter(Boolean)
                 : [];
-
         return segmentsArray.flatMap(segmentKey => {
-            const series = SERIES_BY_SEGMENT[segmentKey as keyof typeof SERIES_BY_SEGMENT];
+            const series = SERIES_BY_SEGMENT[segmentKey];
             return series ? series : [];
         });
     }
