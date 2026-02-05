@@ -216,7 +216,6 @@ function SeriesAdminPage() {
             <span className="sap-tree-label">{node.label}</span>
           </div>
 
-          <div className="sap-tree-right">{formatStudents(node.students)}</div>
         </div>
 
         {hasChildren && isOpen ? (
