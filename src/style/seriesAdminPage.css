@@ -1,0 +1,268 @@
+/* Séries e Modalidades – layout baseado no padrão do Courses.tsx */
+
+.sap-page {
+  font-family: "Inter", sans-serif;
+}
+
+/* Top header */
+.sap-top-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Search + button */
+
+.sap-primary {
+  border: none;
+  background: #2b8ccf;
+  color: #ffffff;
+  font-weight: 600;
+  font-size: 13px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  cursor: pointer;
+  box-shadow: 0 6px 14px rgba(43, 140, 207, 0.22);
+}
+
+.sap-primary:hover {
+  filter: brightness(0.98);
+}
+
+.sap-primary:active {
+  transform: translateY(1px);
+}
+
+/* Filters row (buscar séries + select) */
+.sap-filters {
+  display: grid;
+  grid-template-columns: 1fr 260px;
+  gap: 14px;
+  padding: 12px;
+  border: 1px solid #eef2f7;
+  border-radius: 12px;
+  background: #ffffff;
+  margin: 0 20px;
+  margin-bottom: 14px;
+}
+
+.sap-input {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border: 1px solid #e6ebf2;
+  border-radius: 10px;
+  background: #ffffff;
+}
+
+.sap-input input {
+  border: none;
+  outline: none;
+  width: 100%;
+  font-size: 13px;
+  color: #1e1e1e;
+}
+
+.sap-input input::placeholder {
+  color: #9aa6b2;
+}
+
+.sap-select {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.sap-select select {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid #e6ebf2;
+  background: #ffffff;
+  font-size: 13px;
+  color: #1e1e1e;
+  outline: none;
+  cursor: pointer;
+}
+
+/* Card container */
+.sap-card {
+  background: #ffffff;
+  border: 1px solid #eef2f7;
+  border-radius: 14px;
+  overflow: hidden;
+  margin: 0 20px;
+}
+
+.sap-card-header {
+  padding: 16px 18px;
+  border-bottom: 1px solid #f0f3f8;
+}
+
+.sap-card-header b {
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  color: #1f2937;
+}
+
+/* Tree */
+.sap-tree {
+  padding: 14px;
+}
+
+.sap-tree-item {
+  margin-bottom: 10px;
+}
+
+.sap-tree-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 46px;
+  border-radius: 12px;
+  border: 1px solid #f2f5fa;
+  background: #f7f9fc;
+}
+
+.sap-tree-row-root {
+  background: #f5f7fb;
+}
+
+.sap-tree-row-group {
+  font-weight: 600;
+}
+
+.sap-tree-row-leaf {
+  background: #ffffff;
+  border-color: #eef2f7;
+}
+
+.sap-tree-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sap-tree-label {
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0.1px;
+  color: #1f2937;
+}
+
+.sap-tree-row-leaf .sap-tree-label {
+  font-weight: 600;
+  color: #111827;
+}
+
+.sap-tree-right {
+  padding-right: 14px;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: #94a3b8;
+}
+
+/* Toggle */
+.sap-tree-toggle {
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  border-radius: 8px;
+  color: #5b6b7c;
+}
+
+.sap-tree-toggle:hover {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.sap-tree-toggle-placeholder {
+  cursor: default;
+}
+
+/* Icons */
+.sap-ico {
+  color: #6b7a90;
+}
+
+.sap-ico-folder {
+  margin-right: 2px;
+  color: #2d3a4a;
+}
+
+.sap-ico-rot {
+  transform: rotate(90deg);
+}
+
+.sap-tree-children {
+  margin-top: 10px;
+}
+
+/* Empty state */
+.sap-empty {
+  padding: 34px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  font-size: 13px;
+  color: #94a3b8;
+}
+
+.sap-empty b {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+/* Footer (se você reativar no TSX) */
+.sap-footer {
+  text-align: center;
+  color: #9aa6b2;
+  margin-top: 18px;
+  font-size: 13px;
+}
+
+/* Responsivo */
+@media (max-width: 980px) {
+  .sap-top {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .sap-top-actions {
+    width: 100%;
+  }
+
+  .sap-global-search {
+    flex: 1;
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .sap-primary {
+    white-space: nowrap;
+  }
+
+  .sap-filters {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 520px) {
+  .sap-page {
+    padding: 18px 14px;
+  }
+
+  .sap-title b {
+    font-size: 22px;
+  }
+}
