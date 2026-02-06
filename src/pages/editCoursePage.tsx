@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import imageCompression from "browser-image-compression";
 import { useParams } from "react-router-dom";
-import { getOverviewData } from "../controllers/dash/overview.controller";
+import { getCookies } from "../controllers/misc/cookies.controller";
 import { createModule, IModuleData } from "../controllers/course/admin/createModule.controller";
 import { deleteModule } from "../controllers/course/admin/deleteModule.controller";
 import { createLesson, ILessonData } from "../controllers/course/admin/createLesson.controller";
@@ -24,7 +24,10 @@ type TOverviewData = {
     unreadNotifications: number
 }
 
-type LessonInList = ILessonData & { id?: number };
+type LessonInList = ILessonData & {
+  id?: number;
+  thumbnailUrl?: string | null;
+};
 type ModuleInList = IModuleData & { id?: number; lessons?: LessonInList[] };
 
 type ICourseData = {
@@ -72,7 +75,8 @@ function EditCoursePage() {
     const [segments, setSegments] = useState<{ value: string; label: string }[]>([]);
     const seriesRef = useRef<HTMLDivElement | null>(null);
     const [isSeriesOpen, setIsSeriesOpen] = useState(false);
-
+    const [thumbnailMap, setThumbnailMap] = useState<Record<number, string>>({});
+    
     function handleModalMessage(data: { isError: boolean; message: string }) {
         const messageElement = document.getElementById("warning-message") as HTMLSpanElement;
 
@@ -149,7 +153,12 @@ function EditCoursePage() {
                   id: mod.id,
                   title: mod.title,
                   order: index + 1,
-                  lessons: Array.isArray(mod.lessons) ? mod.lessons : [],
+                  lessons: Array.isArray(mod.lessons)
+                    ? mod.lessons.map((l: any) => ({
+                        ...l,
+                        thumbnailUrl: l.thumbnailUrl ?? l.thumbnail_url ?? null,
+                      }))
+                    : [],
                 }))
               : []
           );
@@ -168,6 +177,44 @@ function EditCoursePage() {
       fetchCourseData();
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [courseId]);
+
+    useEffect(() => {
+    let alive = true;
+
+    async function loadThumbnails() {
+        const updates: Record<number, string> = {};
+
+        for (const module of modules) {
+        for (const lesson of module.lessons || []) {
+            if (
+              lesson.id &&
+              lesson.type === "video" &&
+              lesson.thumbnailUrl &&
+              !thumbnailMap[lesson.id]
+            ) {
+            try {
+                const objectUrl = await fetchThumbnailBlob(lesson.thumbnailUrl);
+                updates[lesson.id] = objectUrl;
+            } catch (err) {
+                console.warn("Erro ao carregar thumbnail da aula", lesson.id);
+            }
+            }
+        }
+        }
+
+        if (!alive) return;
+
+        if (Object.keys(updates).length) {
+        setThumbnailMap(prev => ({ ...prev, ...updates }));
+        }
+    }
+
+    loadThumbnails();
+
+    return () => {
+        alive = false;
+    };
+    }, [modules, thumbnailMap]);
 
     const fileToBase64 = (file: File): Promise<string> => {
         return new Promise((resolve, reject) => {
@@ -267,11 +314,25 @@ function EditCoursePage() {
             }
             // Atualiza o estado dos módulos, usando extUrl = id do CDN se houver arquivo
             setModules(prev =>
-                prev.map((m, i) =>
-                    i === idx
-                        ? { ...m, lessons: [...(m.lessons ?? []), { ...lessonPayload, id: lessonId, extUrl: extUrlFromFileId }] }
-                        : m
-                )
+            prev.map((m, i) =>
+                i === idx
+                ? {
+                    ...m,
+                    lessons: [
+                        ...(m.lessons ?? []),
+                        {
+                        ...lessonPayload,
+                        id: lessonId,
+                        extUrl: extUrlFromFileId,
+                        thumbnailUrl:
+                          extUrlFromFileId && lessonPayload.type === "video"
+                            ? `${process.env.REACT_APP_CDN_BASE_URL}/thumbnail/${extUrlFromFileId}`
+                            : null,
+                        },
+                    ],
+                    }
+                : m
+            )
             );
             handleModalMessage({ isError: false, message: "Aula criada com sucesso" });
             // Reseta o state do form
@@ -321,6 +382,29 @@ function EditCoursePage() {
             console.error("Erro ao atualizar curso:", error);
             handleModalMessage({ isError: true, message: "Erro ao salvar alterações do curso" });
         }
+    }
+
+    async function fetchThumbnailBlob(url: string): Promise<string> {
+    const token = getCookies("authToken");
+
+    if (!token) {
+        throw new Error("Auth token não encontrado");
+    }
+
+    const res = await fetch(url, {
+        headers: {
+        Authorization: `Bearer ${token}`,
+        },
+    });
+
+    if (!res.ok) {
+        const txt = await res.text().catch(() => "");
+        console.error("Thumbnail 401:", res.status, txt);
+        throw new Error(`Erro ao buscar thumbnail (${res.status})`);
+    }
+
+    const blob = await res.blob();
+    return URL.createObjectURL(blob);
     }
 
     return (
@@ -527,15 +611,39 @@ function EditCoursePage() {
                                                     </div>
                                                 </div>
                                                 {(module.lessons ?? []).length > 0 && (
-                                                    <ul className="lesson-sublist">
+                                                    <div className="lesson-cards-grid">
                                                         {module.lessons!.map((lesson, lessonIndex) => (
-                                                            <li key={lesson.id ?? `l-${lessonIndex}`} className="lesson-sublist-item">
-                                                                <span className="lesson-sublist-title">{lesson.title}</span>
-                                                                {lesson.subTitle && <span className="lesson-sublist-sub">{lesson.subTitle}</span>}
-                                                                <span className="lesson-sublist-type">{lesson.type}</span>
-                                                            </li>
+                                                        <div
+                                                            key={lesson.id ?? `l-${lessonIndex}`}
+                                                            className="lesson-card"
+                                                        >
+                                                            <div className="lesson-thumbnail-wrapper">
+                                                              <span className="lesson-type-badge absolute">
+                                                                {lesson.type}
+                                                              </span>
+
+                                                              {lesson.id && thumbnailMap[lesson.id] ? (
+                                                                <img
+                                                                  src={thumbnailMap[lesson.id]}
+                                                                  alt="Thumbnail da aula"
+                                                                  className="lesson-thumbnail"
+                                                                />
+                                                              ) : (
+                                                                <div className={`lesson-thumbnail-fallback ${lesson.type}`}>
+                                                                  {lesson.type === 'pdf' && <span>📄</span>}
+                                                                  {lesson.type === 'attachment' && <span>📎</span>}
+                                                                  {lesson.type === 'video' && <span>🎬</span>}
+                                                                </div>
+                                                              )}
+                                                            </div>
+
+                                                            <div className="lesson-card-body">
+                                                              <strong>{lesson.title}</strong>
+                                                              {lesson.subTitle && <p>{lesson.subTitle}</p>}
+                                                            </div>
+                                                        </div>
                                                         ))}
-                                                    </ul>
+                                                    </div>
                                                 )}
                                             </li>
                                         ))}

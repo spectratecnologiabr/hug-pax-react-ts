@@ -493,15 +493,24 @@ function NewCoursePage() {
                                                     </div>
                                                 </div>
                                                 {(module.lessons ?? []).length > 0 && (
-                                                    <ul className="lesson-sublist">
+                                                    <div className="lesson-cards-grid">
                                                         {module.lessons!.map((lesson, lessonIndex) => (
-                                                            <li key={lesson.id ?? `l-${lessonIndex}`} className="lesson-sublist-item">
-                                                                <span className="lesson-sublist-title">{lesson.title}</span>
-                                                                {lesson.subTitle && <span className="lesson-sublist-sub">{lesson.subTitle}</span>}
-                                                                <span className="lesson-sublist-type">{lesson.type}</span>
-                                                            </li>
+                                                            <div
+                                                                key={lesson.id ?? `l-${lessonIndex}`}
+                                                                className="lesson-card"
+                                                            >
+                                                                <div className="lesson-card-header">
+                                                                    <span className="lesson-type-badge">
+                                                                        {lesson.type}
+                                                                    </span>
+                                                                </div>
+                                                                <div className="lesson-card-body">
+                                                                    <strong>{lesson.title}</strong>
+                                                                    {lesson.subTitle && <p>{lesson.subTitle}</p>}
+                                                                </div>
+                                                            </div>
                                                         ))}
-                                                    </ul>
+                                                    </div>
                                                 )}
                                             </li>
                                         ))}

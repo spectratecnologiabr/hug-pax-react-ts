@@ -1,3 +1,40 @@
+.lesson-thumbnail-wrapper {
+  position: relative;
+}
+
+.lesson-type-badge.absolute {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 2;
+  background: rgba(0, 0, 0, 0.65);
+  color: #fff;
+}
+
+.lesson-thumbnail-fallback {
+  width: 100%;
+  height: 120px;
+  border-radius: 8px;
+  background: #f1f5f9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
+  color: #475569;
+  margin-bottom: 8px;
+}
+
+.lesson-thumbnail-fallback.pdf {
+  background: #fee2e2;
+}
+
+.lesson-thumbnail-fallback.attachment {
+  background: #e0f2fe;
+}
+
+.lesson-thumbnail-fallback.video {
+  background: #ede9fe;
+}
 /* ================== Module Creation Modal & Module List ================== */
 .modal-overlay {
     position: fixed;
@@ -825,4 +862,65 @@
 @keyframes fadeIn {
     from { opacity: 0; transform: translateY(-10px); }
     to { opacity: 1; transform: translateY(0); }
+}
+
+/* ===== Lesson Cards ===== */
+.lesson-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.lesson-card {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  box-shadow: 0 3px 8px rgba(0,0,0,0.05);
+  transition: transform .2s ease, box-shadow .2s ease;
+}
+
+.lesson-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 14px rgba(0,0,0,0.08);
+}
+
+.lesson-card-header {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.lesson-type-badge {
+  font-size: 11px;
+  font-family: 'SF UI Display Medium';
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #f1f5f9;
+  color: #475569;
+  text-transform: uppercase;
+}
+
+.lesson-card-body strong {
+  font-family: 'SF UI Display Semibold';
+  font-size: 14px;
+  color: #111827;
+}
+
+.lesson-card-body p {
+  font-family: 'SF UI Display Medium';
+  font-size: 12px;
+  color: #6b7280;
+  margin: 0;
+}
+
+.lesson-thumbnail {
+  width: 100%;
+  height: 120px;
+  object-fit: cover;
+  border-radius: 8px;
+  margin-bottom: 8px;
 }

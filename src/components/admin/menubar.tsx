@@ -67,7 +67,7 @@ function Menubar() {
                         <path d="M12 13.0001L15.923 12.0201" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
                     </svg>
 
-                    <span>Trilhas</span>
+                    <span>Biblioteca</span>
                 </a>
 
                 <a href="/admin/certificates" className={pathname.includes("/admin/certificates") ? "menu-link selected" : "menu-link"}>
