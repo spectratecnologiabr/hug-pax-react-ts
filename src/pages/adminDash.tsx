@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { listCommunications } from "../controllers/communication/listCommunications.controller";
 import { listConsultants } from "../controllers/user/listConsultants.controller";
 import ViewSchedulingForm from "../components/admin/ViewSchedulingForm";
 import { listLast30Visits } from "../controllers/admin/listLast30Visits.controller";
@@ -103,6 +104,7 @@ function AdminDash() {
     const [selectedConsultantId, setSelectedConsultantId] = useState<number | undefined>(undefined);
     // === Refresh control state ===
     const [refreshKey, setRefreshKey] = useState(0);
+    const [communications, setCommunications] = useState<any[]>([]);
 
     // Função para abrir o modal de visualização de agendamento
     function openViewScheduling(visitId: number) {
@@ -136,12 +138,56 @@ function AdminDash() {
       loadLastVisits();
     }, [selectedConsultantId, refreshKey]);
 
+    useEffect(() => {
+      async function loadCommunications() {
+        try {
+          const response = await listCommunications({ page: 1 });
+
+          const list = Array.isArray(response)
+            ? response
+            : Array.isArray(response?.data)
+              ? response.data
+              : Array.isArray(response?.items)
+                ? response.items
+                : [];
+
+          setCommunications(list.slice(0, 4));
+        } catch (err) {
+          console.error("Erro ao carregar comunicações", err);
+        }
+      }
+
+      loadCommunications();
+    }, []);
+
     // === Função do seletor de consultor (igual agendaAdminPage) ===
     function handleSelectConsultant(
       event: React.ChangeEvent<HTMLSelectElement>
     ) {
       const consultantId = Number(event.currentTarget.value || undefined);
       setSelectedConsultantId(consultantId);
+    }
+
+    // Communication status class map for status badge
+    const communicationStatusClass: Record<string, string> = {
+      sent: 'status-success',
+      scheduled: 'status-info',
+      draft: 'status-warning',
+      processing: 'status-info',
+      failed: 'status-danger'
+    };
+    const communicationStatusLabel: Record<string, string> = {
+      sent: 'Enviada',
+      scheduled: 'Agendada',
+      draft: 'Rascunho',
+      processing: 'Enviando',
+      failed: 'Falhou'
+    };
+
+    function htmlToPlainText(html?: string) {
+        if (!html) return "";
+        const doc = new DOMParser().parseFromString(html, "text/html");
+        return doc.body.textContent || "";
     }
 
     return (
@@ -359,63 +405,40 @@ function AdminDash() {
                                     Comunicações Recentes
                                     </h3>
 
-                                    <button className="communications-link">
+                                    <a className="communications-link" href="/admin/communications">
                                     Ver todas
                                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                         <path d="m9 18 6-6-6-6"></path>
                                     </svg>
-                                    </button>
+                                    </a>
                                 </div>
 
-                                <div className="communications-list">
-                                    <div className="communication-item">
+                            <div className="communications-list">
+                                {communications.map(comm => (
+                                  <div className="communication-item" key={comm.id}>
                                     <div className="communication-info">
-                                        <p className="communication-title">Boas-vindas ao novo semestre</p>
-                                        <p className="communication-target">2.847 alunos</p>
+                                      <p className="communication-title">{comm.title}</p>
+                                      <p className="communication-target">
+                                        {htmlToPlainText(comm.message)}
+                                      </p>
                                     </div>
 
                                     <div className="communication-meta">
-                                        <span className="communication-time">Hoje, 10:30</span>
-                                        <span className="communication-status status-success">Enviado</span>
+                                      <span className="communication-time">
+                                        {comm.sentAt
+                                          ? new Date(comm.sentAt).toLocaleString('pt-BR', {
+                                              dateStyle: 'short',
+                                              timeStyle: 'short'
+                                            })
+                                          : '—'}
+                                      </span>
+                                      <span className={`communication-status ${communicationStatusClass[comm.status] ?? ''}`}>
+                                        {communicationStatusLabel[comm.status] ?? comm.status}
+                                      </span>
                                     </div>
-                                    </div>
-
-                                    <div className="communication-item">
-                                    <div className="communication-info">
-                                        <p className="communication-title">Lembrete: Reunião de pais</p>
-                                        <p className="communication-target">1.523 responsáveis</p>
-                                    </div>
-
-                                    <div className="communication-meta">
-                                        <span className="communication-time">Amanhã, 08:00</span>
-                                        <span className="communication-status status-info">Agendado</span>
-                                    </div>
-                                    </div>
-
-                                    <div className="communication-item">
-                                    <div className="communication-info">
-                                        <p className="communication-title">Aviso de manutenção</p>
-                                        <p className="communication-target">Todos</p>
-                                    </div>
-
-                                    <div className="communication-meta">
-                                        <span className="communication-time">Ontem, 14:00</span>
-                                        <span className="communication-status status-success">Enviado</span>
-                                    </div>
-                                    </div>
-
-                                    <div className="communication-item">
-                                    <div className="communication-info">
-                                        <p className="communication-title">Novo curso disponível</p>
-                                        <p className="communication-target">A definir</p>
-                                    </div>
-
-                                    <div className="communication-meta">
-                                        <span className="communication-time">—</span>
-                                        <span className="communication-status status-warning">Rascunho</span>
-                                    </div>
-                                    </div>
-                                </div>
+                                  </div>
+                                ))}
+                            </div>
                             </div>
                             <div className="activities-card">
                                 <div className="activities-header">

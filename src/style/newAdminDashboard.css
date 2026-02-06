@@ -416,6 +416,8 @@
     display: flex;
     align-items: center;
     gap: 6px;
+    text-decoration: none;
+    font-family: "Inter";
     font-size: 13px;
     font-weight: 500;
     color: #228BC3;
@@ -553,6 +555,7 @@
     display: flex;
     align-items: center;
     gap: 6px;
+    text-decoration: none;
     font-family: "Inter";
     font-size: 13px;
     font-weight: 500;

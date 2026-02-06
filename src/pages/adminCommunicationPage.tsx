@@ -8,7 +8,7 @@ import { getCommunicationsSummary } from "../controllers/communication/getCommun
 import { sendCommunicationNow } from "../controllers/communication/sendCommunicationNow.controller";
 
 type Summary = { sent: number; scheduled: number; draft: number; failed: number };
-type Communication = { id: number; title: string; status: string; createdAt: string; scheduledAt?: string; sentAt?: string; preview?: string };
+type Communication = { id: number; title: string; message: string; status: string; createdAt: string; scheduledAt?: string; sentAt?: string; preview?: string };
 
 function AdminCommunicationPage() {
   const [summary, setSummary] = useState<Summary | null>(null);
@@ -19,6 +19,20 @@ function AdminCommunicationPage() {
   const [openModal, setOpenModal] = useState(false);
   const [editing, setEditing] = useState<any>(null);
   const [openActionsId, setOpenActionsId] = useState<number | null>(null);
+
+  const communicationStatusLabel: Record<string, string> = {
+    sent: 'Enviada',
+    scheduled: 'Agendada',
+    draft: 'Rascunho',
+    processing: 'Enviando',
+    failed: 'Falhou'
+  };
+
+  function htmlToPlainText(html?: string) {
+    if (!html) return "";
+    const doc = new DOMParser().parseFromString(html, "text/html");
+    return doc.body.textContent || "";
+  }
 
   async function openEdit(id: number) {
     const data = await getCommunicationById(id);
@@ -155,11 +169,11 @@ function AdminCommunicationPage() {
                     <td>
                       <div className="sap-msg-cell">
                         <b>{r.title}</b>
-                        <span>{r.preview || "Prévia da mensagem..."}</span>
+                        <span>{htmlToPlainText(r.message) || "Prévia da mensagem..."}</span>
                       </div>
                     </td>
                     <td>
-                      <span className={`sap-status ${r.status}`}>{r.status}</span>
+                      <span className={`sap-status ${r.status}`}>{communicationStatusLabel[r.status]}</span>
                     </td>
                     <td className="sap-date">
                       {r.sentAt
