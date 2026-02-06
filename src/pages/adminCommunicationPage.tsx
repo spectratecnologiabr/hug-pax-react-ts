@@ -8,7 +8,17 @@ import { getCommunicationsSummary } from "../controllers/communication/getCommun
 import { sendCommunicationNow } from "../controllers/communication/sendCommunicationNow.controller";
 
 type Summary = { sent: number; scheduled: number; draft: number; failed: number };
-type Communication = { id: number; title: string; message: string; status: string; createdAt: string; scheduledAt?: string; sentAt?: string; preview?: string };
+type Communication = {
+  id: number;
+  title: string;
+  message: string;
+  status: string;
+  createdAt: string;
+  scheduledAt?: string;
+  sentAt?: string;
+  preview?: string;
+  targetSummary?: string;
+};
 
 function AdminCommunicationPage() {
   const [summary, setSummary] = useState<Summary | null>(null);
@@ -163,7 +173,7 @@ function AdminCommunicationPage() {
                 {rows.map(r => (
                   <tr
                     key={r.id}
-                    onClick={() => openEdit(r.id)}
+                    onClick={r.status !== 'sent' ? () => openEdit(r.id) : () => {}}
                     style={{ cursor: "pointer" }}
                   >
                     <td>
@@ -182,7 +192,9 @@ function AdminCommunicationPage() {
                         ? new Date(r.scheduledAt).toLocaleString()
                         : "-"}
                     </td>
-                    <td className="sap-audience">A definir</td>
+                    <td className="sap-audience">
+                      {r.targetSummary || '—'}
+                    </td>
                     <td className="sap-actions" onClick={e => e.stopPropagation()}>
                       <button
                         className="sap-actions-trigger"
@@ -192,7 +204,7 @@ function AdminCommunicationPage() {
                       </button>
                       {openActionsId === r.id && (
                         <div className="sap-actions-menu">
-                          <button onClick={() => { setOpenActionsId(null); openEdit(r.id); }}>Editar</button>
+                          <button onClick={() => { setOpenActionsId(null); openEdit(r.id); }} disabled={r.status === 'sent'}>Editar</button>
                           <button onClick={() => handleSendNow(r.id)} disabled={r.status !== "draft"}>Enviar agora</button>
                         </div>
                       )}
