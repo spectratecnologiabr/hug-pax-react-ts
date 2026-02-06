@@ -48,6 +48,23 @@ function NewEducatorPage() {
         language: "",
         collegeId: null
     } as ICreateUserData);
+    const [isError, setIsError] = useState(false);
+    const [modalErrorOpen, setModalErrorOpen] = useState(false);
+    const [message, setMessage] = useState("");
+
+    function handleModalMessage(data: { isError: boolean; message: string }) {
+        const messageElement = document.getElementById("warning-message") as HTMLSpanElement;
+
+        setIsError(data.isError);
+        if (messageElement) {
+            messageElement.textContent = data.message;
+        } else {
+            setMessage(data.message);
+        }
+        setModalErrorOpen(true);
+
+        setTimeout(() => setModalErrorOpen(false), 5000);
+    }
 
     useEffect(() => {
         async function fetchOverviewData() {
@@ -84,12 +101,18 @@ function NewEducatorPage() {
         console.log("Creating user with data:", createUserData);
         try {
             const response = await createUser(createUserData);
-            alert("Educador criado com sucesso!");
+            handleModalMessage({
+                isError: false,
+                message: "Educador criado com sucesso!"
+            });
             console.log("User created successfully:", response);
             setTimeout(() => {window.location.href = "/admin/educators";}, 1000);
         } catch (error) {
             console.error("Error creating user:", error);
-            alert("Erro ao criar educador. Verifique os dados e tente novamente.");
+            handleModalMessage({
+                isError: true,
+                message: "Erro ao criar educador. Verifique os dados e tente novamente."
+            });
         }
     }
 
@@ -194,6 +217,14 @@ function NewEducatorPage() {
                         </div>
                     </div>
                 </div>
+            </div>
+            <div className={`warning-container ${isError ? "error" : "success" } ${modalErrorOpen ? "open" : ""}`}>
+                <button onClick={() => setModalErrorOpen(false)}>
+                    <svg width="12" height="12" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12.8925 0.3025C12.5025 -0.0874998 11.8725 -0.0874998 11.4825 0.3025L6.5925 5.1825L1.7025 0.2925C1.3125 -0.0975 0.6825 -0.0975 0.2925 0.2925C-0.0975 0.6825 -0.0975 1.3125 0.2925 1.7025L5.1825 6.5925L0.2925 11.4825C-0.0975 11.8725 -0.0975 12.5025 0.2925 12.8925C0.6825 13.2825 1.3125 13.2825 1.7025 12.8925L6.5925 8.0025L11.4825 12.8925C11.8725 13.2825 12.5025 13.2825 12.8925 12.8925C13.2825 12.5025 13.2825 11.8725 12.8925 11.4825L8.0025 6.5925L12.8925 1.7025C13.2725 1.3225 13.2725 0.6825 12.8925 0.3025Z" fill="#000000"/>
+                    </svg>
+                </button>
+                <span id="warning-message">{message}</span>
             </div>
         </React.Fragment>
     );

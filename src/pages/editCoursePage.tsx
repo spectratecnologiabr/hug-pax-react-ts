@@ -7,6 +7,7 @@ import { getOverviewData } from "../controllers/dash/overview.controller";
 import { createModule, IModuleData } from "../controllers/course/admin/createModule.controller";
 import { deleteModule } from "../controllers/course/admin/deleteModule.controller";
 import { createLesson, ILessonData } from "../controllers/course/admin/createLesson.controller";
+import { listTeachingModalitiesAdmin } from "../controllers/education/listTeachingModalitiesAdmin.controller";
 import Menubar from "../components/admin/menubar";
 import "../style/adminDash.css";
 import { uploadLessonFileController } from "../controllers/course/admin/uploadFile.controller";
@@ -34,6 +35,8 @@ type ICourseData = {
   workload: number;
   series: string[];
 };
+
+type TeachingModality = { id: number; name: string; slug: string; isActive?: boolean };
 
 function EditCoursePage() {
     const { courseId } = useParams<{ courseId: string }>();
@@ -63,8 +66,26 @@ function EditCoursePage() {
         fileName: undefined,
     });
     const [lessonFileUploading, setLessonFileUploading] = useState(false);
+    const [isError, setIsError] = useState(false);
+    const [modalErrorOpen, setModalErrorOpen] = useState(false);
+    const [message, setMessage] = useState("");
+    const [segments, setSegments] = useState<{ value: string; label: string }[]>([]);
     const seriesRef = useRef<HTMLDivElement | null>(null);
     const [isSeriesOpen, setIsSeriesOpen] = useState(false);
+
+    function handleModalMessage(data: { isError: boolean; message: string }) {
+        const messageElement = document.getElementById("warning-message") as HTMLSpanElement;
+
+        setIsError(data.isError);
+        if (messageElement) {
+            messageElement.textContent = data.message;
+        } else {
+            setMessage(data.message);
+        }
+        setModalErrorOpen(true);
+
+        setTimeout(() => setModalErrorOpen(false), 5000);
+    }
     useEffect(() => {
         function handleClickOutside(event: MouseEvent) {
             if (seriesRef.current && !seriesRef.current.contains(event.target as Node)) {
@@ -74,6 +95,31 @@ function EditCoursePage() {
 
         document.addEventListener("mousedown", handleClickOutside);
         return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
+
+    useEffect(() => {
+      let alive = true;
+      (async () => {
+        try {
+          const modalitiesResp = await listTeachingModalitiesAdmin();
+          const modalities: TeachingModality[] = Array.isArray(modalitiesResp?.data)
+            ? modalitiesResp.data
+            : modalitiesResp;
+
+          const activeModalities = (modalities || []).filter((m) => m.isActive !== false);
+          const segmentOptions = activeModalities.map((m) => ({ value: String(m.id), label: m.name }));
+
+          if (!alive) return;
+          setSegments(segmentOptions);
+        } catch {
+          if (!alive) return;
+          setSegments([]);
+        }
+      })();
+
+      return () => {
+        alive = false;
+      };
     }, []);
 
     // Busca dados do curso e módulos/aulas ao carregar
@@ -115,22 +161,13 @@ function EditCoursePage() {
           }));
         } catch (err) {
           console.error(err);
-          alert("Erro ao buscar dados do curso.");
+          handleModalMessage({ isError: true, message: "Erro ao buscar dados do curso." });
         }
       }
 
       fetchCourseData();
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [courseId]);
-
-    const segments = [
-        { value: "EDUCACAO_INFANTIL", label: "Educação Infantil" },
-        { value: "ENSINO_FUNDAMENTAL_I", label: "Ensino Fundamental I" },
-        { value: "ENSINO_FUNDAMENTAL_II", label: "Ensino Fundamental II" },
-        { value: "ENSINO_MEDIO", label: "Ensino Médio" },
-        { value: "EDUCACAO_PROFISSIONAL", label: "Educação Profissional" },
-        { value: "EJA", label: "Educação de Jovens e Adultos" },
-    ];
 
     const fileToBase64 = (file: File): Promise<string> => {
         return new Promise((resolve, reject) => {
@@ -157,7 +194,7 @@ function EditCoursePage() {
         try {
             const response = await createModule(newModuleData) as { success?: boolean; module?: Array<{ insertId?: number } | null>; message?: string };
             if (response.success) {
-                alert("Módulo criado com sucesso");
+                handleModalMessage({ isError: false, message: "Módulo criado com sucesso" });
                 const first = response.module?.[0];
                 const moduleId = first != null && typeof first === "object" && typeof first.insertId === "number"
                     ? first.insertId
@@ -175,24 +212,24 @@ function EditCoursePage() {
                     order: prev.order + 1,
                 }));
             } else {
-                alert(response.message ?? "Erro ao criar o módulo.");
+                handleModalMessage({ isError: true, message: response.message ?? "Erro ao criar o módulo." });
             }
         } catch (error) {
             console.error("Erro ao criar módulo:", error);
-            alert("Erro ao criar o módulo");
+            handleModalMessage({ isError: true, message: "Erro ao criar o módulo" });
         }
     }
 
     // Criação de aula (igual newCoursePage)
     async function handleCreateLesson(idx: number) {
         if (!newLessonData.title?.trim()) {
-            alert("Informe o título da aula.");
+            handleModalMessage({ isError: true, message: "Informe o título da aula." });
             return;
         }
         const targetModule = modules[idx];
         const moduleId = targetModule?.id;
         if (!moduleId) {
-            alert("Este módulo ainda não possui ID. Feche o modal de módulos e tente novamente.");
+            handleModalMessage({ isError: true, message: "Este módulo ainda não possui ID. Feche o modal de módulos e tente novamente." });
             return;
         }
         setLessonFileUploading(true);
@@ -207,7 +244,7 @@ function EditCoursePage() {
             const lessonResponse = await createLesson(lessonPayload);
             const insertResult = lessonResponse.data?.[0];
             if (!insertResult || !("insertId" in insertResult)) {
-                alert("Erro ao criar a aula.");
+                handleModalMessage({ isError: true, message: "Erro ao criar a aula." });
                 return;
             }
             const lessonId = insertResult.insertId;
@@ -236,7 +273,7 @@ function EditCoursePage() {
                         : m
                 )
             );
-            alert("Aula criada com sucesso");
+            handleModalMessage({ isError: false, message: "Aula criada com sucesso" });
             // Reseta o state do form
             setNewLessonData({
                 moduleId: 0,
@@ -255,7 +292,7 @@ function EditCoursePage() {
             setShowLessonFormForModuleIndex(null);
         } catch (error) {
             console.error("Erro ao criar aula:", error);
-            alert("Erro ao criar a aula");
+            handleModalMessage({ isError: true, message: "Erro ao criar a aula" });
         } finally {
             setLessonFileUploading(false);
         }
@@ -279,10 +316,10 @@ function EditCoursePage() {
 
             await updateCourse(Number(courseId), payload);
 
-            alert("Curso atualizado com sucesso");
+            handleModalMessage({ isError: false, message: "Curso atualizado com sucesso" });
         } catch (error) {
             console.error("Erro ao atualizar curso:", error);
-            alert("Erro ao salvar alterações do curso");
+            handleModalMessage({ isError: true, message: "Erro ao salvar alterações do curso" });
         }
     }
 
@@ -362,7 +399,7 @@ function EditCoursePage() {
                                                 }));
                                             } catch (error) {
                                                 console.error("Erro ao comprimir a imagem:", error);
-                                                alert("Erro ao processar a imagem da capa");
+                                                handleModalMessage({ isError: true, message: "Erro ao processar a imagem da capa" });
                                             }
                                         }}
                                     />
@@ -477,11 +514,11 @@ function EditCoursePage() {
                                                                     if (res?.success !== false) {
                                                                         setModules(prev => prev.filter(m => m.id !== module.id));
                                                                     } else {
-                                                                        alert(res?.message ?? "Erro ao remover o módulo.");
+                                                                        handleModalMessage({ isError: true, message: res?.message ?? "Erro ao remover o módulo." });
                                                                     }
                                                                 } catch (err) {
                                                                     console.error("Erro ao remover módulo:", err);
-                                                                    alert("Erro ao remover o módulo.");
+                                                                    handleModalMessage({ isError: true, message: "Erro ao remover o módulo." });
                                                                 }
                                                             }}
                                                         >
@@ -715,6 +752,14 @@ function EditCoursePage() {
                         )}
                     </div>
                 </div>
+            </div>
+            <div className={`warning-container ${isError ? "error" : "success" } ${modalErrorOpen ? "open" : ""}`}>
+                <button onClick={() => setModalErrorOpen(false)}>
+                    <svg width="12" height="12" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12.8925 0.3025C12.5025 -0.0874998 11.8725 -0.0874998 11.4825 0.3025L6.5925 5.1825L1.7025 0.2925C1.3125 -0.0975 0.6825 -0.0975 0.2925 0.2925C-0.0975 0.6825 -0.0975 1.3125 0.2925 1.7025L5.1825 6.5925L0.2925 11.4825C-0.0975 11.8725 -0.0975 12.5025 0.2925 12.8925C0.6825 13.2825 1.3125 13.2825 1.7025 12.8925L6.5925 8.0025L11.4825 12.8925C11.8725 13.2825 12.5025 13.2825 12.8925 12.8925C13.2825 12.5025 13.2825 11.8725 12.8925 11.4825L8.0025 6.5925L12.8925 1.7025C13.2725 1.3225 13.2725 0.6825 12.8925 0.3025Z" fill="#000000"/>
+                    </svg>
+                </button>
+                <span id="warning-message">{message}</span>
             </div>
         </React.Fragment>
     )

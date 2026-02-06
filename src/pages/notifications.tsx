@@ -3,6 +3,8 @@ import listNotifications from "../controllers/notifications/listNotifications.co
 import { getOverviewData } from "../controllers/dash/overview.controller";
 import readNotifications from "../controllers/notifications/readNotifications.controller";
 
+import DOMPurify from "dompurify";
+
 import AsideMenu from "../components/asideMenu";
 import Footer from "../components/footer";
 
@@ -96,7 +98,12 @@ function Notifications() {
                                     <div className="notification-element">
                                         <div className="left">
                                             {notification.title ? (<b className="title">{notification.title}</b>) : "" }
-                                            <span className="message">{notification.text}</span>
+                                            <span
+                                              className="message"
+                                              dangerouslySetInnerHTML={{
+                                                __html: DOMPurify.sanitize(notification.text)
+                                              }}
+                                            />
                                         </div>
                                         <div className="right">
                                             {
