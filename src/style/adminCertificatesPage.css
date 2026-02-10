@@ -1,0 +1,372 @@
+/* Página: Certificados (Admin) */
+
+.admin-certificates-page {
+  font-family: "Inter", sans-serif;
+}
+
+/* Top search (direita no header) */
+.admin-certificates-page .acp-top-search {
+  min-width: 520px;
+  display: flex;
+  align-items: center;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  gap: 10px;
+  height: 44px;
+  padding: 0 14px;
+  margin: 0;
+  border: 1px solid #e6ebf2;
+  border-radius: 12px;
+  background: #ffffff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+/* Evita conflito com regras globais do header */
+.admin-certificates-page .admin-header-wrapper .acp-top-search {
+  flex-direction: row;
+}
+
+.admin-certificates-page .acp-top-search-icon {
+  width: 16px;
+  height: 16px;
+  opacity: 0.7;
+  flex-shrink: 0;
+  color: #667085;
+  display: block;
+}
+
+.admin-certificates-page .acp-top-search input {
+  flex: 1;
+  min-width: 0;
+  width: 100%;
+  height: 100%;
+  border: none;
+  outline: none;
+  font-size: 13px;
+  color: #1e1e1e;
+  background: transparent;
+  padding: 0;
+  margin: 0;
+  line-height: 44px;
+}
+
+.admin-certificates-page .acp-top-search input::placeholder {
+  color: #9aa6b2;
+}
+
+/* Summary cards */
+.admin-certificates-page .acp-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin: 0 20px 22px;
+}
+
+.admin-certificates-page .acp-summary-card {
+  background: #ffffff;
+  border: 1px solid #e6ebf2;
+  border-radius: 14px;
+  padding: 18px 18px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.admin-certificates-page .acp-summary-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.admin-certificates-page .acp-summary-icon svg {
+  width: 22px;
+  height: 22px;
+  display: block;
+  stroke: currentColor;
+}
+
+.admin-certificates-page .acp-summary-icon.valid {
+  background: rgba(16, 185, 129, 0.12);
+  color: #10b981;
+}
+
+.admin-certificates-page .acp-summary-icon.total {
+  background: rgba(34, 139, 195, 0.12);
+  color: #228bc3;
+}
+
+.admin-certificates-page .acp-summary-icon.fraud {
+  background: rgba(239, 68, 68, 0.12);
+  color: #ef4444;
+}
+
+.admin-certificates-page .acp-summary-content {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.15;
+}
+
+.admin-certificates-page .acp-summary-content b {
+  font-size: 32px;
+  font-weight: 800;
+  color: #29303d;
+}
+
+.admin-certificates-page .acp-summary-content span {
+  font-size: 13px;
+  color: #737b8c;
+  margin-top: 2px;
+}
+
+/* Verify card */
+.admin-certificates-page .acp-verify-card {
+  margin: 0 20px 14px;
+  background: #ffffff;
+  border: 1px solid #eef2f7;
+  border-radius: 14px;
+  padding: 16px 18px;
+}
+
+.admin-certificates-page .acp-verify-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #29303d;
+  margin-bottom: 12px;
+}
+
+.admin-certificates-page .acp-verify-title svg {
+  width: 18px;
+  height: 18px;
+  opacity: 0.9;
+  color: #228bc3;
+}
+
+.admin-certificates-page .acp-verify-form {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 14px;
+  align-items: center;
+}
+
+.admin-certificates-page .acp-verify-input {
+  display: flex;
+  align-items: center;
+  padding: 12px 14px;
+  border: 1px solid #e6ebf2;
+  border-radius: 12px;
+  background: #ffffff;
+}
+
+.admin-certificates-page .acp-verify-input input {
+  width: 100%;
+  border: none;
+  outline: none;
+  font-size: 13px;
+  color: #1e1e1e;
+}
+
+.admin-certificates-page .acp-verify-input input::placeholder {
+  color: #9aa6b2;
+}
+
+.admin-certificates-page .acp-verify-btn {
+  height: 42px;
+  padding: 0 16px;
+  border: none;
+  border-radius: 12px;
+  background: #2b8ccf;
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 13px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  box-shadow: 0 10px 18px rgba(43, 140, 207, 0.22);
+}
+
+.admin-certificates-page .acp-verify-btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.admin-certificates-page .acp-verify-btn svg {
+  width: 16px;
+  height: 16px;
+  stroke: currentColor;
+}
+
+.admin-certificates-page .acp-verify-help {
+  margin-top: 10px;
+  font-size: 12px;
+  color: #9aa6b2;
+}
+
+/* Result / Empty card */
+.admin-certificates-page .acp-result-card {
+  margin: 0 20px 20px;
+  background: #ffffff;
+  border: 1px solid #eef2f7;
+  border-radius: 14px;
+  padding: 24px 18px;
+  min-height: 360px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.admin-certificates-page .acp-empty {
+  max-width: 520px;
+  text-align: center;
+}
+
+.admin-certificates-page .acp-empty-icon {
+  width: 96px;
+  height: 96px;
+  border-radius: 999px;
+  background: #2b8ccf;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 14px;
+}
+
+.admin-certificates-page .acp-empty-icon svg {
+  width: 42px;
+  height: 42px;
+  stroke: currentColor;
+}
+
+.admin-certificates-page .acp-empty b {
+  display: block;
+  font-size: 22px;
+  color: #000;
+  margin-bottom: 10px;
+}
+
+.admin-certificates-page .acp-empty p {
+  margin: 0;
+  font-size: 13px;
+  color: #9aa6b2;
+  line-height: 1.45;
+}
+
+.admin-certificates-page .acp-error {
+  max-width: 520px;
+  width: 100%;
+  padding: 14px 16px;
+  border-radius: 12px;
+  border: 1px solid #fecaca;
+  background: #fff1f2;
+  color: #b91c1c;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.admin-certificates-page .acp-error b {
+  font-size: 14px;
+}
+
+.admin-certificates-page .acp-error span {
+  font-size: 13px;
+  color: #b91c1c;
+}
+
+.admin-certificates-page .acp-result {
+  width: 100%;
+  max-width: 760px;
+}
+
+.admin-certificates-page .acp-result-status {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  background: rgba(16, 185, 129, 0.08);
+  color: #065f46;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.admin-certificates-page .acp-result-badge {
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #10b981;
+  color: #fff;
+  font-size: 14px;
+  line-height: 1;
+}
+
+.admin-certificates-page .acp-result-grid {
+  margin-top: 14px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px 14px;
+  font-size: 13px;
+  color: #29303d;
+}
+
+.admin-certificates-page .acp-result-grid > div {
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid #eef2f7;
+  background: #fbfcfe;
+}
+
+.admin-certificates-page .acp-result-grid strong {
+  color: #667085;
+  font-weight: 600;
+}
+
+.admin-certificates-page .acp-result-grid b {
+  font-weight: 700;
+  color: #111827;
+}
+
+@media (max-width: 1100px) {
+  .admin-certificates-page .acp-top-search {
+    min-width: 360px;
+  }
+}
+
+@media (max-width: 900px) {
+  .admin-certificates-page .acp-summary-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-certificates-page .acp-top-search {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .admin-certificates-page .admin-header-wrapper {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 14px;
+  }
+
+  .admin-certificates-page .acp-verify-form {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-certificates-page .acp-result-grid {
+    grid-template-columns: 1fr;
+  }
+}
