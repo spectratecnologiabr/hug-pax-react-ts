@@ -37,6 +37,7 @@ import AdminDash from './pages/adminDash';
 import AgendaAdminPage from './pages/agendaAdminPage';
 import SeriesAdminPage from './pages/seriesAdminPage';
 import AdminCommunicationPage from './pages/adminCommunicationPage';
+import AdminUsersPage from './pages/adminUsersPage';
 
 function MyRoutes() {
     return (
@@ -75,6 +76,7 @@ function MyRoutes() {
                 <Route path='/admin/courses/edit/:courseId' element={<AdminRoute><EditCoursePage/></AdminRoute>} />
                 <Route path='/admin/series' element={<AdminRoute><SeriesAdminPage/></AdminRoute>} />
                 <Route path='/admin/communications' element={<AdminRoute><AdminCommunicationPage/></AdminRoute>} />
+                <Route path='/admin/users' element={<AdminRoute><AdminUsersPage/></AdminRoute>} />
             </Routes>
         </BrowserRouter>
     )
