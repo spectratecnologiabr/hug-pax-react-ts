@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import Menubar from "../components/admin/menubar";
 import Footer from "../components/footer";
 import "../style/adminUsersPage.css";
@@ -119,7 +120,9 @@ function AdminUsersPage() {
   const [statusFilter, setStatusFilter] = useState<AdminUserStatus | "all">("all");
   const [loading, setLoading] = useState(false);
   const [openActionsUserId, setOpenActionsUserId] = useState<number | null>(null);
-  const openActionsRef = useRef<HTMLTableCellElement | null>(null);
+  const actionsMenuRef = useRef<HTMLDivElement | null>(null);
+  const actionsButtonRef = useRef<HTMLElement | null>(null);
+  const [actionsMenuPos, setActionsMenuPos] = useState<{ top: number; left: number }>({ top: 0, left: 0 });
   const [confirm, setConfirm] = useState<ConfirmState>({ open: false, action: null, user: null });
   const [confirmSubmitting, setConfirmSubmitting] = useState(false);
   const [confirmError, setConfirmError] = useState<string | null>(null);
@@ -188,7 +191,8 @@ function AdminUsersPage() {
     const onMouseDown = (event: MouseEvent) => {
       const target = event.target as Node | null;
       if (!target) return;
-      if (openActionsRef.current && openActionsRef.current.contains(target)) return;
+      if (actionsButtonRef.current && actionsButtonRef.current.contains(target)) return;
+      if (actionsMenuRef.current && actionsMenuRef.current.contains(target)) return;
       setOpenActionsUserId(null);
     };
 
@@ -201,6 +205,36 @@ function AdminUsersPage() {
     return () => {
       document.removeEventListener("mousedown", onMouseDown);
       document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [openActionsUserId]);
+
+  useEffect(() => {
+    if (openActionsUserId == null) return;
+
+    const updatePosition = () => {
+      const button = actionsButtonRef.current;
+      if (!button) return;
+
+      const rect = button.getBoundingClientRect();
+      const menuHeight = actionsMenuRef.current?.offsetHeight ?? 0;
+      const preferredTop = rect.bottom + 8;
+
+      let top = preferredTop;
+      if (menuHeight && preferredTop + menuHeight > window.innerHeight - 8) {
+        top = Math.max(8, rect.top - menuHeight - 8);
+      }
+
+      const left = Math.min(window.innerWidth - 8, Math.max(8, rect.right));
+      setActionsMenuPos({ top, left });
+    };
+
+    const raf = window.requestAnimationFrame(updatePosition);
+    window.addEventListener("resize", updatePosition);
+    window.addEventListener("scroll", updatePosition, true);
+    return () => {
+      window.cancelAnimationFrame(raf);
+      window.removeEventListener("resize", updatePosition);
+      window.removeEventListener("scroll", updatePosition, true);
     };
   }, [openActionsUserId]);
 
@@ -362,6 +396,18 @@ function AdminUsersPage() {
     }
   }
 
+  function toggleActionsMenu(user: User, buttonEl: HTMLElement) {
+    if (openActionsUserId === user.id) {
+      setOpenActionsUserId(null);
+      return;
+    }
+
+    actionsButtonRef.current = buttonEl;
+    const rect = buttonEl.getBoundingClientRect();
+    setActionsMenuPos({ top: rect.bottom + 8, left: rect.right });
+    setOpenActionsUserId(user.id);
+  }
+
   return (
     <div className="admin-dashboard-container">
       <Menubar />
@@ -494,96 +540,105 @@ function AdminUsersPage() {
 	                  </td>
 	                  <td>{u.lastAccess}</td>
 	                  <td
-                      className={`sap-actions ${openActionsUserId === u.id ? "open" : ""}`}
-                      ref={node => {
-                        if (u.id === openActionsUserId) openActionsRef.current = node;
-                      }}
+                      className="sap-actions"
                     >
 	                    <button
                         className="sap-actions-btn"
                         aria-label="Ações"
                         aria-haspopup="menu"
                         aria-expanded={openActionsUserId === u.id}
-                        onClick={() => setOpenActionsUserId(prev => (prev === u.id ? null : u.id))}
+                        onClick={e => toggleActionsMenu(u, e.currentTarget)}
                       >
 	                      <img src={iconDots} alt="" />
 	                    </button>
-	                      {openActionsUserId === u.id && (
-                        <div className="sap-actions-menu" role="menu">
-                          <button
-                            className="sap-actions-item"
-                            role="menuitem"
-                            onClick={() => {
-                              setOpenActionsUserId(null);
-                              openUserModal("view", u);
-                            }}
-                          >
-                            Ver detalhes
-                          </button>
-                          <button
-                            className="sap-actions-item"
-                            role="menuitem"
-                            onClick={() => {
-                              setOpenActionsUserId(null);
-                              openUserModal("edit", u);
-                            }}
-                          >
-                            Editar
-                          </button>
-                          <div className="sap-actions-sep" role="separator" />
-                          <button
-                            className="sap-actions-item"
-                            role="menuitem"
-                            onClick={() => {
-                              setOpenActionsUserId(null);
-                              if (u.status === "inactive") {
-                                setUserStatusAdmin(u.id, "active")
-                                  .then(loadUsers)
-                                  .catch(err => console.error("Failed to activate user:", err));
-                                return;
-                              }
-
-                              openConfirm("deactivate", u);
-                            }}
-                          >
-                            {u.status === "inactive" ? "Ativar" : "Desativar"}
-                          </button>
-                          <button
-                            className="sap-actions-item"
-                            role="menuitem"
-                            onClick={() => {
-                              setOpenActionsUserId(null);
-                              if (u.status === "blocked") {
-                                setUserStatusAdmin(u.id, "active")
-                                  .then(loadUsers)
-                                  .catch(err => console.error("Failed to unblock user:", err));
-                                return;
-                              }
-
-                              openConfirm("block", u);
-                            }}
-                          >
-                            {u.status === "blocked" ? "Desbloquear" : "Bloquear"}
-                          </button>
-                          <div className="sap-actions-sep" role="separator" />
-                          <button
-                            className="sap-actions-item danger"
-                            role="menuitem"
-                            onClick={() => {
-                              setOpenActionsUserId(null);
-                              openConfirm("delete", u);
-                            }}
-                          >
-                            Excluir
-                          </button>
-                        </div>
-                      )}
 	                  </td>
 	                </tr>
 	              ))}
 	            </tbody>
 	          </table>
 	        </div>
+
+          {openActionsUserId != null &&
+            (() => {
+              const user = rows.find(r => r.id === openActionsUserId);
+              if (!user) return null;
+              return createPortal(
+                <div
+                  className="sap-actions-menu-portal"
+                  role="menu"
+                  ref={actionsMenuRef}
+                  style={{ top: actionsMenuPos.top, left: actionsMenuPos.left }}
+                >
+                  <button
+                    className="sap-actions-item"
+                    role="menuitem"
+                    onClick={() => {
+                      setOpenActionsUserId(null);
+                      openUserModal("view", user);
+                    }}
+                  >
+                    Ver detalhes
+                  </button>
+                  <button
+                    className="sap-actions-item"
+                    role="menuitem"
+                    onClick={() => {
+                      setOpenActionsUserId(null);
+                      openUserModal("edit", user);
+                    }}
+                  >
+                    Editar
+                  </button>
+                  <div className="sap-actions-sep" role="separator" />
+                  <button
+                    className="sap-actions-item"
+                    role="menuitem"
+                    onClick={() => {
+                      setOpenActionsUserId(null);
+                      if (user.status === "inactive") {
+                        setUserStatusAdmin(user.id, "active")
+                          .then(loadUsers)
+                          .catch(err => console.error("Failed to activate user:", err));
+                        return;
+                      }
+
+                      openConfirm("deactivate", user);
+                    }}
+                  >
+                    {user.status === "inactive" ? "Ativar" : "Desativar"}
+                  </button>
+                  <button
+                    className="sap-actions-item"
+                    role="menuitem"
+                    onClick={() => {
+                      setOpenActionsUserId(null);
+                      if (user.status === "blocked") {
+                        setUserStatusAdmin(user.id, "active")
+                          .then(loadUsers)
+                          .catch(err => console.error("Failed to unblock user:", err));
+                        return;
+                      }
+
+                      openConfirm("block", user);
+                    }}
+                  >
+                    {user.status === "blocked" ? "Desbloquear" : "Bloquear"}
+                  </button>
+                  <div className="sap-actions-sep" role="separator" />
+                  <button
+                    className="sap-actions-item danger"
+                    role="menuitem"
+                    onClick={() => {
+                      setOpenActionsUserId(null);
+                      openConfirm("delete", user);
+                    }}
+                  >
+                    Excluir
+                  </button>
+                </div>,
+                document.body
+              );
+            })()}
 
           {confirm.open && confirm.user && (
             <div

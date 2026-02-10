@@ -5,13 +5,14 @@ import ViewSchedulingForm from "../components/admin/ViewSchedulingForm";
 import { listLast30Visits } from "../controllers/admin/listLast30Visits.controller";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, TooltipProps } from "recharts";
 import { PieChart, Pie, Cell, Legend } from "recharts";
+import { getAdminDashboardMetrics } from "../controllers/dash/getAdminDashboardMetrics.controller";
 
 import Menubar from "../components/admin/menubar";
 import Footer from "../components/footer";
 
 import "../style/newAdminDashboard.css";
 
-const studentsEvolution = [
+const DEFAULT_STUDENTS_EVOLUTION = [
     {
         month: "Jan",
         active: 2100,
@@ -44,9 +45,9 @@ const studentsEvolution = [
     }
 ]
 
-const studentsStatusData = [
-  { name: "Ativos", value: 2847 },
-  { name: "Inativos", value: 197 },
+const DEFAULT_STUDENTS_STATUS_DATA = [
+  { name: "Ativos", value: 0 },
+  { name: "Inativos", value: 0 },
 ];
 
 const CustomTooltip = ({ active, payload, label }: any) => {
@@ -94,8 +95,31 @@ type TConsultant = {
     lastName: string;
 }
 
+function safeNumber(value: any, fallback: number) {
+  const n = typeof value === "string" ? Number(value.replace(/\./g, "").replace(/,/g, ".")) : Number(value)
+  return Number.isFinite(n) ? n : fallback
+}
+
+function monthLabelFromYYYYMM(value: string) {
+  const match = /^(\d{4})-(\d{2})$/.exec(value)
+  if (!match) return value
+
+  const year = match[1]
+  const month = Number(match[2])
+  const monthNames = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"]
+  const monthName = monthNames[month - 1]
+  if (!monthName) return value
+
+  return `${monthName}/${year.slice(2)}`
+}
+
 function AdminDash() {
     const [lastVisits, setLastVisits] = useState<any[]>([]);
+    const [studentsTotal, setStudentsTotal] = useState(2847);
+    const [educatorsTotal, setEducatorsTotal] = useState(156);
+    const [activeCoursesTotal, setActiveCoursesTotal] = useState(42);
+    const [studentsEvolution, setStudentsEvolution] = useState(DEFAULT_STUDENTS_EVOLUTION);
+    const [studentsStatusData, setStudentsStatusData] = useState(DEFAULT_STUDENTS_STATUS_DATA);
     // === ViewSchedulingForm state ===
     const [viewSchedulingFormOpen, setViewSchedulingFormOpen] = useState(false);
     const [openedVisitId, setOpenedVisitId] = useState<number>(0);
@@ -160,6 +184,42 @@ function AdminDash() {
       loadCommunications();
     }, []);
 
+    useEffect(() => {
+      async function loadDashboardMetrics() {
+        try {
+          const raw = await getAdminDashboardMetrics();
+          const data = raw?.data ?? raw
+
+          setStudentsTotal(safeNumber(data?.users?.studentsTotal, studentsTotal))
+          setEducatorsTotal(safeNumber(data?.users?.educatorsTotal, educatorsTotal))
+          setActiveCoursesTotal(safeNumber(data?.activeCourses, activeCoursesTotal))
+
+          if (Array.isArray(data?.studentsEvolution)) {
+            setStudentsEvolution(
+              data.studentsEvolution.map((item: any) => ({
+                month: monthLabelFromYYYYMM(String(item.month ?? "")),
+                active: safeNumber(item.active, 0),
+                inactive: safeNumber(item.inactive, 0) + safeNumber(item.blocked, 0),
+              }))
+            )
+          }
+
+          if (data?.studentsStatus) {
+            const active = safeNumber(data.studentsStatus.active, DEFAULT_STUDENTS_STATUS_DATA[0].value)
+            const inactive = safeNumber(data.studentsStatus.inactive, 0) + safeNumber(data.studentsStatus.blocked, 0)
+            setStudentsStatusData([
+              { name: "Ativos", value: active },
+              { name: "Inativos", value: inactive },
+            ])
+          }
+        } catch (err) {
+          console.error("Erro ao carregar métricas do dashboard", err);
+        }
+      }
+
+      loadDashboardMetrics();
+    }, []);
+
     // === Função do seletor de consultor (igual agendaAdminPage) ===
     function handleSelectConsultant(
       event: React.ChangeEvent<HTMLSelectElement>
@@ -205,8 +265,8 @@ function AdminDash() {
                     <div className="main-cards-wrapper">
                         <div className="card-element">
                             <div className="column">
-                                <small>Total de Alunos</small>
-                                <b>2.847</b>
+                                <small>Total de Educadores</small>
+                                <b>{studentsTotal.toLocaleString("pt-BR")}</b>
                                 <div className="line">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18" fill="none">
                                         <path d="M16.3747 5.20972L10.0488 11.5356L6.32769 7.8145L1.49023 12.652" stroke="#10B77F" stroke-width="1.48845" stroke-linecap="round" stroke-linejoin="round"/>
@@ -228,8 +288,8 @@ function AdminDash() {
 
                         <div className="card-element">
                             <div className="column">
-                                <small>Educadores</small>
-                                <b>156</b>
+                                <small>Coordenadores</small>
+                                <b>{educatorsTotal.toLocaleString("pt-BR")}</b>
                                 <div className="line">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18" fill="none">
                                         <path d="M16.3747 5.20972L10.0488 11.5356L6.32769 7.8145L1.49023 12.652" stroke="#10B77F" stroke-width="1.48845" stroke-linecap="round" stroke-linejoin="round"/>
@@ -251,7 +311,7 @@ function AdminDash() {
                         <div className="card-element">
                             <div className="column">
                                 <small>Cursos Ativos</small>
-                                <b>42</b>
+                                <b>{activeCoursesTotal.toLocaleString("pt-BR")}</b>
                                 <div className="line">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18" fill="none">
                                         <path d="M16.3747 5.20972L10.0488 11.5356L6.32769 7.8145L1.49023 12.652" stroke="#10B77F" stroke-width="1.48845" stroke-linecap="round" stroke-linejoin="round"/>
