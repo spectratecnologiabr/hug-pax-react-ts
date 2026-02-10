@@ -1,6 +1,6 @@
 import axios from "axios"
 import { getCookies } from "../misc/cookies.controller"
-import type { AdminUserRole, AdminUserStatus } from "./listUsersAdmin.controller"
+import type { AdminUserRole } from "./listUsersAdmin.controller"
 
 export interface ICreateUserAdminData {
   firstName: string
@@ -8,7 +8,15 @@ export interface ICreateUserAdminData {
   email: string
   password: string
   role: AdminUserRole
-  status?: AdminUserStatus
+  isActive?: boolean
+  isBlocked?: boolean
+  docType?: string
+  docId?: string
+  birthDate?: string
+  gender?: string
+  profilePic?: string
+  phone?: string
+  language?: string
   collegeId?: number | null
 }
 
@@ -19,4 +27,3 @@ export async function createUserAdmin(data: ICreateUserAdminData) {
 
   return response.data?.data ?? response.data
 }
-

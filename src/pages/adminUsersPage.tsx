@@ -10,6 +10,8 @@ import { setUserStatusAdmin } from "../controllers/user/setUserStatusAdmin.contr
 import { deleteUserAdmin } from "../controllers/user/deleteUserAdmin.controller";
 import { createUserAdmin, type ICreateUserAdminData } from "../controllers/user/createUserAdmin.controller";
 import { updateUserAdmin, type IUpdateUserAdminData } from "../controllers/user/updateUserAdmin.controller";
+import { listColleges } from "../controllers/college/listColleges.controller";
+import { getUserAdmin } from "../controllers/user/getUserAdmin.controller";
 import iconTotal from "../img/adminUsers/shield.svg";
 import iconActive from "../img/adminUsers/shield-check.svg";
 import iconInactive from "../img/adminUsers/shield-minus.svg";
@@ -35,6 +37,16 @@ type User = {
   role: AdminUserRole;
   profile: "Administrador" | "Educador" | "Consultor" | "Coordenador";
   status: AdminUserStatus;
+  isActive?: boolean;
+  isBlocked?: boolean;
+  docType?: string;
+  docId?: string;
+  birthDate?: string;
+  gender?: string;
+  phone?: string;
+  language?: string;
+  collegeId?: number | null;
+  collegeName?: string;
   lastAccess: string;
 };
 
@@ -107,6 +119,16 @@ function mapAdminUserToRow(user: IAdminUserListItem): User {
     role: user.role,
     profile: roleLabel(user.role),
     status: resolveAdminUserStatus(user),
+    isActive: user.isActive,
+    isBlocked: user.isBlocked,
+    docType: user.docType,
+    docId: user.docId,
+    birthDate: user.birthDate,
+    gender: user.gender,
+    phone: user.phone,
+    language: user.language,
+    collegeId: user.collegeId,
+    collegeName: user.collegeName,
     lastAccess: formatLastAccess(user.lastAccessAt),
   };
 }
@@ -129,14 +151,51 @@ function AdminUsersPage() {
   const [userModal, setUserModal] = useState<UserModalState>({ open: false, mode: "create", user: null });
   const [userModalSubmitting, setUserModalSubmitting] = useState(false);
   const [userModalError, setUserModalError] = useState<string | null>(null);
+  const [userModalDetailsLoading, setUserModalDetailsLoading] = useState(false);
+  const userModalRequestIdRef = useRef(0);
+  const [colleges, setColleges] = useState<Array<{ id: number; name: string }>>([]);
+  const [collegesLoading, setCollegesLoading] = useState(false);
   const [userForm, setUserForm] = useState({
     firstName: "",
     lastName: "",
     email: "",
     password: "",
     role: "educator" as AdminUserRole,
-    status: "active" as AdminUserStatus,
+    isActive: "true" as "true" | "false",
+    isBlocked: false,
+    docType: "",
+    docId: "",
+    birthDate: "",
+    gender: "male",
+    phone: "",
+    language: "pt-BR",
+    collegeId: "" as "" | number,
   });
+
+  const loadColleges = useCallback(async () => {
+    if (collegesLoading) return;
+    setCollegesLoading(true);
+    try {
+      const collegesList = await listColleges();
+      if (Array.isArray(collegesList)) {
+        setColleges(collegesList);
+        return;
+      }
+
+      const payload = collegesList?.data ?? collegesList;
+      if (Array.isArray(payload)) {
+        setColleges(payload);
+        return;
+      }
+
+      setColleges([]);
+    } catch (e) {
+      console.error("Erro ao carregar escolas", e);
+      setColleges([]);
+    } finally {
+      setCollegesLoading(false);
+    }
+  }, [collegesLoading]);
 
   useEffect(() => {
     isMountedRef.current = true;
@@ -246,6 +305,7 @@ function AdminUsersPage() {
         if (userModalSubmitting) return;
         setUserModal({ open: false, mode: "create", user: null });
         setUserModalError(null);
+        setUserModalDetailsLoading(false);
       }
     };
     document.addEventListener("keydown", onKeyDown);
@@ -255,7 +315,9 @@ function AdminUsersPage() {
   function openUserModal(mode: UserModalMode, user?: User) {
     setUserModalError(null);
     setUserModalSubmitting(false);
+    setUserModalDetailsLoading(false);
     setUserModal({ open: true, mode, user: user ?? null });
+    loadColleges();
 
     if (mode === "create") {
       setUserForm({
@@ -264,7 +326,15 @@ function AdminUsersPage() {
         email: "",
         password: "",
         role: "educator",
-        status: "active",
+        isActive: "true",
+        isBlocked: false,
+        docType: "",
+        docId: "",
+        birthDate: "",
+        gender: "male",
+        phone: "",
+        language: "pt-BR",
+        collegeId: "",
       });
       return;
     }
@@ -276,8 +346,63 @@ function AdminUsersPage() {
       email: user?.email ?? "",
       password: "",
       role: user?.role ?? "educator",
-      status: user?.status ?? "active",
+      isActive: user?.isActive === false ? "false" : user?.isActive === true ? "true" : user?.status === "active" ? "true" : "false",
+      isBlocked: Boolean(user?.isBlocked),
+      docType: user?.docType ?? "",
+      docId: user?.docId ?? "",
+      birthDate: user?.birthDate ?? "",
+      gender: user?.gender ?? "male",
+      phone: user?.phone ?? "",
+      language: user?.language ?? "pt-BR",
+      collegeId: typeof user?.collegeId === "number" ? user.collegeId : "",
     });
+
+    if (!user?.id) return;
+    setUserModalDetailsLoading(true);
+    const requestId = ++userModalRequestIdRef.current;
+    getUserAdmin(user.id)
+      .then((adminUser: any) => {
+        if (userModalRequestIdRef.current !== requestId) return;
+        const merged: User = {
+          ...user,
+          ...adminUser,
+          id: user.id,
+          name: `${adminUser?.firstName ?? user.firstName ?? ""} ${adminUser?.lastName ?? user.lastName ?? ""}`.trim() || user.name,
+          role: (adminUser?.role ?? user.role) as AdminUserRole,
+          status: resolveAdminUserStatus({
+            isActive: adminUser?.isActive ?? user.isActive,
+            isBlocked: adminUser?.isBlocked ?? user.isBlocked,
+          }),
+        };
+
+        setUserModal(prev => (prev.open ? { ...prev, user: merged } : prev));
+
+        setUserForm(prev => ({
+          ...prev,
+          firstName: String(adminUser?.firstName ?? prev.firstName ?? ""),
+          lastName: String(adminUser?.lastName ?? prev.lastName ?? ""),
+          email: String(adminUser?.email ?? prev.email ?? ""),
+          role: (adminUser?.role ?? prev.role) as AdminUserRole,
+          isActive: adminUser?.isActive === false ? "false" : "true",
+          isBlocked: Boolean(adminUser?.isBlocked),
+          docType: String(adminUser?.docType ?? prev.docType ?? ""),
+          docId: String(adminUser?.docId ?? prev.docId ?? ""),
+          birthDate: String(adminUser?.birthDate ?? prev.birthDate ?? ""),
+          gender: String(adminUser?.gender ?? prev.gender ?? "male"),
+          phone: String(adminUser?.phone ?? prev.phone ?? ""),
+          language: String(adminUser?.language ?? prev.language ?? "pt-BR"),
+          collegeId: typeof adminUser?.collegeId === "number" ? adminUser.collegeId : prev.collegeId,
+        }));
+      })
+      .catch(err => {
+        console.error("Erro ao buscar detalhes do usuário", err);
+        if (userModalRequestIdRef.current !== requestId) return;
+        setUserModalError("Não foi possível carregar os dados completos do usuário.");
+      })
+      .finally(() => {
+        if (userModalRequestIdRef.current !== requestId) return;
+        setUserModalDetailsLoading(false);
+      });
   }
 
   function closeUserModal() {
@@ -285,6 +410,8 @@ function AdminUsersPage() {
     setUserModal({ open: false, mode: "create", user: null });
     setUserModalError(null);
     setUserModalSubmitting(false);
+    setUserModalDetailsLoading(false);
+    userModalRequestIdRef.current += 1;
   }
 
   function openConfirm(action: ConfirmAction, user: User) {
@@ -348,8 +475,16 @@ function AdminUsersPage() {
     const lastName = userForm.lastName.trim();
     const email = userForm.email.trim();
     const role = userForm.role;
-    const status = userForm.status;
     const password = userForm.password;
+    const isActive = userForm.isActive === "true";
+    const isBlocked = Boolean(userForm.isBlocked);
+    const docType = userForm.docType?.trim() || undefined;
+    const docId = userForm.docId?.trim() || undefined;
+    const birthDate = userForm.birthDate?.trim() || undefined;
+    const gender = userForm.gender?.trim() || undefined;
+    const phone = userForm.phone?.trim() || undefined;
+    const language = userForm.language?.trim() || undefined;
+    const collegeId = userForm.collegeId === "" ? null : userForm.collegeId;
 
     if (!firstName || !lastName || !email || !role) {
       setUserModalError("Preencha nome, sobrenome, e-mail e perfil.");
@@ -372,7 +507,15 @@ function AdminUsersPage() {
           email,
           password: password.trim(),
           role,
-          status,
+          isActive,
+          isBlocked,
+          docType,
+          docId,
+          birthDate,
+          gender,
+          phone,
+          language,
+          collegeId,
         };
         await createUserAdmin(payload);
       } else if (userModal.mode === "edit" && userModal.user) {
@@ -381,7 +524,15 @@ function AdminUsersPage() {
           lastName,
           email,
           role,
-          status,
+          isActive,
+          isBlocked,
+          docType,
+          docId,
+          birthDate,
+          gender,
+          phone,
+          language,
+          collegeId,
         };
         await updateUserAdmin(userModal.user.id, payload);
       }
@@ -710,13 +861,16 @@ function AdminUsersPage() {
                 </div>
 
                 <div className="sap-user-modal-body">
+                  {userModalDetailsLoading && (
+                    <div style={{ marginBottom: 12, fontSize: 13, color: "#667085" }}>Carregando dados do usuário...</div>
+                  )}
                   <div className="sap-user-form-grid">
                     <label className="sap-user-field">
                       <span>Nome</span>
                       <input
                         value={userForm.firstName}
                         onChange={e => setUserForm(s => ({ ...s, firstName: e.target.value }))}
-                        disabled={userModal.mode === "view" || userModalSubmitting}
+                        disabled={userModal.mode === "view" || userModalSubmitting || userModalDetailsLoading}
                         placeholder="Nome"
                       />
                     </label>
@@ -725,29 +879,128 @@ function AdminUsersPage() {
                       <input
                         value={userForm.lastName}
                         onChange={e => setUserForm(s => ({ ...s, lastName: e.target.value }))}
-                        disabled={userModal.mode === "view" || userModalSubmitting}
+                        disabled={userModal.mode === "view" || userModalSubmitting || userModalDetailsLoading}
                         placeholder="Sobrenome"
                       />
                     </label>
 
+                    <label className="sap-user-field">
+                      <span>Tipo de Documento</span>
+                      <select
+                        value={userForm.docType}
+                        onChange={e => setUserForm(s => ({ ...s, docType: e.target.value }))}
+                        disabled={userModal.mode === "view" || userModalSubmitting || userModalDetailsLoading}
+                      >
+                        <option value="">Selecionar</option>
+                        <option value="cpf">CPF</option>
+                      </select>
+                    </label>
+
+                    <label className="sap-user-field">
+                      <span>Número do Documento</span>
+                      <input
+                        value={userForm.docId}
+                        inputMode="numeric"
+                        pattern="[0-9]*"
+                        onKeyDown={e => {
+                          const allowedKeys = ["Backspace", "Delete", "ArrowLeft", "ArrowRight", "Tab"];
+                          if (allowedKeys.includes(e.key)) return;
+                          if (!/^[0-9]$/.test(e.key)) e.preventDefault();
+                        }}
+                        onChange={e => {
+                          const formatted = formatDocId(e.target.value, userForm.docType || "cpf");
+                          setUserForm(s => ({ ...s, docId: formatted }));
+                        }}
+                        disabled={userModal.mode === "view" || userModalSubmitting || userModalDetailsLoading}
+                        placeholder="Número do documento"
+                      />
+                    </label>
+
+                    <label className="sap-user-field">
+                      <span>Data de Nascimento</span>
+                      <input
+                        value={userForm.birthDate}
+                        onChange={e => setUserForm(s => ({ ...s, birthDate: e.target.value }))}
+                        disabled={userModal.mode === "view" || userModalSubmitting || userModalDetailsLoading}
+                        type="date"
+                      />
+                    </label>
+
                     <label className="sap-user-field sap-user-field-full">
-                      <span>E-mail</span>
+                      <span>Email</span>
                       <input
                         value={userForm.email}
                         onChange={e => setUserForm(s => ({ ...s, email: e.target.value }))}
-                        disabled={userModal.mode === "view" || userModalSubmitting}
-                        placeholder="email@pax.edu.br"
+                        disabled={userModal.mode === "view" || userModalSubmitting || userModalDetailsLoading}
+                        placeholder="user@example.com"
                         type="email"
                       />
                     </label>
 
-                    {userModal.mode === "create" && (
+                    <label className="sap-user-field">
+                      <span>Gênero</span>
+                      <select
+                        value={userForm.gender}
+                        onChange={e => setUserForm(s => ({ ...s, gender: e.target.value }))}
+                        disabled={userModal.mode === "view" || userModalSubmitting || userModalDetailsLoading}
+                      >
+                        <option value="male">Masculino</option>
+                        <option value="female">Feminino</option>
+                        <option value="other">Outro</option>
+                      </select>
+                    </label>
+
+                    <label className="sap-user-field">
+                      <span>Telefone</span>
+                      <input
+                        value={userForm.phone}
+                        onChange={e => setUserForm(s => ({ ...s, phone: e.target.value }))}
+                        disabled={userModal.mode === "view" || userModalSubmitting || userModalDetailsLoading}
+                        placeholder="(00) 00000-0000"
+                      />
+                    </label>
+
+                    <label className="sap-user-field">
+                      <span>Idioma</span>
+                      <select
+                        value={userForm.language}
+                        onChange={e => setUserForm(s => ({ ...s, language: e.target.value }))}
+                        disabled={userModal.mode === "view" || userModalSubmitting || userModalDetailsLoading}
+                      >
+                        <option value="pt-BR">Português</option>
+                        <option value="es-ES">Espanhol</option>
+                        <option value="en-US">Inglês</option>
+                      </select>
+                    </label>
+
+                    <label className="sap-user-field">
+                      <span>Escola</span>
+                      <select
+                        value={userForm.collegeId === "" ? "" : String(userForm.collegeId)}
+                        onChange={e =>
+                          setUserForm(s => ({
+                            ...s,
+                            collegeId: e.target.value ? Number(e.target.value) : "",
+                          }))
+                        }
+                        disabled={userModal.mode === "view" || userModalSubmitting || userModalDetailsLoading || collegesLoading}
+                      >
+                        <option value="">{collegesLoading ? "Carregando..." : "Selecionar"}</option>
+                        {colleges.map(c => (
+                          <option key={c.id} value={String(c.id)}>
+                            {c.name}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+
+                      {userModal.mode === "create" && (
                       <label className="sap-user-field sap-user-field-full">
                         <span>Senha</span>
                         <input
                           value={userForm.password}
                           onChange={e => setUserForm(s => ({ ...s, password: e.target.value }))}
-                          disabled={userModalSubmitting}
+                          disabled={userModalSubmitting || userModalDetailsLoading}
                           placeholder="Mínimo 6 caracteres"
                           type="password"
                         />
@@ -759,7 +1012,7 @@ function AdminUsersPage() {
                       <select
                         value={userForm.role}
                         onChange={e => setUserForm(s => ({ ...s, role: e.target.value as AdminUserRole }))}
-                        disabled={userModal.mode === "view" || userModalSubmitting}
+                        disabled={userModal.mode === "view" || userModalSubmitting || userModalDetailsLoading}
                       >
                         <option value="admin">Administrador</option>
                         <option value="coordinator">Coordenador</option>
@@ -771,13 +1024,12 @@ function AdminUsersPage() {
                     <label className="sap-user-field">
                       <span>Status</span>
                       <select
-                        value={userForm.status}
-                        onChange={e => setUserForm(s => ({ ...s, status: e.target.value as AdminUserStatus }))}
-                        disabled={userModal.mode === "view" || userModalSubmitting}
+                        value={userForm.isActive}
+                        onChange={e => setUserForm(s => ({ ...s, isActive: e.target.value as "true" | "false" }))}
+                        disabled={userModal.mode === "view" || userModalSubmitting || userModalDetailsLoading}
                       >
-                        <option value="active">Ativo</option>
-                        <option value="inactive">Inativo</option>
-                        <option value="blocked">Bloqueado</option>
+                        <option value="true">Ativo</option>
+                        <option value="false">Inativo</option>
                       </select>
                     </label>
                   </div>
@@ -805,3 +1057,18 @@ function AdminUsersPage() {
 }
 
 export default AdminUsersPage;
+  function formatDocId(docId: string, docType: string) {
+    if (!docId) return "";
+
+    const clean = docId.replace(/\W/g, "");
+
+    if (docType === "cpf") {
+      return clean
+        .slice(0, 11)
+        .replace(/^(\d{3})(\d)/, "$1.$2")
+        .replace(/^(\d{3})\.(\d{3})(\d)/, "$1.$2.$3")
+        .replace(/^(\d{3})\.(\d{3})\.(\d{3})(\d{1,2})/, "$1.$2.$3-$4");
+    }
+
+    return docId;
+  }

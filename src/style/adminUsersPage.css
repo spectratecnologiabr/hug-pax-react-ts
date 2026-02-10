@@ -597,7 +597,7 @@
 
 .admin-users-page .sap-user-modal-card {
   width: 100%;
-  max-width: 640px;
+  max-width: 980px;
   background: #ffffff;
   border-radius: 14px;
   border: 1px solid #eef2f7;
@@ -625,7 +625,7 @@
 
 .admin-users-page .sap-user-form-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(5, minmax(150px, 1fr));
   gap: 12px;
 }
 
@@ -689,6 +689,18 @@
 }
 
 @media (max-width: 640px) {
+  .admin-users-page .sap-user-form-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 1100px) {
+  .admin-users-page .sap-user-form-grid {
+    grid-template-columns: repeat(2, minmax(180px, 1fr));
+  }
+}
+
+@media (max-width: 860px) {
   .admin-users-page .sap-user-form-grid {
     grid-template-columns: 1fr;
   }

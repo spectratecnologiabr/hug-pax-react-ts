@@ -21,6 +21,15 @@ export interface IAdminUserListItem {
   role: AdminUserRole
   isActive?: boolean
   isBlocked?: boolean
+  docType?: string
+  docId?: string
+  birthDate?: string
+  gender?: string
+  profilePic?: string
+  phone?: string
+  language?: string
+  collegeId?: number | null
+  collegeName?: string
   lastAccessAt?: string | null
 }
 
