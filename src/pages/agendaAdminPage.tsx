@@ -81,7 +81,7 @@ function groupVisitsByDay(visits: TVisit[]) {
 
 const parsedStatus: Record<string, string> = {
   scheduled: "Agendado",
-  canceled: "Cancelado",
+  cancelled: "Cancelado",
   completed: "Concluído",
   rescheduled: "Reagendado",
 }
