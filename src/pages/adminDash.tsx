@@ -6,6 +6,7 @@ import { listLast30Visits } from "../controllers/admin/listLast30Visits.controll
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, TooltipProps } from "recharts";
 import { PieChart, Pie, Cell, Legend } from "recharts";
 import { getAdminDashboardMetrics } from "../controllers/dash/getAdminDashboardMetrics.controller";
+import { getAdminLogsTimeline } from "../controllers/logs/getAdminLogsTimeline.controller";
 
 import Menubar from "../components/admin/menubar";
 import Footer from "../components/footer";
@@ -113,6 +114,65 @@ function monthLabelFromYYYYMM(value: string) {
   return `${monthName}/${year.slice(2)}`
 }
 
+function timeAgo(dateInput?: string | number | Date | null) {
+  if (!dateInput) return "—";
+
+  const toDate = (value: string | number | Date) => {
+    if (value instanceof Date) return value;
+    if (typeof value === "number") return new Date(value);
+
+    const s = value.trim();
+    if (!s) return new Date(NaN);
+
+    // Se vier com timezone (Z ou offset), respeita.
+    const hasTimezone = /[zZ]$|[+-]\d{2}:\d{2}$/.test(s);
+    if (hasTimezone) return new Date(s);
+
+    // Se vier sem timezone (ex: "2026-02-10T15:07:27.000"), assume horário local do browser.
+    const isIsoWithoutTz = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?$/.test(s);
+    if (isIsoWithoutTz) return new Date(s);
+
+    // Se vier "YYYY-MM-DD HH:mm:ss", converte para ISO local (sem timezone)
+    const matchSql = /^(\d{4}-\d{2}-\d{2})\s(\d{2}:\d{2}:\d{2})(\.\d+)?$/.exec(s);
+    if (matchSql) return new Date(`${matchSql[1]}T${matchSql[2]}${matchSql[3] ?? ""}`);
+
+    return new Date(s);
+  };
+
+  const date = toDate(dateInput);
+  if (Number.isNaN(date.getTime())) return "—";
+
+  const diffMs = Date.now() - date.getTime();
+  const diffSec = Math.max(0, Math.floor(diffMs / 1000));
+  if (diffSec < 10) return "Agora";
+  if (diffSec < 60) return `Há ${diffSec}s`;
+  const diffMin = Math.floor(diffSec / 60);
+  if (diffMin < 60) return `Há ${diffMin} min`;
+  const diffH = Math.floor(diffMin / 60);
+  if (diffH < 24) return `Há ${diffH} h`;
+  const diffD = Math.floor(diffH / 24);
+  if (diffD < 30) return `Há ${diffD} dias`;
+  return date.toLocaleDateString("pt-BR");
+}
+
+type TLogTimelineItem = {
+  id?: number | string;
+  level?: string;
+  name?: string;
+  message?: string;
+  metadata?: Record<string, any>;
+  createdAt?: string;
+  updatedAt?: string;
+
+  // compat com formatos antigos
+  title?: string;
+  event?: string;
+  timestamp?: string;
+  user?: { name?: string; email?: string };
+  actor?: string;
+  source?: string;
+};
+
 function AdminDash() {
     const [lastVisits, setLastVisits] = useState<any[]>([]);
     const [studentsTotal, setStudentsTotal] = useState(2847);
@@ -129,6 +189,8 @@ function AdminDash() {
     // === Refresh control state ===
     const [refreshKey, setRefreshKey] = useState(0);
     const [communications, setCommunications] = useState<any[]>([]);
+    const [logsLoading, setLogsLoading] = useState(false);
+    const [logsTimeline, setLogsTimeline] = useState<TLogTimelineItem[]>([]);
 
     // Função para abrir o modal de visualização de agendamento
     function openViewScheduling(visitId: number) {
@@ -218,6 +280,34 @@ function AdminDash() {
       }
 
       loadDashboardMetrics();
+    }, []);
+
+    useEffect(() => {
+      async function loadLogsTimeline() {
+        setLogsLoading(true);
+        try {
+          const data = await getAdminLogsTimeline({ limit: 6 });
+
+          const list: TLogTimelineItem[] = Array.isArray(data)
+            ? data
+            : Array.isArray((data as any)?.items)
+              ? (data as any).items
+              : Array.isArray((data as any)?.timeline)
+                ? (data as any).timeline
+                : Array.isArray((data as any)?.data)
+                  ? (data as any).data
+                  : [];
+
+          setLogsTimeline(list);
+        } catch (err) {
+          console.error("Erro ao carregar logs do dashboard", err);
+          setLogsTimeline([]);
+        } finally {
+          setLogsLoading(false);
+        }
+      }
+
+      loadLogsTimeline();
     }, []);
 
     // === Função do seletor de consultor (igual agendaAdminPage) ===
@@ -507,7 +597,7 @@ function AdminDash() {
                                             <path d="M8.93053 16.373C13.0408 16.373 16.3728 13.041 16.3728 8.93077C16.3728 4.82053 13.0408 1.48853 8.93053 1.48853C4.82029 1.48853 1.48828 4.82053 1.48828 8.93077C1.48828 13.041 4.82029 16.373 8.93053 16.373Z" stroke="#228BC3" stroke-width="1.48845" stroke-linecap="round" stroke-linejoin="round"/>
                                             <path d="M8.92969 4.46533V8.93068L11.9066 10.4191" stroke="#228BC3" stroke-width="1.48845" stroke-linecap="round" stroke-linejoin="round"/>
                                         </svg>
-                                        Ações Recentes
+                                        Logs Recentes
                                     </h3>
 
                                     <button className="activities-link">
@@ -519,86 +609,66 @@ function AdminDash() {
                                 </div>
 
                                 <div className="activities-list">
-                                    <div className="activity-item">
-                                        <div className="activity-icon">
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18" fill="none">
-                                                <path d="M11.9094 15.6287V14.1402C11.9094 13.3507 11.5957 12.5935 11.0375 12.0352C10.4792 11.477 9.722 11.1633 8.93248 11.1633H4.46713C3.67761 11.1633 2.92042 11.477 2.36215 12.0352C1.80387 12.5935 1.49023 13.3507 1.49023 14.1402V15.6287" stroke="#228BC3" stroke-width="1.48845" stroke-linecap="round" stroke-linejoin="round"/>
-                                                <path d="M6.69955 8.18646C8.34365 8.18646 9.67645 6.85366 9.67645 5.20956C9.67645 3.56547 8.34365 2.23267 6.69955 2.23267C5.05546 2.23267 3.72266 3.56547 3.72266 5.20956C3.72266 6.85366 5.05546 8.18646 6.69955 8.18646Z" stroke="#228BC3" stroke-width="1.48845" stroke-linecap="round" stroke-linejoin="round"/>
-                                                <path d="M14.1406 5.95374V10.4191" stroke="#228BC3" stroke-width="1.48845" stroke-linecap="round" stroke-linejoin="round"/>
-                                                <path d="M16.3716 8.18652H11.9062" stroke="#228BC3" stroke-width="1.48845" stroke-linecap="round" stroke-linejoin="round"/>
-                                            </svg>
-                                            <span className="activity-line" />
-                                        </div>
+                  {logsLoading ? (
+                    <div style={{ fontFamily: "Inter", fontSize: 13, color: "#6B7280" }}>Carregando...</div>
+                  ) : logsTimeline.length === 0 ? (
+                    <div style={{ fontFamily: "Inter", fontSize: 13, color: "#6B7280" }}>Sem logs recentes.</div>
+                  ) : (
+	                    logsTimeline.map((item, index) => {
+	                      const level = String(item.level ?? "").toLowerCase();
+	                      const title =
+	                        item.message ??
+	                        item.title ??
+	                        item.event ??
+	                        (item.name ? `${item.name}` : level ? `Evento (${level})` : "Evento");
+	                      const who =
+	                        item.user?.name ??
+	                        item.actor ??
+	                        item.source ??
+	                        (item.metadata?.userId ? `Usuário #${item.metadata.userId}` : item.name ?? "Sistema");
+	                      const when = timeAgo(item.createdAt ?? item.timestamp);
 
-                                        <div className="activity-content">
-                                            <p className="activity-title">Novo aluno cadastrado</p>
-                                            <div className="activity-meta">
-                                            <span>Maria Silva</span>
-                                            <span>•</span>
-                                            <span>Há 5 min</span>
-                                            </div>
-                                        </div>
-                                    </div>
+                      const iconClass =
+                        level === "error" || level === "fatal"
+                          ? "level-error"
+                          : level === "warn" || level === "warning"
+                            ? "level-warn"
+                            : "level-info";
 
-                                    <div className="activity-item">
-                                        <div className="activity-icon">
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18" fill="none">
-                                                <path d="M11.163 1.48853H4.46501C4.07025 1.48853 3.69166 1.64534 3.41252 1.92448C3.13338 2.20362 2.97656 2.58221 2.97656 2.97697V14.8846C2.97656 15.2793 3.13338 15.6579 3.41252 15.9371C3.69166 16.2162 4.07025 16.373 4.46501 16.373H13.3957C13.7905 16.373 14.1691 16.2162 14.4482 15.9371C14.7273 15.6579 14.8842 15.2793 14.8842 14.8846V5.20965L11.163 1.48853Z" stroke="#228BC3" stroke-width="1.48845" stroke-linecap="round" stroke-linejoin="round"/>
-                                                <path d="M10.4199 1.48853V4.46542C10.4199 4.86018 10.5767 5.23878 10.8559 5.51792C11.135 5.79705 11.5136 5.95387 11.9084 5.95387H14.8853" stroke="#228BC3" stroke-width="1.48845" stroke-linecap="round" stroke-linejoin="round"/>
-                                                <path d="M7.44353 6.698H5.95508" stroke="#228BC3" stroke-width="1.48845" stroke-linecap="round" stroke-linejoin="round"/>
-                                                <path d="M11.9089 9.67493H5.95508" stroke="#228BC3" stroke-width="1.48845" stroke-linecap="round" stroke-linejoin="round"/>
-                                                <path d="M11.9089 12.6519H5.95508" stroke="#228BC3" stroke-width="1.48845" stroke-linecap="round" stroke-linejoin="round"/>
-                                            </svg>
-                                            <span className="activity-line" />
-                                        </div>
+                      return (
+                        <div className="activity-item" key={String(item.id ?? `${title}-${index}`)}>
+                          <div className={`activity-icon ${iconClass}`}>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18" fill="none">
+                              <path
+                                d="M8.93053 16.373C13.0408 16.373 16.3728 13.041 16.3728 8.93077C16.3728 4.82053 13.0408 1.48853 8.93053 1.48853C4.82029 1.48853 1.48828 4.82053 1.48828 8.93077C1.48828 13.041 4.82029 16.373 8.93053 16.373Z"
+                                stroke="currentColor"
+                                strokeWidth="1.8"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              />
+                              <path
+                                d="M8.92969 4.46533V8.93068L11.9066 10.4191"
+                                stroke="currentColor"
+                                strokeWidth="1.8"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              />
+                            </svg>
+                            {index < logsTimeline.length - 1 && <span className="activity-line" />}
+                          </div>
 
-                                        <div className="activity-content">
-                                            <p className="activity-title">Certificado emitido</p>
-                                            <div className="activity-meta">
-                                            <span>João Santos</span>
-                                            <span>•</span>
-                                            <span>Há 15 min</span>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div className="activity-item">
-                                        <div className="activity-icon">
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18" fill="none">
-                                                <path d="M9.09554 1.48853H8.76808C8.37332 1.48853 7.99472 1.64534 7.71558 1.92448C7.43645 2.20362 7.27963 2.58221 7.27963 2.97697V3.11093C7.27936 3.37195 7.21046 3.62831 7.07983 3.85429C6.94921 4.08028 6.76145 4.26793 6.5354 4.39844L6.21539 4.5845C5.98911 4.71514 5.73244 4.78391 5.47116 4.78391C5.20989 4.78391 4.95321 4.71514 4.72694 4.5845L4.6153 4.52496C4.27375 4.32794 3.86798 4.27449 3.48706 4.37635C3.10614 4.4782 2.7812 4.72704 2.58357 5.06824L2.41984 5.35105C2.22282 5.6926 2.16937 6.09837 2.27123 6.47929C2.37308 6.86021 2.62193 7.18515 2.96313 7.38278L3.07476 7.45721C3.29972 7.58708 3.48678 7.77357 3.61734 7.99813C3.7479 8.22269 3.81742 8.47752 3.81898 8.73727V9.11683C3.82003 9.37911 3.75174 9.637 3.62105 9.86441C3.49036 10.0918 3.3019 10.2806 3.07476 10.4118L2.96313 10.4788C2.62193 10.6764 2.37308 11.0013 2.27123 11.3822C2.16937 11.7632 2.22282 12.1689 2.41984 12.5105L2.58357 12.7933C2.7812 13.1345 3.10614 13.3833 3.48706 13.4852C3.86798 13.5871 4.27375 13.5336 4.6153 13.3366L4.72694 13.277C4.95321 13.1464 5.20989 13.0776 5.47116 13.0776C5.73244 13.0776 5.98911 13.1464 6.21539 13.277L6.5354 13.4631C6.76145 13.5936 6.94921 13.7813 7.07983 14.0072C7.21046 14.2332 7.27936 14.4896 7.27963 14.7506V14.8846C7.27963 15.2793 7.43645 15.6579 7.71558 15.9371C7.99472 16.2162 8.37332 16.373 8.76808 16.373H9.09554C9.4903 16.373 9.86889 16.2162 10.148 15.9371C10.4272 15.6579 10.584 15.2793 10.584 14.8846V14.7506C10.5843 14.4896 10.6532 14.2332 10.7838 14.0072C10.9144 13.7813 11.1022 13.5936 11.3282 13.4631L11.6482 13.277C11.8745 13.1464 12.1312 13.0776 12.3924 13.0776C12.6537 13.0776 12.9104 13.1464 13.1367 13.277L13.2483 13.3366C13.5899 13.5336 13.9956 13.5871 14.3766 13.4852C14.7575 13.3833 15.0824 13.1345 15.28 12.7933L15.4438 12.503C15.6408 12.1615 15.6942 11.7557 15.5924 11.3748C15.4905 10.9939 15.2417 10.6689 14.9005 10.4713L14.7889 10.4118C14.5617 10.2806 14.3732 10.0918 14.2426 9.86441C14.1119 9.637 14.0436 9.37911 14.0446 9.11683V8.74471C14.0436 8.48243 14.1119 8.22454 14.2426 7.99713C14.3732 7.76973 14.5617 7.5809 14.7889 7.44976L14.9005 7.38278C15.2417 7.18515 15.4905 6.86021 15.5924 6.47929C15.6942 6.09837 15.6408 5.6926 15.4438 5.35105L15.28 5.06824C15.0824 4.72704 14.7575 4.4782 14.3766 4.37635C13.9956 4.27449 13.5899 4.32794 13.2483 4.52496L13.1367 4.5845C12.9104 4.71514 12.6537 4.78391 12.3924 4.78391C12.1312 4.78391 11.8745 4.71514 11.6482 4.5845L11.3282 4.39844C11.1022 4.26793 10.9144 4.08028 10.7838 3.85429C10.6532 3.62831 10.5843 3.37195 10.584 3.11093V2.97697C10.584 2.58221 10.4272 2.20362 10.148 1.92448C9.86889 1.64534 9.4903 1.48853 9.09554 1.48853Z" stroke="#228BC3" stroke-width="1.48845" stroke-linecap="round" stroke-linejoin="round"/>
-                                                <path d="M8.93189 11.1633C10.165 11.1633 11.1646 10.1637 11.1646 8.93067C11.1646 7.6976 10.165 6.698 8.93189 6.698C7.69882 6.698 6.69922 7.6976 6.69922 8.93067C6.69922 10.1637 7.69882 11.1633 8.93189 11.1633Z" stroke="#228BC3" stroke-width="1.48845" stroke-linecap="round" stroke-linejoin="round"/>
-                                            </svg>
-                                            <span className="activity-line" />
-                                        </div>
-
-                                        <div className="activity-content">
-                                            <p className="activity-title">Configurações atualizadas</p>
-                                            <div className="activity-meta">
-                                            <span>Admin</span>
-                                            <span>•</span>
-                                            <span>Há 1 hora</span>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div className="activity-item">
-                                        <div className="activity-icon">
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18" fill="none">
-                                                    <path d="M15.6285 11.1634C15.6285 11.5581 15.4716 11.9367 15.1925 12.2159C14.9134 12.495 14.5348 12.6518 14.14 12.6518H5.20932L2.23242 15.6287V3.72111C2.23242 3.32635 2.38924 2.94776 2.66838 2.66862C2.94752 2.38948 3.32611 2.23267 3.72087 2.23267H14.14C14.5348 2.23267 14.9134 2.38948 15.1925 2.66862C15.4716 2.94776 15.6285 3.32635 15.6285 3.72111V11.1634Z" stroke="#228BC3" stroke-width="1.48845" stroke-linecap="round" stroke-linejoin="round"/>
-                                            </svg>
-                                            <span className="activity-line" />
-                                        </div>
-
-                                        <div className="activity-content">
-                                            <p className="activity-title">Comunicação enviada</p>
-                                            <div className="activity-meta">
-                                            <span>Admin</span>
-                                            <span>•</span>
-                                            <span>Há 2 horas</span>
-                                            </div>
-                                        </div>
-                                    </div>
-
+                          <div className="activity-content">
+                            <p className="activity-title">{title}</p>
+                            <div className="activity-meta">
+                              <span>{who}</span>
+                              <span>•</span>
+                              <span>{when}</span>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })
+                  )}
                                 </div>
                             </div>
                         </div>

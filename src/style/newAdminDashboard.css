@@ -707,6 +707,7 @@
   height: 28px;
   border-radius: 999px;
   background: rgba(34,139,195,0.12);
+  color: #228BC3;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -715,8 +716,23 @@
 .activity-icon svg {
   width: 16px;
   height: 16px;
-  stroke: #228BC3;
+  stroke: currentColor;
   stroke-width: 2;
+}
+
+.activity-icon.level-info {
+  background: rgba(34, 139, 195, 0.12);
+  color: #228BC3;
+}
+
+.activity-icon.level-warn {
+  background: rgba(245, 159, 10, 0.14);
+  color: #F59F0A;
+}
+
+.activity-icon.level-error {
+  background: rgba(239, 68, 68, 0.14);
+  color: #EF4444;
 }
 
 .activity-line {

@@ -72,13 +72,6 @@ function Courses() {
         return `${dia}/${mes}/${ano} - ${hora}:${minuto}`;
     };
 
-    function handleEditCourse(event: React.MouseEvent<HTMLButtonElement>) {
-        const courseId = event.currentTarget.getAttribute("data-course-id");
-        if (courseId) {
-            window.location.href = `/admin/courses/edit/${courseId}`;
-        }
-    }
-
     return (
         <React.Fragment>
             <div className="admin-dashboard-container library-page">
@@ -90,7 +83,7 @@ function Courses() {
                             <span>Gerencie trilhas, aulas e materiais educacionais</span>
                         </div>
                         <div className="buttons-wrapper">
-                        <a href="/admin/courses/add" className="new-course-button">Nova trilha</a>
+                        <button className="new-course-button" onClick={() => window.location.href = `/admin/courses/add`}>+ Nova trilha</button>
                     </div>
                     </div>
                     
