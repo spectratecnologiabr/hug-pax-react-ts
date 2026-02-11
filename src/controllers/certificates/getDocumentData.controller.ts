@@ -10,5 +10,5 @@ export async function getDocumentData(code: string) {
             }
         }
     );
-    return response.data;
+    return response.data?.data ?? response.data;
 }

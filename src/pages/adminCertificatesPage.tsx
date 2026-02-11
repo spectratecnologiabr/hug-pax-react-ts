@@ -1,7 +1,8 @@
-import React, { useMemo, useState } from "react"
+import React, { useEffect, useMemo, useState } from "react"
 import Menubar from "../components/admin/menubar"
 import Footer from "../components/footer"
-import { getDocumentData } from "../controllers/certificates/getDocumentData.controller"
+import { getCertificatesSummaryAdmin } from "../controllers/certificates/getCertificatesSummaryAdmin.controller"
+import { verifyCertificateAdmin, type TCertificateDocument } from "../controllers/certificates/verifyCertificateAdmin.controller"
 
 import "../style/adminCertificatesPage.css"
 
@@ -10,30 +11,74 @@ import { ReactComponent as IconCheck } from "../img/adminCertificates/check.svg"
 import { ReactComponent as IconAward } from "../img/adminCertificates/award.svg"
 import { ReactComponent as IconX } from "../img/adminCertificates/x.svg"
 
-type TCertificateDoc = {
-  certificateCode: string
-  userName: string
-  courseTitle: string
-  hours: number
-  issuedAt: string
-  modules: Array<string>
-}
-
 function AdminCertificatesPage() {
     const [topSearch, setTopSearch] = useState("")
     const [verifyQuery, setVerifyQuery] = useState("")
     const [verifying, setVerifying] = useState(false)
     const [verifyError, setVerifyError] = useState<string | null>(null)
-    const [verifyResult, setVerifyResult] = useState<TCertificateDoc | null>(null)
+    const [verifyResult, setVerifyResult] = useState<TCertificateDocument | null>(null)
+    const [summaryLoading, setSummaryLoading] = useState(false)
+    const [summaryError, setSummaryError] = useState<string | null>(null)
 
     const summary = useMemo(
       () => ({
-        valid: 1847,
-        totalIssued: 2156,
-        frauds: 23,
+        valid: 0,
+        totalIssued: 0,
+        frauds: 0,
       }),
       []
     )
+
+    const [summaryData, setSummaryData] = useState(summary)
+
+    useEffect(() => {
+      let cancelled = false
+
+      async function loadSummary() {
+        setSummaryLoading(true)
+        setSummaryError(null)
+        try {
+          const data = await getCertificatesSummaryAdmin()
+          if (cancelled) return
+
+          const valid =
+            (data as any)?.valid ??
+            (data as any)?.valids ??
+            (data as any)?.validTotal ??
+            (data as any)?.validCertificates ??
+            0
+
+          const totalIssued =
+            (data as any)?.totalIssued ??
+            (data as any)?.total ??
+            (data as any)?.totalEmitted ??
+            (data as any)?.issued ??
+            0
+
+          const frauds =
+            (data as any)?.frauds ??
+            (data as any)?.fraudsDetected ??
+            (data as any)?.fraud ??
+            0
+
+          setSummaryData({
+            valid: Number(valid ?? 0),
+            totalIssued: Number(totalIssued ?? 0),
+            frauds: Number(frauds ?? 0),
+          })
+        } catch (e) {
+          console.error("Erro ao carregar resumo de certificados", e)
+          if (!cancelled) setSummaryError("Não foi possível carregar os dados de certificados.")
+        } finally {
+          if (!cancelled) setSummaryLoading(false)
+        }
+      }
+
+      loadSummary()
+      return () => {
+        cancelled = true
+      }
+    }, [])
 
     async function handleVerify() {
       const q = verifyQuery.trim()
@@ -43,8 +88,8 @@ function AdminCertificatesPage() {
       setVerifyError(null)
       setVerifyResult(null)
       try {
-        const data = await getDocumentData(q)
-        setVerifyResult(data as TCertificateDoc)
+        const data = await verifyCertificateAdmin(q)
+        setVerifyResult(data)
       } catch (e) {
         console.error("Erro ao verificar certificado", e)
         setVerifyError("Não foi possível verificar. Confira o código/CPF e tente novamente.")
@@ -84,7 +129,7 @@ function AdminCertificatesPage() {
                   <IconCheck aria-hidden="true" />
                 </div>
                 <div className="acp-summary-content">
-                  <b>{summary.valid.toLocaleString("pt-BR")}</b>
+                  <b>{summaryLoading ? "—" : summaryData.valid.toLocaleString("pt-BR")}</b>
                   <span>Válidos</span>
                 </div>
               </div>
@@ -94,7 +139,7 @@ function AdminCertificatesPage() {
                   <IconAward aria-hidden="true" />
                 </div>
                 <div className="acp-summary-content">
-                  <b>{summary.totalIssued.toLocaleString("pt-BR")}</b>
+                  <b>{summaryLoading ? "—" : summaryData.totalIssued.toLocaleString("pt-BR")}</b>
                   <span>Total Emitidos</span>
                 </div>
               </div>
@@ -104,11 +149,13 @@ function AdminCertificatesPage() {
                   <IconX aria-hidden="true" />
                 </div>
                 <div className="acp-summary-content">
-                  <b>{summary.frauds.toLocaleString("pt-BR")}</b>
+                  <b>{summaryLoading ? "—" : summaryData.frauds.toLocaleString("pt-BR")}</b>
                   <span>Fraudes Detectadas</span>
                 </div>
               </div>
             </div>
+
+            {summaryError && <div className="acp-summary-error">{summaryError}</div>}
 
             <div className="acp-verify-card">
               <div className="acp-verify-title">

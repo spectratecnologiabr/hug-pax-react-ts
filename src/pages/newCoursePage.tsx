@@ -146,11 +146,11 @@ function NewCoursePage() {
                 }));
                 setShowModuleForm(true);
             } else {
-                handleModalMessage({ isError: true, message: response.message ?? "Erro ao criar o curso." });
+                handleModalMessage({ isError: true, message: response.message ?? "Erro ao criar a trilha." });
             }
         } catch (error) {
             console.error("Erro ao criar curso:", error);
-            handleModalMessage({ isError: true, message: "Erro ao criar o curso" });
+            handleModalMessage({ isError: true, message: "Erro ao criar a trilha" });
         }
     }
 
@@ -282,16 +282,16 @@ function NewCoursePage() {
                 <div className="admin-dashboard-wrapper">
                     <div className="form-container">
                         <div className="title-wrapper">
-                            <b>Cadastrar novo curso</b>
+                            <b>Cadastrar nova trilha</b>
                             <button onClick={() => {window.history.back()}}>Voltar</button>
                         </div>
                         <div className="form-wrapper">
                             <div className="title-wrapper">
-                                <b>Informações gerais do curso</b>
+                                <b>Informações gerais da trilha</b>
                             </div>
                             <div className="form-grid">
                                 <div className="input-wrapper">
-                                    <label htmlFor="title">Nome do curso:*</label>
+                                    <label htmlFor="title">Nome da trilha:*</label>
                                     <input
                                         type="text"
                                         id="title"
@@ -308,7 +308,7 @@ function NewCoursePage() {
                                     />
                                 </div>
                                 <div className="input-wrapper">
-                                    <label htmlFor="subtitle">Subtítulo do curso:</label>
+                                    <label htmlFor="subtitle">Subtítulo da trilha:</label>
                                     <input
                                         type="text"
                                         id="subtitle"
@@ -323,7 +323,7 @@ function NewCoursePage() {
                                     />
                                 </div>
                                 <div className="input-wrapper">
-                                    <label htmlFor="cover">Capa do curso:*</label>
+                                    <label htmlFor="cover">Capa da trilha:*</label>
                                     <input
                                         type="file"
                                         name="cover"
@@ -433,7 +433,7 @@ function NewCoursePage() {
                                 </button>
                             </div>
                         </div>
-                        {/* Listagem de módulos: visível assim que o curso é criado */}
+                        {/* Listagem de módulos: visível assim que a trilha é criado */}
                         {createdCourseId != null && (
                             <div className="form-wrapper">
                                 <div className="title-wrapper">

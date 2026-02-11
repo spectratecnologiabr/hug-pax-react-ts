@@ -10,5 +10,5 @@ export async function listCertificates() {
             }
         }
     );
-    return response.data;
+    return response.data?.data ?? response.data;
 }

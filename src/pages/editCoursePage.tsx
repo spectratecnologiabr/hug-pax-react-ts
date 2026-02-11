@@ -126,7 +126,7 @@ function EditCoursePage() {
       };
     }, []);
 
-    // Busca dados do curso e módulos/aulas ao carregar
+    // Busca dados do trilha e módulos/aulas ao carregar
     useEffect(() => {
       async function fetchCourseData() {
         if (!courseId) return;
@@ -134,7 +134,7 @@ function EditCoursePage() {
         try {
           const data = await getFullCourseData(Number(courseId));
 
-          // Curso agora vem no root da response
+          // trilha agora vem no root da response
           setNewCoursedata({
             slug: data.slug,
             title: data.title,
@@ -170,7 +170,7 @@ function EditCoursePage() {
           }));
         } catch (err) {
           console.error(err);
-          handleModalMessage({ isError: true, message: "Erro ao buscar dados do curso." });
+          handleModalMessage({ isError: true, message: "Erro ao buscar dados do trilha." });
         }
       }
 
@@ -377,10 +377,10 @@ function EditCoursePage() {
 
             await updateCourse(Number(courseId), payload);
 
-            handleModalMessage({ isError: false, message: "Curso atualizado com sucesso" });
+            handleModalMessage({ isError: false, message: "trilha atualizado com sucesso" });
         } catch (error) {
-            console.error("Erro ao atualizar curso:", error);
-            handleModalMessage({ isError: true, message: "Erro ao salvar alterações do curso" });
+            console.error("Erro ao atualizar trilha:", error);
+            handleModalMessage({ isError: true, message: "Erro ao salvar alterações do trilha" });
         }
     }
 
@@ -414,19 +414,19 @@ function EditCoursePage() {
                 <div className="admin-dashboard-wrapper">
                     <div className="form-container">
                         <div className="title-wrapper">
-                            <b>Editar curso</b>
+                            <b>Editar trilha</b>
                             <button onClick={() => {window.history.back()}}>Voltar</button>
                         </div>
                         <div className="form-wrapper">
                             <div className="title-wrapper">
-                                <b>Informações gerais do curso</b>
+                                <b>Informações gerais do trilha</b>
                                 <button className="action-button" onClick={handleSaveCourse}>
                                     Salvar alterações
                                 </button>
                             </div>
                             <div className="form-grid">
                                 <div className="input-wrapper">
-                                    <label htmlFor="title">Nome do curso:*</label>
+                                    <label htmlFor="title">Nome do trilha:*</label>
                                     <input
                                         type="text"
                                         id="title"
@@ -441,7 +441,7 @@ function EditCoursePage() {
                                     />
                                 </div>
                                 <div className="input-wrapper">
-                                    <label htmlFor="subtitle">Subtítulo do curso:</label>
+                                    <label htmlFor="subtitle">Subtítulo do trilha:</label>
                                     <input
                                         type="text"
                                         id="subtitle"
@@ -456,7 +456,7 @@ function EditCoursePage() {
                                     />
                                 </div>
                                 <div className="input-wrapper">
-                                    <label htmlFor="cover">Capa do curso:*</label>
+                                    <label htmlFor="cover">Capa do trilha:*</label>
                                     <input
                                         type="file"
                                         name="cover"
