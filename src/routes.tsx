@@ -39,6 +39,7 @@ import SeriesAdminPage from './pages/seriesAdminPage';
 import AdminCommunicationPage from './pages/adminCommunicationPage';
 import AdminUsersPage from './pages/adminUsersPage';
 import AdminCertificatesPage from './pages/adminCertificatesPage';
+import AdminLogsPage from './pages/adminLogsPage';
 
 function MyRoutes() {
     return (
@@ -79,6 +80,7 @@ function MyRoutes() {
                 <Route path='/admin/communications' element={<AdminRoute><AdminCommunicationPage/></AdminRoute>} />
                 <Route path='/admin/users' element={<AdminRoute><AdminUsersPage/></AdminRoute>} />
                 <Route path='/admin/certificates' element={<AdminRoute><AdminCertificatesPage/></AdminRoute>} />
+                <Route path='/admin/logs' element={<AdminRoute><AdminLogsPage/></AdminRoute>} />
             </Routes>
         </BrowserRouter>
     )
