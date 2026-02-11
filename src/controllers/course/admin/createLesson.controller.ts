@@ -11,6 +11,7 @@ export interface ILessonData {
     code?: string;
     cover?: string;
     isActive?: number;
+    allowDownload?: boolean;
 }
 
 export async function createLesson(data: ILessonData) {
@@ -24,6 +25,7 @@ export async function createLesson(data: ILessonData) {
         code: data.code,
         cover: data.cover,
         isActive: data.isActive ?? true,
+        allowDownload: data.allowDownload ?? true,
     };
     const response = await axios.post(
         `${process.env.REACT_APP_API_URL}/lessons`,

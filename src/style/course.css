@@ -214,6 +214,25 @@
   cursor: pointer;
 }
 
+.course-container .course-wrapper .lession-media-wrapper .video-controls.bar .control-btn.download-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.12);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.course-container .course-wrapper .lession-media-wrapper .video-controls.bar .control-btn.download-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.course-container .course-wrapper .lession-media-wrapper .video-controls.bar .control-btn.download-btn svg {
+  display: block;
+}
+
 .course-container .course-wrapper .lession-media-wrapper .video-controls.bar .time-display {
   font-family: 'SF UI Display Medium';
   font-size: 14px;
@@ -249,9 +268,13 @@
   background-color: transparent;
 }
 
-.course-container .course-wrapper .lession-document-wrapper .pdf-controls .left {
+.course-container .course-wrapper .lession-document-wrapper .pdf-controls .left, .course-container .course-wrapper .lession-document-wrapper .pdf-controls .right {
     display: flex;
     gap: 10px;
+}
+
+.course-container .course-wrapper .lession-document-wrapper .pdf-controls .right {
+  gap: 20px;
 }
 
 .course-container .course-wrapper .lession-document-wrapper .pdf-controls button {
@@ -262,6 +285,25 @@
   border-radius: 50%;
   font-size: 18px;
   cursor: pointer;
+}
+
+.course-container .course-wrapper .lession-document-wrapper .pdf-controls .download-btn {
+  background: #323232;
+  border: 1px solid #e5e7eb;
+  color: #FFFFFF;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  transition: ease-in-out .2s all;
+}
+
+.course-container .course-wrapper .lession-document-wrapper .pdf-controls .download-btn:hover {
+  background: #b8b8b9;
+}
+
+.course-container .course-wrapper .lession-document-wrapper .pdf-controls .download-btn svg {
+  display: block;
 }
 
 .course-container .course-wrapper .lession-document-wrapper .pdf-controls button:disabled {
@@ -515,6 +557,16 @@
     text-decoration: none;
     cursor: pointer;
     transition: ease-in-out .2s all;
+}
+
+.course-container .right-container .steps-list .steps-group .lessions-list .lession-item button:disabled {
+    background-color: #d1d5db;
+    color: #6b7280;
+    cursor: not-allowed;
+}
+
+.course-container .right-container .steps-list .steps-group .lessions-list .lession-item button:disabled:hover {
+    background-color: #d1d5db;
 }
 
 .course-container .right-container .steps-list .steps-group .lessions-list .lession-item a:hover, .course-container .right-container .steps-list .steps-group .lessions-list .lession-item button:hover {

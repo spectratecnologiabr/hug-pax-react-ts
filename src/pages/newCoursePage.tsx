@@ -12,7 +12,7 @@ import Menubar from "../components/admin/menubar";
 import "../style/adminDash.css";
 import { uploadLessonFileController } from "../controllers/course/admin/uploadFile.controller";
 import { createFile } from "../controllers/course/admin/createFile.controller";
-import { updateLessonExtUrl } from "../controllers/course/admin/updateLesson.controller";
+import { updateLessonAllowDownload, updateLessonExtUrl } from "../controllers/course/admin/updateLesson.controller";
 
 type TOverviewData = {
     completedCourses: number,
@@ -49,6 +49,7 @@ function NewCoursePage() {
         code: undefined,
         cover: undefined,
         isActive: 1,
+        allowDownload: true,
         file: undefined,
         mimeType: undefined,
         size: undefined,
@@ -125,6 +126,44 @@ function NewCoursePage() {
             .replace(/\s+/g, "-")
             .replace(/-+/g, "-");
     };
+
+    async function toggleLessonDownload(moduleIndex: number, lessonIndex: number) {
+        const lesson = modules[moduleIndex]?.lessons?.[lessonIndex];
+        if (!lesson) return;
+
+        const current = lesson.allowDownload !== false;
+        const next = !current;
+
+        setModules(prev =>
+            prev.map((m, mi) =>
+                mi !== moduleIndex
+                    ? m
+                    : {
+                          ...m,
+                          lessons: (m.lessons ?? []).map((l, li) => (li === lessonIndex ? { ...l, allowDownload: next } : l)),
+                      }
+            )
+        );
+
+        if (!lesson.id) return;
+
+        try {
+            await updateLessonAllowDownload(lesson.id, next);
+        } catch (e) {
+            console.error("Erro ao atualizar permissão de download", e);
+            handleModalMessage({ isError: true, message: "Não foi possível atualizar a permissão de download" });
+            setModules(prev =>
+                prev.map((m, mi) =>
+                    mi !== moduleIndex
+                        ? m
+                        : {
+                              ...m,
+                              lessons: (m.lessons ?? []).map((l, li) => (li === lessonIndex ? { ...l, allowDownload: current } : l)),
+                          }
+                )
+            );
+        }
+    }
 
 
     // Função para criar curso
@@ -260,6 +299,7 @@ function NewCoursePage() {
                 code: undefined,
                 cover: undefined,
                 isActive: 1,
+                allowDownload: true,
                 file: undefined,
                 mimeType: undefined,
                 size: undefined,
@@ -508,6 +548,17 @@ function NewCoursePage() {
                                                                     <strong>{lesson.title}</strong>
                                                                     {lesson.subTitle && <p>{lesson.subTitle}</p>}
                                                                 </div>
+                                                                <div className="lesson-card-footer">
+                                                                    <label className="lesson-download-toggle" title="Permitir download do ativo">
+                                                                        <input
+                                                                            type="checkbox"
+                                                                            checked={lesson.allowDownload !== false}
+                                                                            onChange={() => toggleLessonDownload(index, lessonIndex)}
+                                                                        />
+                                                                        <span className="lesson-toggle-switch" aria-hidden="true" />
+                                                                        <span>Download</span>
+                                                                    </label>
+                                                                </div>
                                                             </div>
                                                         ))}
                                                     </div>
@@ -702,21 +753,22 @@ function NewCoursePage() {
                                             className="secondary-button"
                                             onClick={() => {
                                                 setShowLessonFormForModuleIndex(null);
-                                                setNewLessonData(prev => ({
-                                                    ...prev,
-                                                    title: "",
-                                                    subTitle: "",
-                                                    slug: "",
-                                                    type: "video",
-                                                    extUrl: undefined,
-                                                    code: undefined,
-                                                    cover: undefined,
-                                                    isActive: 1,
-                                                    file: undefined,
-                                                    mimeType: undefined,
-                                                    size: undefined,
-                                                    fileName: undefined,
-                                                }));
+            setNewLessonData(prev => ({
+                ...prev,
+                title: "",
+                subTitle: "",
+                slug: "",
+                type: "video",
+                extUrl: undefined,
+                code: undefined,
+                cover: undefined,
+                isActive: 1,
+                allowDownload: true,
+                file: undefined,
+                mimeType: undefined,
+                size: undefined,
+                fileName: undefined,
+            }));
                                             }}
                                         >
                                             Fechar

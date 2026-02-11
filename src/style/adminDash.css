@@ -884,6 +884,68 @@
   transition: transform .2s ease, box-shadow .2s ease;
 }
 
+.lesson-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding-top: 6px;
+  border-top: 1px solid #eef2f7;
+}
+
+.lesson-download-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-family: "SF UI Display Medium";
+  font-size: 12px;
+  color: #475569;
+  user-select: none;
+}
+
+.lesson-download-toggle input {
+  position: absolute;
+  opacity: 0;
+  width: 1px;
+  height: 1px;
+}
+
+.lesson-toggle-switch {
+  width: 42px;
+  height: 22px;
+  border-radius: 999px;
+  background: #e5e7eb;
+  display: inline-flex;
+  align-items: center;
+  padding: 3px;
+  transition: background .2s ease;
+  flex-shrink: 0;
+}
+
+.lesson-toggle-switch::after {
+  content: "";
+  width: 16px;
+  height: 16px;
+  border-radius: 999px;
+  background: #ffffff;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+  transform: translateX(0);
+  transition: transform .2s ease;
+}
+
+.lesson-download-toggle input:checked + .lesson-toggle-switch {
+  background: #10b981;
+}
+
+.lesson-download-toggle input:checked + .lesson-toggle-switch::after {
+  transform: translateX(20px);
+}
+
+.lesson-download-toggle input:focus-visible + .lesson-toggle-switch {
+  outline: 2px solid rgba(34, 139, 195, 0.55);
+  outline-offset: 2px;
+}
+
 .lesson-card:hover {
   transform: translateY(-2px);
   box-shadow: 0 6px 14px rgba(0,0,0,0.08);

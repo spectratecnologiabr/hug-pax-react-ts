@@ -72,6 +72,7 @@ type TLesson = {
     extUrl: string,
     moduleId: number,
     isActive: boolean,
+    allowDownload?: boolean,
     createdAt: string,
     updatedAt: string
 }
@@ -178,6 +179,48 @@ function Course() {
     const [modalErrorOpen, setModalErrorOpen] = React.useState(false);
     const [message, setMessage] = React.useState("");
 
+    function coerceBoolean(value: any): boolean | undefined {
+        if (value === true || value === "true" || value === 1 || value === "1") return true;
+        if (value === false || value === "false" || value === 0 || value === "0") return false;
+        return undefined;
+    }
+
+    function resolveAllowDownload(lessonLike: any): boolean {
+        const candidates = [
+            lessonLike?.allowDownload,
+            lessonLike?.downloadAllowed,
+            lessonLike?.isDownloadAllowed,
+            lessonLike?.canDownload,
+            lessonLike?.isDownloadable,
+        ];
+
+        for (const c of candidates) {
+            const coerced = coerceBoolean(c);
+            if (typeof coerced !== "undefined") return coerced;
+        }
+
+        return true;
+    }
+
+    function toCamelCase(str: string) {
+        return str.replace(/_([a-z])/g, (g) => g[1].toUpperCase());
+    }
+
+    function mapKeysToCamelCase(obj: any): any {
+        if (Array.isArray(obj)) {
+            return obj.map(mapKeysToCamelCase);
+        } else if (obj && typeof obj === "object" && obj.constructor === Object) {
+            const newObj: any = {};
+            for (const key in obj) {
+                if (Object.prototype.hasOwnProperty.call(obj, key)) {
+                    newObj[toCamelCase(key)] = mapKeysToCamelCase(obj[key]);
+                }
+            }
+            return newObj;
+        }
+        return obj;
+    }
+
     function handleModalMessage(data: { isError: boolean; message: string }) {
         const messageElement = document.getElementById("warning-message") as HTMLSpanElement;
 
@@ -246,7 +289,20 @@ function Course() {
                             modules
                                 .sort((a: TCourseModule, b: TCourseModule) => a.order - b.order)
                                 .map(async (module: TCourseModule) => {
-                                const lessons = await getModuleLessons(module.id);
+                                const lessonsResp = await getModuleLessons(module.id);
+                                const lessonsRaw =
+                                    lessonsResp?.success && Array.isArray(lessonsResp.data)
+                                        ? lessonsResp.data
+                                        : Array.isArray(lessonsResp)
+                                          ? lessonsResp
+                                          : Array.isArray(lessonsResp?.data)
+                                            ? lessonsResp.data
+                                            : [];
+
+                                const lessons = lessonsRaw.map((l: any) => {
+                                    const camel = mapKeysToCamelCase(l);
+                                    return { ...camel, allowDownload: resolveAllowDownload(camel) };
+                                });
 
                                 return {
                                     ...module,
@@ -265,27 +321,6 @@ function Course() {
     },[])
     
     React.useEffect(() => {
-        // Função utilitária para converter snake_case para camelCase
-        function toCamelCase(str: string) {
-            return str.replace(/_([a-z])/g, (g) => g[1].toUpperCase());
-        }
-
-        // Converte objeto (ou array de objetos) de snake_case para camelCase recursivamente
-        function mapKeysToCamelCase(obj: any): any {
-            if (Array.isArray(obj)) {
-                return obj.map(mapKeysToCamelCase);
-            } else if (obj && typeof obj === "object" && obj.constructor === Object) {
-                const newObj: any = {};
-                for (const key in obj) {
-                    if (Object.prototype.hasOwnProperty.call(obj, key)) {
-                        newObj[toCamelCase(key)] = mapKeysToCamelCase(obj[key]);
-                    }
-                }
-                return newObj;
-            }
-            return obj;
-        }
-
         async function getLessionData() {
             const response = await getLession(Number(lessonId));
             initializedRef.current = false;
@@ -303,10 +338,17 @@ function Course() {
             if (response && response.success && response.data) {
                 // Mapeia todos os campos para camelCase, incluindo comentários e avaliação se vierem juntos
                 const camelData = mapKeysToCamelCase(response.data);
+                camelData.allowDownload = resolveAllowDownload(camelData);
                 // Se vier comments ou avaliations junto, já garante camelCase
                 setLessionData(camelData);
             } else {
-                setLessionData(null);
+                const camelData = mapKeysToCamelCase(response?.data ?? response);
+                if (camelData && typeof camelData === "object") {
+                    camelData.allowDownload = resolveAllowDownload(camelData);
+                    setLessionData(camelData);
+                } else {
+                    setLessionData(null);
+                }
             }
         }
 
@@ -639,8 +681,13 @@ function Course() {
         }
     }, [pendingSeek, lessionData?.id])
 
-    async function forceDownload(url: string, filename?: string) {
+    async function forceDownload(url: string, filename?: string, allowDownload?: boolean) {
         try {
+            if (allowDownload === false) {
+                handleModalMessage({ isError: true, message: "Download desativado para este conteúdo" });
+                return;
+            }
+
             let downloadUrl = url;
             let headers: HeadersInit | undefined = undefined;
 
@@ -755,7 +802,7 @@ function Course() {
                                                             setProgress(percent)
                                                         }
                                                     }}
-                                                    controlsList="nodownload"
+                                                    controlsList={lessionData?.allowDownload ? undefined : "nodownload"}
                                                 />
 
                                                 <div className="video-controls bar">
@@ -802,6 +849,20 @@ function Course() {
                                                         </div>
 
                                                         <div className="right-controls">
+                                                            {lessionData?.allowDownload && lessionData?.extUrl && (
+                                                                <button
+                                                                    type="button"
+                                                                    className="control-btn download-btn"
+                                                                    onClick={() => forceDownload(lessionData.extUrl, `${lessionData.title || "video"}.mp4`, lessionData.allowDownload)}
+                                                                    title="Baixar vídeo"
+                                                                >
+                                                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                                                                        <path d="M12 3V14" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                                                                        <path d="M7 10L12 15L17 10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                                                        <path d="M5 21H19" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                                                                    </svg>
+                                                                </button>
+                                                            )}
                                                             <button className="control-btn" onClick={() => videoRef.current?.requestFullscreen()}>
                                                                 ⛶
                                                             </button>
@@ -854,11 +915,29 @@ function Course() {
                                                     <span>{pageNumber} / {numPages}</span>
                                                 </div>
 
-                                                <button onClick={toggleFullscreen}>
-                                                    <svg width="42" viewBox="0 0 52 43" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                        <path d="M47.2727 28.6667H52V33.4444H47.2727V28.6667ZM47.2727 19.1111H52V23.8889H47.2727V19.1111ZM52 38.2222H47.2727V43C49.6364 43 52 40.6111 52 38.2222ZM28.3636 0H33.0909V4.77778H28.3636V0ZM47.2727 9.55556H52V14.3333H47.2727V9.55556ZM47.2727 0V4.77778H52C52 2.38889 49.6364 0 47.2727 0ZM0 9.55556H4.72727V14.3333H0V9.55556ZM37.8182 0H42.5455V4.77778H37.8182V0ZM37.8182 38.2222H42.5455V43H37.8182V38.2222ZM4.72727 0C2.36364 0 0 2.38889 0 4.77778H4.72727V0ZM18.9091 0H23.6364V4.77778H18.9091V0ZM9.45455 0H14.1818V4.77778H9.45455V0ZM0 19.1111V38.2222C0 40.85 2.12727 43 4.72727 43H33.0909V23.8889C33.0909 21.2611 30.9636 19.1111 28.3636 19.1111H0ZM6.21636 36.2872L9.73818 31.7244C10.2109 31.1272 11.0855 31.1033 11.5818 31.7006L14.8673 35.69L19.8309 29.24C20.3036 28.6189 21.2491 28.6189 21.6982 29.2639L26.9455 36.335C27.5364 37.1233 26.9691 38.2461 26 38.2461H7.13818C6.16909 38.2222 5.60182 37.0756 6.21636 36.2872Z" fill="#323232"/>
-                                                    </svg>
-                                                </button>
+                                                <div className="right">
+                                                      {lessionData?.allowDownload && lessionData?.extUrl && (
+                                                        <button
+                                                            type="button"
+                                                            className="download-btn"
+                                                            onClick={() => forceDownload(lessionData.extUrl, `${lessionData.title || "arquivo"}.pdf`, lessionData.allowDownload)}
+                                                            title="Baixar PDF"
+                                                        >
+                                                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                                                                <path d="M12 3V14" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                                                                <path d="M7 10L12 15L17 10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                                                <path d="M5 21H19" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                                                            </svg>
+                                                        </button>
+                                                    )}
+
+                                                    <button onClick={toggleFullscreen}>
+                                                        <svg width="42" viewBox="0 0 52 43" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                            <path d="M47.2727 28.6667H52V33.4444H47.2727V28.6667ZM47.2727 19.1111H52V23.8889H47.2727V19.1111ZM52 38.2222H47.2727V43C49.6364 43 52 40.6111 52 38.2222ZM28.3636 0H33.0909V4.77778H28.3636V0ZM47.2727 9.55556H52V14.3333H47.2727V9.55556ZM47.2727 0V4.77778H52C52 2.38889 49.6364 0 47.2727 0ZM0 9.55556H4.72727V14.3333H0V9.55556ZM37.8182 0H42.5455V4.77778H37.8182V0ZM37.8182 38.2222H42.5455V43H37.8182V38.2222ZM4.72727 0C2.36364 0 0 2.38889 0 4.77778H4.72727V0ZM18.9091 0H23.6364V4.77778H18.9091V0ZM9.45455 0H14.1818V4.77778H9.45455V0ZM0 19.1111V38.2222C0 40.85 2.12727 43 4.72727 43H33.0909V23.8889C33.0909 21.2611 30.9636 19.1111 28.3636 19.1111H0ZM6.21636 36.2872L9.73818 31.7244C10.2109 31.1272 11.0855 31.1033 11.5818 31.7006L14.8673 35.69L19.8309 29.24C20.3036 28.6189 21.2491 28.6189 21.6982 29.2639L26.9455 36.335C27.5364 37.1233 26.9691 38.2461 26 38.2461H7.13818C6.16909 38.2222 5.60182 37.0756 6.21636 36.2872Z" fill="#323232"/>
+                                                        </svg>
+                                                    </button>
+                                                </div>
+                                                
                                             </div>
                                             </div>
                                         </div>
@@ -1002,13 +1081,19 @@ function Course() {
                                                     </div>
 
                                                     {lesson.type === "attachment" ? (
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => forceDownload(lesson.extUrl, lesson.title)}
-                                                            className="lesson-action-link"
-                                                        >
-                                                            Baixar
-                                                        </button>
+                                                        (lesson.allowDownload === false ? (
+                                                            <button type="button" className="lesson-action-link" disabled>
+                                                                Download bloqueado
+                                                            </button>
+                                                        ) : (
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => forceDownload(lesson.extUrl, lesson.title, lesson.allowDownload)}
+                                                                className="lesson-action-link"
+                                                            >
+                                                                Baixar
+                                                            </button>
+                                                        ))
                                                     ) : (
                                                         <a
                                                             href={`/course/${courseSlug}/lesson/${lesson.id}`}
