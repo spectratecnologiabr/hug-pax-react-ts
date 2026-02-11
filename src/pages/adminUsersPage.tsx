@@ -47,6 +47,7 @@ type User = {
   language?: string;
   collegeId?: number | null;
   collegeName?: string;
+  management?: string;
   lastAccess: string;
 };
 
@@ -170,6 +171,7 @@ function AdminUsersPage() {
     phone: "",
     language: "pt-BR",
     collegeId: "" as "" | number,
+    management: "",
   });
 
   const loadColleges = useCallback(async () => {
@@ -335,6 +337,7 @@ function AdminUsersPage() {
         phone: "",
         language: "pt-BR",
         collegeId: "",
+        management: "",
       });
       return;
     }
@@ -355,6 +358,7 @@ function AdminUsersPage() {
       phone: user?.phone ?? "",
       language: user?.language ?? "pt-BR",
       collegeId: typeof user?.collegeId === "number" ? user.collegeId : "",
+      management: user?.management ?? "",
     });
 
     if (!user?.id) return;
@@ -392,6 +396,7 @@ function AdminUsersPage() {
           phone: String(adminUser?.phone ?? prev.phone ?? ""),
           language: String(adminUser?.language ?? prev.language ?? "pt-BR"),
           collegeId: typeof adminUser?.collegeId === "number" ? adminUser.collegeId : prev.collegeId,
+          management: String(adminUser?.management ?? prev.management ?? ""),
         }));
       })
       .catch(err => {
@@ -484,7 +489,8 @@ function AdminUsersPage() {
     const gender = userForm.gender?.trim() || undefined;
     const phone = userForm.phone?.trim() || undefined;
     const language = userForm.language?.trim() || undefined;
-    const collegeId = userForm.collegeId === "" ? null : userForm.collegeId;
+    const collegeId = role === "educator" ? (userForm.collegeId === "" ? null : userForm.collegeId) : null;
+    const management = role === "coordinator" ? (userForm.management?.trim() || null) : null;
 
     if (!firstName || !lastName || !email || !role) {
       setUserModalError("Preencha nome, sobrenome, e-mail e perfil.");
@@ -516,6 +522,7 @@ function AdminUsersPage() {
           phone,
           language,
           collegeId,
+          management,
         };
         await createUserAdmin(payload);
       } else if (userModal.mode === "edit" && userModal.user) {
@@ -533,6 +540,7 @@ function AdminUsersPage() {
           phone,
           language,
           collegeId,
+          management,
         };
         await updateUserAdmin(userModal.user.id, payload);
       }
@@ -973,27 +981,6 @@ function AdminUsersPage() {
                       </select>
                     </label>
 
-                    <label className="sap-user-field">
-                      <span>Escola</span>
-                      <select
-                        value={userForm.collegeId === "" ? "" : String(userForm.collegeId)}
-                        onChange={e =>
-                          setUserForm(s => ({
-                            ...s,
-                            collegeId: e.target.value ? Number(e.target.value) : "",
-                          }))
-                        }
-                        disabled={userModal.mode === "view" || userModalSubmitting || userModalDetailsLoading || collegesLoading}
-                      >
-                        <option value="">{collegesLoading ? "Carregando..." : "Selecionar"}</option>
-                        {colleges.map(c => (
-                          <option key={c.id} value={String(c.id)}>
-                            {c.name}
-                          </option>
-                        ))}
-                      </select>
-                    </label>
-
                       {userModal.mode === "create" && (
                       <label className="sap-user-field sap-user-field-full">
                         <span>Senha</span>
@@ -1011,7 +998,15 @@ function AdminUsersPage() {
                       <span>Perfil</span>
                       <select
                         value={userForm.role}
-                        onChange={e => setUserForm(s => ({ ...s, role: e.target.value as AdminUserRole }))}
+                        onChange={e => {
+                          const role = e.target.value as AdminUserRole;
+                          setUserForm(s => ({
+                            ...s,
+                            role,
+                            collegeId: role === "educator" ? s.collegeId : "",
+                            management: role === "coordinator" ? s.management : "",
+                          }));
+                        }}
                         disabled={userModal.mode === "view" || userModalSubmitting || userModalDetailsLoading}
                       >
                         <option value="admin">Administrador</option>
@@ -1020,6 +1015,41 @@ function AdminUsersPage() {
                         <option value="consultant">Consultor</option>
                       </select>
                     </label>
+
+                    {userForm.role === "educator" && (
+                      <label className="sap-user-field">
+                        <span>Escola</span>
+                        <select
+                          value={userForm.collegeId === "" ? "" : String(userForm.collegeId)}
+                          onChange={e =>
+                            setUserForm(s => ({
+                              ...s,
+                              collegeId: e.target.value ? Number(e.target.value) : "",
+                            }))
+                          }
+                          disabled={userModal.mode === "view" || userModalSubmitting || userModalDetailsLoading || collegesLoading}
+                        >
+                          <option value="">{collegesLoading ? "Carregando..." : "Selecionar"}</option>
+                          {colleges.map(c => (
+                            <option key={c.id} value={String(c.id)}>
+                              {c.name}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                    )}
+
+                    {userForm.role === "coordinator" && (
+                      <label className="sap-user-field">
+                        <span>Regional/Gerência</span>
+                        <input
+                          value={userForm.management}
+                          onChange={e => setUserForm(s => ({ ...s, management: e.target.value }))}
+                          disabled={userModal.mode === "view" || userModalSubmitting || userModalDetailsLoading}
+                          placeholder="Ex.: Regional Sul"
+                        />
+                      </label>
+                    )}
 
                     <label className="sap-user-field">
                       <span>Status</span>

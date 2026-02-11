@@ -17,6 +17,7 @@ export interface IUpdateUserAdminData {
   phone?: string
   language?: string
   collegeId?: number | null
+  management?: string | null
 }
 
 export async function updateUserAdmin(userId: number, data: IUpdateUserAdminData) {

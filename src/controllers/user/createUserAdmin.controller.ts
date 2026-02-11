@@ -18,6 +18,7 @@ export interface ICreateUserAdminData {
   phone?: string
   language?: string
   collegeId?: number | null
+  management?: string | null
 }
 
 export async function createUserAdmin(data: ICreateUserAdminData) {
