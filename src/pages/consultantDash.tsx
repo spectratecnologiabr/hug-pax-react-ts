@@ -6,6 +6,8 @@ import Menubar from "../components/consultant/menubar";
 import AdminDatePicker from "../components/consultant/AdminDatePicker";
 import SchedulingList from "../components/consultant/SchedulingList";
 import EvolutionRadar from "../components/consultant/evolutionRadar";
+import DigitalBriefcase, { type TDigitalBriefcaseFile } from "../components/consultant/DigitalBriefcase";
+import { getBriefcaseFiles, type TBriefcaseFile } from "../controllers/consultant/getBriefcaseFiles.controller";
 
 import "../style/adminDash.css";
 
@@ -29,6 +31,51 @@ function ConsultantDash() {
     const [selectedDate, setSelectedDate] = useState<Date>(new Date());
     const [overviewData, setOverviewData] = useState<TOverviewData | null>(null);
     const [consultantOverviewData, setConsultantOverviewData] = useState<TConsultantOverviewData | null>(null);
+    const [briefcaseFiles, setBriefcaseFiles] = useState<Array<TDigitalBriefcaseFile>>([]);
+
+    function normalizeBriefcaseType(value: unknown): TDigitalBriefcaseFile["type"] {
+        if (typeof value !== "string") return undefined;
+        const normalized = value.toLowerCase();
+        if (normalized.includes("pdf")) return "pdf";
+        if (normalized.includes("xls")) return "xlsx";
+        if (normalized.includes("doc")) return "doc";
+        if (normalized.includes("ppt")) return "ppt";
+        if (normalized.includes("link")) return "link";
+        if (normalized.includes("file")) return "file";
+        return undefined;
+    }
+
+    function mapBriefcaseFile(file: TBriefcaseFile & Record<string, any>): TDigitalBriefcaseFile {
+        const name =
+            String(
+                file.name ??
+                file.fileName ??
+                file.originalName ??
+                file.title ??
+                "Arquivo"
+            );
+
+        const rawUrl = file.url ?? file.fileUrl ?? file.downloadUrl;
+        const fileKey = file.fileKey ?? file.path;
+        const url =
+            typeof rawUrl === "string" && rawUrl.trim()
+                ? rawUrl.startsWith("https://") || rawUrl.startsWith("http://")
+                    ? rawUrl
+                    : `${process.env.REACT_APP_CDN_URL}/api/stream/${rawUrl}`
+                : typeof fileKey === "string" && fileKey.trim()
+                  ? `${process.env.REACT_APP_CDN_URL}/api/stream/${fileKey}`
+                  : undefined;
+        const type = file.type ?? file.fileType ?? file.mimeType ?? file.extension ?? file.ext;
+        const mimeType = file.mimeType ?? file.mimetype ?? file.contentType;
+
+        return {
+            id: file.id ?? name,
+            name,
+            url,
+            mimeType: typeof mimeType === "string" ? mimeType : undefined,
+            type: normalizeBriefcaseType(type),
+        };
+    }
 
     useEffect(() => {
         async function fetchOverviewData() {
@@ -49,8 +96,20 @@ function ConsultantDash() {
             }
         }
 
+        async function fetchBriefcaseFiles() {
+            try {
+                const files = await getBriefcaseFiles();
+                const normalized = (Array.isArray(files) ? files : []).map(mapBriefcaseFile);
+                setBriefcaseFiles(normalized);
+            } catch (error) {
+                console.error("Error fetching briefcase files:", error);
+                setBriefcaseFiles([]);
+            }
+        }
+
         fetchConsultamtOverviewData()
         fetchOverviewData()
+        fetchBriefcaseFiles()
     }, []);
 
     function handleDateChange(date: Date | null) {
@@ -147,6 +206,7 @@ function ConsultantDash() {
                         </div>
                     </div>
                 </div>
+                <DigitalBriefcase files={briefcaseFiles} />
             </div>
         </React.Fragment>
     )

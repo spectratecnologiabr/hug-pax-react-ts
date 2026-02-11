@@ -10,6 +10,7 @@ import { getAdminLogsTimeline } from "../controllers/logs/getAdminLogsTimeline.c
 
 import Menubar from "../components/admin/menubar";
 import Footer from "../components/footer";
+import BriefcaseManager from "../components/admin/BriefcaseManager";
 
 import "../style/newAdminDashboard.css";
 
@@ -456,6 +457,8 @@ function AdminDash() {
                               </div>
                             </div>
                         </div>
+
+                        <BriefcaseManager />
 
                         <div className="schedules-wrapper">
                           <div className="schedules-card">

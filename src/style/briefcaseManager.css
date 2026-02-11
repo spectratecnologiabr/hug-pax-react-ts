@@ -1,0 +1,236 @@
+.briefcase-manager-card {
+  grid-column: span 3;
+  border: 1px solid #e0e5eb;
+  border-radius: 12px;
+  background: #ffffff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.briefcase-manager-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.briefcase-manager-header h3 {
+  margin: 0;
+  font-family: "Inter";
+  font-size: 18px;
+  font-weight: 700;
+  color: #29303d;
+}
+
+.briefcase-manager-header span {
+  display: block;
+  margin-top: 4px;
+  font-family: "Inter";
+  font-size: 12px;
+  color: #737b8c;
+}
+
+.briefcase-refresh-btn {
+  border: 1px solid #cfd8e3;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #29303d;
+  font-family: "Inter";
+  font-size: 13px;
+  font-weight: 600;
+  height: 38px;
+  padding: 0 14px;
+  cursor: pointer;
+}
+
+.briefcase-upload-row {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr auto;
+  gap: 10px;
+}
+
+.briefcase-input,
+.briefcase-file-input {
+  height: 40px;
+  border: 1px solid #d8e0ea;
+  border-radius: 10px;
+  padding: 0 12px;
+  font-family: "Inter";
+  font-size: 13px;
+  color: #29303d;
+  background: #ffffff;
+}
+
+.briefcase-file-input {
+  padding: 8px 10px;
+}
+
+.briefcase-upload-btn {
+  height: 40px;
+  border: 1px solid #228bc3;
+  background: #228bc3;
+  color: #ffffff;
+  border-radius: 10px;
+  padding: 0 14px;
+  font-family: "Inter";
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.briefcase-upload-btn:disabled,
+.briefcase-refresh-btn:disabled,
+.briefcase-delete-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.briefcase-error {
+  border: 1px solid #fecaca;
+  background: #fff1f2;
+  color: #b91c1c;
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-family: "Inter";
+  font-size: 12px;
+}
+
+.briefcase-files-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.briefcase-empty {
+  grid-column: 1 / -1;
+  border: 1px dashed #d8e0ea;
+  border-radius: 10px;
+  padding: 14px;
+  color: #737b8c;
+  font-family: "Inter";
+  font-size: 13px;
+}
+
+.briefcase-file-item {
+  border: 1px solid #e6ebf2;
+  border-radius: 10px;
+  padding: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.briefcase-file-main {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.briefcase-file-type {
+  min-width: 42px;
+  height: 24px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: "Inter";
+  font-size: 11px;
+  font-weight: 700;
+  color: #374151;
+  background: #e5e7eb;
+}
+
+.briefcase-file-type.pdf {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.briefcase-file-type.xlsx {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.briefcase-file-type.doc {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.briefcase-file-type.ppt {
+  background: #ffedd5;
+  color: #c2410c;
+}
+
+.briefcase-file-meta {
+  min-width: 0;
+}
+
+.briefcase-file-meta b {
+  display: block;
+  font-family: "Inter";
+  font-size: 13px;
+  color: #29303d;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.briefcase-file-meta small {
+  font-family: "Inter";
+  font-size: 11px;
+  color: #8b95a7;
+}
+
+.briefcase-file-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.briefcase-link-btn,
+.briefcase-delete-btn {
+  height: 30px;
+  border-radius: 8px;
+  border: 1px solid #d8e0ea;
+  background: #ffffff;
+  color: #29303d;
+  font-family: "Inter";
+  font-size: 12px;
+  font-weight: 600;
+  padding: 0 10px;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.briefcase-link-btn.disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.briefcase-delete-btn {
+  border-color: #fecaca;
+  color: #b91c1c;
+  background: #fff1f2;
+}
+
+@media (max-width: 980px) {
+  .briefcase-manager-card {
+    grid-column: span 1;
+  }
+
+  .briefcase-upload-row {
+    grid-template-columns: 1fr;
+  }
+
+  .briefcase-files-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
