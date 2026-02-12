@@ -40,6 +40,7 @@ import AdminCommunicationPage from './pages/adminCommunicationPage';
 import AdminUsersPage from './pages/adminUsersPage';
 import AdminCertificatesPage from './pages/adminCertificatesPage';
 import AdminLogsPage from './pages/adminLogsPage';
+import AdminCommunicationTemplatesPage from './pages/adminCommunicationTemplatesPage';
 
 function MyRoutes() {
     return (
@@ -78,6 +79,7 @@ function MyRoutes() {
                 <Route path='/admin/courses/edit/:courseId' element={<AdminRoute><EditCoursePage/></AdminRoute>} />
                 <Route path='/admin/series' element={<AdminRoute><SeriesAdminPage/></AdminRoute>} />
                 <Route path='/admin/communications' element={<AdminRoute><AdminCommunicationPage/></AdminRoute>} />
+                <Route path='/admin/communications/templates' element={<AdminRoute><AdminCommunicationTemplatesPage/></AdminRoute>} />
                 <Route path='/admin/users' element={<AdminRoute><AdminUsersPage/></AdminRoute>} />
                 <Route path='/admin/certificates' element={<AdminRoute><AdminCertificatesPage/></AdminRoute>} />
                 <Route path='/admin/logs' element={<AdminRoute><AdminLogsPage/></AdminRoute>} />

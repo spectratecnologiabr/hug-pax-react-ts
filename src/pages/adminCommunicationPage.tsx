@@ -85,6 +85,7 @@ function AdminCommunicationPage() {
             <span>Gerencie mensagens e avisos</span>
           </div>
           <div className="sap-top-actions">
+            <a href="/admin/communications/templates">Meus templates</a>
             <button
               className="sap-primary"
               type="button"
