@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react"
 import Menubar from "../components/admin/menubar"
+import CoordinatorMenubar from "../components/coordinator/menubar"
 import Footer from "../components/footer"
 import { getCertificatesSummaryAdmin } from "../controllers/certificates/getCertificatesSummaryAdmin.controller"
 import { verifyCertificateAdmin, type TCertificateDocument } from "../controllers/certificates/verifyCertificateAdmin.controller"
@@ -12,6 +13,7 @@ import { ReactComponent as IconAward } from "../img/adminCertificates/award.svg"
 import { ReactComponent as IconX } from "../img/adminCertificates/x.svg"
 
 function AdminCertificatesPage() {
+    const isCoordinatorPanel = window.location.pathname.startsWith("/coordinator")
     const [topSearch, setTopSearch] = useState("")
     const [verifyQuery, setVerifyQuery] = useState("")
     const [verifying, setVerifying] = useState(false)
@@ -100,7 +102,7 @@ function AdminCertificatesPage() {
 
     return (
         <div className="admin-dashboard-container">
-          <Menubar />
+          {isCoordinatorPanel ? <CoordinatorMenubar /> : <Menubar />}
 
           <div className="admin-dashboard-wrapper sap-page admin-certificates-page">
             <div className="admin-header-wrapper">

@@ -46,7 +46,6 @@ const TEMPLATE_PLACEHOLDERS = [
   "email",
   "role",
   "courseName",
-  "lessonName",
   "date",
 ];
 

@@ -6,7 +6,7 @@ export interface ICreateUserAdminData {
   firstName: string
   lastName: string
   email: string
-  password: string
+  password?: string
   role: AdminUserRole
   isActive?: boolean
   isBlocked?: boolean

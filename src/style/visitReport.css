@@ -10,6 +10,15 @@
   margin-bottom: 20px;
 }
 
+.report-back-button {
+  margin-bottom: 12px;
+  border: 1px solid #d0d7de;
+  background: #fff;
+  border-radius: 8px;
+  padding: 8px 12px;
+  cursor: pointer;
+}
+
 .report-section {
   margin-bottom: 24px;
 }
@@ -60,6 +69,32 @@
 
 .report-section span {
   line-height: 1.6;
+}
+
+.report-photo-block {
+  margin-bottom: 18px;
+}
+
+.report-photo-link {
+  display: inline-block;
+  margin-top: 8px;
+  text-decoration: none;
+}
+
+.report-photo-preview {
+  width: 100%;
+  max-width: 360px;
+  max-height: 260px;
+  object-fit: cover;
+  border: 1px solid #d0d7de;
+  border-radius: 10px;
+  background: #f8fafc;
+}
+
+.report-photo-caption {
+  margin: 8px 0 0;
+  color: #4b5563;
+  font-size: 13px;
 }
 
 @page {

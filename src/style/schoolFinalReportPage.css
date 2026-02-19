@@ -1,0 +1,304 @@
+.school-report-page {
+  font-family: "SF UI Display", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  line-height: 1.45;
+}
+
+.school-report-page button,
+.school-report-page input,
+.school-report-page select,
+.school-report-page textarea {
+  font-family: inherit;
+}
+
+.school-report-page .school-report-main {
+  padding: 24px 28px;
+}
+
+.school-report-page .school-report-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+
+.school-report-page .school-report-header h1 {
+  margin: 0;
+  font-size: 28px;
+  color: #0f172a;
+  font-family: "SF UI Display Semibold", "SF UI Display", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.school-report-page .school-report-header p {
+  margin: 6px 0 0;
+  color: #334155;
+  font-size: 14px;
+  font-family: "SF UI Display Medium", "SF UI Display", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.school-report-page .school-report-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.school-report-page .sr-primary,
+.school-report-page .sr-secondary {
+  border: 1px solid #d0d7e2;
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.school-report-page .sr-primary {
+  background: #0d9488;
+  border-color: #0d9488;
+  color: #fff;
+}
+
+.school-report-page .sr-secondary {
+  background: #fff;
+  color: #1e293b;
+}
+
+.school-report-page .school-report-filters {
+  display: flex;
+  gap: 10px;
+  align-items: flex-end;
+  padding: 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  margin-bottom: 14px;
+  background: #fff;
+}
+
+.school-report-page .school-report-filters label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+  color: #334155;
+  font-family: "SF UI Display Medium", "SF UI Display", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.school-report-page .school-report-filters input {
+  border: 1px solid #d0d7e2;
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-family: inherit;
+}
+
+.school-report-page .sr-feedback {
+  padding: 14px;
+  border-radius: 10px;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  font-family: "SF UI Display Medium", "SF UI Display", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.school-report-page .sr-feedback.error {
+  background: #fff1f2;
+  border-color: #fecdd3;
+  color: #b91c1c;
+}
+
+.school-report-page .print-only {
+  display: none;
+}
+
+.school-report-page .sr-print-header h1 {
+  margin: 0;
+  font-size: 22px;
+  color: #0f172a;
+  font-family: "SF UI Display Semibold", "SF UI Display", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.school-report-page .sr-print-header p {
+  margin: 4px 0 0;
+  font-size: 13px;
+  color: #334155;
+  font-family: "SF UI Display Medium", "SF UI Display", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.school-report-page .school-report-sheet {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 20px;
+}
+
+.school-report-page .sr-meta-grid,
+.school-report-page .sr-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(120px, 1fr));
+  gap: 14px;
+}
+
+.school-report-page .sr-meta-grid {
+  margin-bottom: 14px;
+}
+
+.school-report-page .sr-meta-card,
+.school-report-page .sr-kpi {
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.school-report-page .sr-meta-card b,
+.school-report-page .sr-kpi b {
+  color: #64748b;
+  font-size: 12px;
+  font-family: "SF UI Display Medium", "SF UI Display", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.school-report-page .sr-kpi strong {
+  font-size: 24px;
+  color: #0f172a;
+  font-family: "SF UI Display Semibold", "SF UI Display", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.school-report-page .sr-kpi.highlight {
+  background: linear-gradient(120deg, #ecfeff 0%, #f0fdfa 100%);
+  border-color: #99f6e4;
+}
+
+.school-report-page .sr-kpi small {
+  color: #0f766e;
+  font-weight: 600;
+  font-family: "SF UI Display Medium", "SF UI Display", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.school-report-page .sr-section {
+  margin-top: 16px;
+  page-break-inside: avoid;
+}
+
+.school-report-page .sr-section h2 {
+  margin: 0 0 8px;
+  font-size: 18px;
+  color: #0f172a;
+  font-family: "SF UI Display Semibold", "SF UI Display", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.school-report-page .sr-table-like {
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.school-report-page .sr-table-like > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 9px 12px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.school-report-page .sr-table-like > div:first-child {
+  border-top: none;
+}
+
+.school-report-page .sr-table-like span {
+  color: #475569;
+  font-family: "SF UI Display Medium", "SF UI Display", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.school-report-page .sr-table-like b {
+  color: #0f172a;
+  font-family: "SF UI Display Medium", "SF UI Display", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.school-report-page .sr-radar-layout {
+  display: grid;
+  grid-template-columns: 1fr 280px;
+  gap: 10px;
+  align-items: center;
+}
+
+.school-report-page .sr-radar-canvas {
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 4px;
+  background: #f8fafc;
+}
+
+.school-report-page .sr-radar-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.school-report-page .sr-radar-summary > div {
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 10px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.school-report-page .sr-radar-summary b {
+  font-family: "SF UI Display Medium", "SF UI Display", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.school-report-page .sr-radar-canvas text {
+  font-family: "SF UI Display Medium", "SF UI Display", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+@media (max-width: 980px) {
+  .school-report-page .sr-meta-grid,
+  .school-report-page .sr-kpi-grid {
+    grid-template-columns: repeat(2, minmax(120px, 1fr));
+    gap: 10px;
+  }
+
+  .school-report-page .sr-meta-grid {
+    margin-bottom: 10px;
+  }
+
+  .school-report-page .sr-radar-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media print {
+  .school-report-page .no-print,
+  .school-report-page .admin-menubar,
+  .school-report-page .menu-wrapper,
+  .school-report-page #logout {
+    display: none !important;
+  }
+
+  .school-report-page .school-report-main {
+    padding: 0;
+  }
+
+  .school-report-page {
+    line-height: 1.4;
+  }
+
+  .school-report-page .school-report-sheet {
+    border: none;
+    border-radius: 0;
+    padding: 0;
+  }
+
+  .school-report-page .print-only {
+    display: block !important;
+  }
+
+  .school-report-page .sr-print-header {
+    margin: 0 0 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #cbd5e1;
+  }
+
+  @page {
+    size: A4;
+    margin: 12mm;
+  }
+}

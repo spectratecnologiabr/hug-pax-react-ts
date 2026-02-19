@@ -75,6 +75,19 @@ function AdminCommunicationPage() {
     load();
   }, [status, search]);
 
+  useEffect(() => {
+    if (openActionsId === null) return;
+
+    function handleOutsideClick(event: MouseEvent) {
+      const target = event.target as HTMLElement | null;
+      if (target?.closest(".sap-actions")) return;
+      setOpenActionsId(null);
+    }
+
+    document.addEventListener("mousedown", handleOutsideClick);
+    return () => document.removeEventListener("mousedown", handleOutsideClick);
+  }, [openActionsId]);
+
   return (
     <div className="admin-dashboard-container">
       <Menubar />
@@ -86,6 +99,8 @@ function AdminCommunicationPage() {
           </div>
           <div className="sap-top-actions">
             <a href="/admin/communications/templates">Meus templates</a>
+            <a href="/admin/communications/retention">Régua de retenção</a>
+            <a href="/admin/legal-documents">Termos LGPD</a>
             <button
               className="sap-primary"
               type="button"
@@ -196,7 +211,10 @@ function AdminCommunicationPage() {
                     <td className="sap-audience">
                       {r.targetSummary || '—'}
                     </td>
-                    <td className="sap-actions" onClick={e => e.stopPropagation()}>
+                    <td
+                      className={`sap-actions ${openActionsId === r.id ? "open" : ""}`}
+                      onClick={e => e.stopPropagation()}
+                    >
                       <button
                         className="sap-actions-trigger"
                         onClick={() => setOpenActionsId(openActionsId === r.id ? null : r.id)}

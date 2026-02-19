@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { getCookies } from "../../controllers/misc/cookies.controller";
+import { getCookies, removeCookies } from "../../controllers/misc/cookies.controller";
 import { doLogout } from "../../controllers/user/logout.controller";
 import { checkSession } from "../../controllers/user/checkSession.controller";
 
@@ -24,12 +24,25 @@ function Menubar(props: {notificationCount: number}) {
             try {
                 const sessionData = await checkSession();
                 setUserRole(sessionData.session.role);
-            } catch (error) {
+            } catch (error: any) {
+                const code = String(error?.response?.data?.code ?? "");
+                if (code === "VACATION_MODE") {
+                    removeCookies("authToken");
+                    removeCookies("userData");
+                    window.location.href = `/consultant/vacation?message=${encodeURIComponent(error?.response?.data?.message || "Aproveite seu descanso, nos vemos na volta!")}`;
+                    return;
+                }
+                if (code === "TERMS_ACCEPTANCE_REQUIRED") {
+                    window.location.href = "/terms-acceptance";
+                    return;
+                }
                 console.error("Error fetching userData:", error)
             }
         }
 
         fetchUserRole();
+        const timer = window.setInterval(fetchUserRole, 30000);
+        return () => window.clearInterval(timer);
     }, []); 
 
     return (

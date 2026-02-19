@@ -107,6 +107,31 @@ function addDays(date: Date, days: number) {
   return d;
 }
 
+function parseLocalSqlDateTime(value?: string | null) {
+  if (!value) return null;
+  const raw = String(value).trim();
+  if (!raw) return null;
+
+  const normalized = raw.replace(" ", "T");
+  const parsed = new Date(normalized);
+  if (!Number.isNaN(parsed.getTime())) return parsed;
+
+  const match = raw.match(
+    /^(\d{4})-(\d{2})-(\d{2})[T\s](\d{2}):(\d{2})(?::(\d{2}))?/
+  );
+  if (!match) return null;
+
+  const [, y, m, d, hh, mm, ss] = match;
+  return new Date(
+    Number(y),
+    Number(m) - 1,
+    Number(d),
+    Number(hh),
+    Number(mm),
+    Number(ss || 0)
+  );
+}
+
 function AgendaAdminPage() {
     const [ newSchedFormOpen, setNewSchedFormOpen ] = useState(false)
     const [ tabOpen, setTabOpen ] = useState<"list" | "calendar">("list")
@@ -350,9 +375,11 @@ function AgendaAdminPage() {
                                                         (() => {
                                                             const [year, month, day] = visit.visit_date.split('-').map(Number);
                                                             const date = new Date(year, month - 1, day);
-                                                            const time = new Date(visit.init_visit_time)
+                                                            const time = parseLocalSqlDateTime(visit.init_visit_time)
                                                             const formattedDate = date.toLocaleDateString('pt-BR');
-                                                            const formattedTime = time.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+                                                            const formattedTime = time
+                                                              ? time.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+                                                              : "--:--";
                                                             return `${formattedDate} às ${formattedTime}`;
                                                         })()
                                                     }</span>
@@ -364,10 +391,10 @@ function AgendaAdminPage() {
                                                         (() => {
                                                           if (!visit.init_visit_time || !visit.end_visit_time) return "—";
 
-                                                          const start = new Date(visit.init_visit_time);
-                                                          const end = new Date(visit.end_visit_time);
+                                                          const start = parseLocalSqlDateTime(visit.init_visit_time);
+                                                          const end = parseLocalSqlDateTime(visit.end_visit_time);
 
-                                                          if (isNaN(start.getTime()) || isNaN(end.getTime())) return "—";
+                                                          if (!start || !end) return "—";
 
                                                           const diffMs = end.getTime() - start.getTime();
                                                           if (diffMs <= 0) return "—";
@@ -442,10 +469,10 @@ function AgendaAdminPage() {
                                             </div>
 
                                             {dayVisits.map((visit) => {
-                                              const time = new Date(visit.init_visit_time).toLocaleTimeString(
-                                                "pt-BR",
-                                                { hour: "2-digit", minute: "2-digit" }
-                                              );
+                                              const parsedTime = parseLocalSqlDateTime(visit.init_visit_time);
+                                              const time = parsedTime
+                                                ? parsedTime.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })
+                                                : "--:--";
                                               const consultant = consultants.find(c => c.id === visit.creator_id);
                                               const consultantName = consultant ? `${consultant.firstName} ${consultant.lastName}` : "Consultor desconhecido";
                                               return (

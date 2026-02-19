@@ -10,6 +10,8 @@ function PageSelector(props: {title?: boolean}) {
     const user = getCookies("userData");
     const [open, setOpen] = useState(false);
     const containerRef = useRef<HTMLDivElement>(null);
+    const popupRef = useRef<HTMLDivElement>(null);
+    const [popupAlign, setPopupAlign] = useState<"left" | "right">("left");
     const [ userRole, setUserRole ] = useState<TRole | null>(null);
 
     useEffect(() => {
@@ -36,6 +38,32 @@ function PageSelector(props: {title?: boolean}) {
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
 
+    useEffect(() => {
+        if (!open) return;
+
+        function adjustPopupAlignment() {
+            const popup = popupRef.current;
+            if (!popup) return;
+
+            const rect = popup.getBoundingClientRect();
+            const viewportPadding = 12;
+
+            if (rect.right > window.innerWidth - viewportPadding) {
+                setPopupAlign("right");
+                return;
+            }
+
+            if (rect.left < viewportPadding) {
+                setPopupAlign("left");
+                return;
+            }
+        }
+
+        adjustPopupAlignment();
+        window.addEventListener("resize", adjustPopupAlignment);
+        return () => window.removeEventListener("resize", adjustPopupAlignment);
+    }, [open]);
+
     function handleRedirect(target: "ava" | "admin") {
         if (target === "ava") {
         window.location.href = "/dashboard";
@@ -45,6 +73,9 @@ function PageSelector(props: {title?: boolean}) {
             switch(userRole) {
                 case "consultant":
                      window.location.href = "/consultant";
+                     break;
+                case "coordinator":
+                     window.location.href = "/coordinator";
                      break;
                 default:
                     window.location.href = "/admin";
@@ -68,7 +99,7 @@ function PageSelector(props: {title?: boolean}) {
                 {props.title ? <span>Mudar Módulo</span> : null}
             </button>
 
-            <div className={`page-selector-popup ${open ? "active" : ""}`}>
+            <div ref={popupRef} className={`page-selector-popup ${open ? "active" : ""} ${popupAlign === "right" ? "align-right" : "align-left"}`}>
                 <div className="popup-option" onClick={() => handleRedirect("ava")}>
                     🎓 AVA
                     <span>Ambiente do aluno</span>

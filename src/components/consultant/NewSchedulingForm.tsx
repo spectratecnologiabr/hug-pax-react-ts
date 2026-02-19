@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import axios from "axios";
 import { checkSession } from "../../controllers/user/checkSession.controller";
 import { listColleges } from "../../controllers/college/listColleges.controller";
 import { listConsultants } from "../../controllers/user/listConsultants.controller";
@@ -100,6 +101,24 @@ function NewSchedulingForm(props: { opened: boolean; onClose: () => void }) {
         getUserId();
     }, []);
 
+    function normalizeInternalManagement(value: any): Array<{ name?: string; role?: string }> {
+        if (Array.isArray(value)) return value;
+
+        if (typeof value === "string") {
+            try {
+                const parsed = JSON.parse(value);
+                if (Array.isArray(parsed)) return parsed;
+                if (parsed && typeof parsed === "object") return [parsed];
+            } catch {
+                return [];
+            }
+            return [];
+        }
+
+        if (value && typeof value === "object") return [value];
+        return [];
+    }
+
     function handleCollegeChange(event: React.ChangeEvent<HTMLSelectElement>) {
         const collegeId = Number(event.target.value);
         const college = colleges.find(c => c.id === collegeId) || null;
@@ -114,6 +133,27 @@ function NewSchedulingForm(props: { opened: boolean; onClose: () => void }) {
             ...prev,
             [id]: value
         }));
+    }
+
+    const internalManagers = normalizeInternalManagement(selectedCollege?.internalManagement);
+
+    function buildDateTimeWithOffset(date: string, time: string) {
+        const [year, month, day] = date.split("-").map(Number);
+        const [hour, minute] = time.split(":").map(Number);
+        const localDate = new Date(year, month - 1, day, hour, minute, 0);
+
+        const offsetMinutes = localDate.getTimezoneOffset();
+        const offsetHours = Math.floor(Math.abs(offsetMinutes) / 60).toString().padStart(2, "0");
+        const offsetMins = (Math.abs(offsetMinutes) % 60).toString().padStart(2, "0");
+        const sign = offsetMinutes > 0 ? "-" : "+";
+
+        const yyyy = localDate.getFullYear();
+        const mm = String(localDate.getMonth() + 1).padStart(2, "0");
+        const dd = String(localDate.getDate()).padStart(2, "0");
+        const hh = String(localDate.getHours()).padStart(2, "0");
+        const mi = String(localDate.getMinutes()).padStart(2, "0");
+
+        return `${yyyy}-${mm}-${dd}T${hh}:${mi}:00${sign}${offsetHours}:${offsetMins}`;
     }
 
     async function handleSubmit() {
@@ -131,10 +171,10 @@ function NewSchedulingForm(props: { opened: boolean; onClose: () => void }) {
             manager: schedulingData.manager || "",
             visitDate: schedulingData.visitDate || "",
             initVisitTime: schedulingData.visitDate && schedulingData.initVisitTime
-              ? `${schedulingData.visitDate}T${schedulingData.initVisitTime}`
+              ? buildDateTimeWithOffset(schedulingData.visitDate, schedulingData.initVisitTime)
               : "",
             endVisitTime: schedulingData.visitDate && schedulingData.endVisitTime
-              ? `${schedulingData.visitDate}T${schedulingData.endVisitTime}`
+              ? buildDateTimeWithOffset(schedulingData.visitDate, schedulingData.endVisitTime)
               : "",
             guestConsultants: selectedGuests,
             schedulingObservations: schedulingData.schedulingObservations || ""
@@ -147,7 +187,14 @@ function NewSchedulingForm(props: { opened: boolean; onClose: () => void }) {
                         props.onClose()
                     }
                 }).catch(error => {
-                    console.log("Erro: ", error)
+                    const apiMessage = axios.isAxiosError(error)
+                        ? (error.response?.data?.message as string | undefined)
+                        : undefined;
+
+                    handleModalMessage({
+                        isError: true,
+                        message: apiMessage || "Erro ao criar visita. Verifique os campos obrigatórios."
+                    });
                 })
     }
 
@@ -188,8 +235,8 @@ function NewSchedulingForm(props: { opened: boolean; onClose: () => void }) {
                         <label htmlFor="manager">Selecione o Gestor Escolar</label>
                         <select id="manager" className="manager" onChange={handleSchedulingData}>
                             <option value="">Selecione um gestor</option>
-                            {selectedCollege && selectedCollege.internalManagement.map((manager: any, index: number) => (
-                                <option key={index} value={manager.name}>{manager.name} - {manager.role}</option>
+                            {internalManagers.map((manager: any, index: number) => (
+                                <option key={index} value={manager?.name || ""}>{manager?.name || "Gestor"}{manager?.role ? ` - ${manager.role}` : ""}</option>
                             ))}
                         </select>
                     </div>

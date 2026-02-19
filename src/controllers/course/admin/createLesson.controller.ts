@@ -36,5 +36,5 @@ export async function createLesson(data: ILessonData) {
             },
         }
     );
-    return response.data;
+    return response;
 }

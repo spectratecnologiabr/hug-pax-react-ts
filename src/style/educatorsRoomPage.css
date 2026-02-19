@@ -60,7 +60,7 @@
 
 .educators-page-container .educators-page-wrapper .educators-room-container .grid-wrapper {
     display: grid;
-    grid-template-columns: repeat(7, 1fr);
+    grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
     gap: 20px;
 }
 
@@ -68,34 +68,55 @@
     grid-column: span 1;
     background-color: #F5F5F7;
     border-radius: 20px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    min-height: 100%;
 }
 
 .educators-page-container .educators-page-wrapper .educators-room-container .grid-wrapper .course-item .course-img {
     width: 100%;
     border-radius: 20px;
+    display: block;
 }
 
 .educators-page-container .educators-page-wrapper .educators-room-container .grid-wrapper .course-item .description {
     display: flex;
-    height: 40px;
-    justify-content: space-evenly;
+    min-height: 64px;
+    justify-content: space-between;
     align-items: center;
-    margin: 5px 0;
+    gap: 12px;
+    margin: 10px 12px 8px;
     font-family: 'SF UI Display Medium';
 }
 
+.educators-page-container .educators-page-wrapper .educators-room-container .grid-wrapper .course-item .description span {
+    flex: 1;
+    font-size: 18px;
+    line-height: 1.15;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    word-break: normal;
+    overflow-wrap: normal;
+}
+
 .educators-page-container .educators-page-wrapper .educators-room-container .grid-wrapper .course-item .description .course-progress {
-    height: 100%;
+    width: 40px;
+    min-width: 40px;
+    height: 40px;
 }
 
 .educators-page-container .educators-page-wrapper .educators-room-container .grid-wrapper .course-item .description .course-progress .CircularProgressbar-text {
-    font-size: 30px;
+    font-size: 24px;
 }
 
 .educators-page-container .educators-page-wrapper .educators-room-container .grid-wrapper .course-item a {
     text-decoration: none;
     display: flex;
     justify-content: center;
+    align-items: center;
+    margin-top: auto;
     padding: 20px;
     width: 100%;
     border-bottom-left-radius: 20px;
@@ -113,7 +134,7 @@
 
 @media (max-width: 1720px) {
     .educators-page-container .educators-page-wrapper .educators-room-container .grid-wrapper {
-        grid-template-columns: repeat(6, 1fr);
+        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
     }
 }
 
@@ -127,13 +148,13 @@
     }
 
     .educators-page-container .educators-page-wrapper .educators-room-container .grid-wrapper {
-        grid-template-columns: repeat(5, 1fr);
+        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
     }
 }
 
 @media (max-width: 1270px) {
     .educators-page-container .educators-page-wrapper .educators-room-container .grid-wrapper {
-        grid-template-columns: repeat(4, 1fr);
+        grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
     }
 }
 
@@ -144,6 +165,28 @@
     }
 
     .educators-page-container .educators-page-wrapper .educators-room-container .grid-wrapper {
-        grid-template-columns: repeat(3, 1fr);
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px;
     }
-} 
+
+    .educators-page-container .educators-page-wrapper .educators-room-container .grid-wrapper .course-item .description {
+        min-height: 58px;
+        margin: 8px 10px 6px;
+        gap: 10px;
+    }
+
+    .educators-page-container .educators-page-wrapper .educators-room-container .grid-wrapper .course-item .description span {
+        font-size: 16px;
+    }
+
+    .educators-page-container .educators-page-wrapper .educators-room-container .grid-wrapper .course-item a {
+        font-size: 16px;
+        padding: 16px;
+    }
+}
+
+@media (max-width: 520px) {
+    .educators-page-container .educators-page-wrapper .educators-room-container .grid-wrapper {
+        grid-template-columns: 1fr;
+    }
+}

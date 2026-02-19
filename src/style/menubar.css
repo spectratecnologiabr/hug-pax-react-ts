@@ -80,3 +80,32 @@
     background-color: #3696D3;
     border: 1px solid #ffffff;
 }
+
+@media (min-width: 1025px) {
+    .admin-menubar.admin-menubar-hover-labels .menu-wrapper .menu-link {
+        gap: 0;
+        overflow: hidden;
+        transition: gap .25s ease, background-color .3s ease, border-color .3s ease;
+    }
+
+    .admin-menubar.admin-menubar-hover-labels .menu-wrapper .menu-link > span {
+        max-width: 0;
+        opacity: 0;
+        transform: translateX(-6px);
+        overflow: hidden;
+        white-space: nowrap;
+        transition: max-width .25s ease, opacity .2s ease, transform .25s ease;
+    }
+
+    .admin-menubar.admin-menubar-hover-labels .menu-wrapper .menu-link:hover,
+    .admin-menubar.admin-menubar-hover-labels .menu-wrapper .menu-link:focus-visible {
+        gap: 6px;
+    }
+
+    .admin-menubar.admin-menubar-hover-labels .menu-wrapper .menu-link:hover > span,
+    .admin-menubar.admin-menubar-hover-labels .menu-wrapper .menu-link:focus-visible > span {
+        max-width: 130px;
+        opacity: 1;
+        transform: translateX(0);
+    }
+}

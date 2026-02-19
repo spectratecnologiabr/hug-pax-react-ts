@@ -178,6 +178,7 @@ function Course() {
     const [isError, setIsError] = React.useState(false);
     const [modalErrorOpen, setModalErrorOpen] = React.useState(false);
     const [message, setMessage] = React.useState("");
+    const [pdfAccessibleText, setPdfAccessibleText] = React.useState("");
 
     function coerceBoolean(value: any): boolean | undefined {
         if (value === true || value === "true" || value === 1 || value === "1") return true;
@@ -202,6 +203,33 @@ function Course() {
         return true;
     }
 
+    function toApiStreamUrl(rawKeyOrUrl: string): string {
+        const apiBase = (process.env.REACT_APP_API_URL || "").replace(/\/+$/, "");
+        const cdnBase = (process.env.REACT_APP_CDN_URL || "").replace(/\/+$/, "");
+        const value = String(rawKeyOrUrl || "").trim();
+        if (!value) return "";
+
+        const cdnPrefix = `${cdnBase}/api/stream/`;
+        if (cdnBase && value.startsWith(cdnPrefix)) {
+            const fileKey = decodeURIComponent(value.slice(cdnPrefix.length));
+            return `${apiBase}/files/stream/${encodeURIComponent(fileKey)}`;
+        }
+
+        if (value.startsWith("https://") || value.startsWith("http://")) {
+            return value;
+        }
+
+        return `${apiBase}/files/stream/${encodeURIComponent(value)}`;
+    }
+
+    function buildStreamHeaders(url: string): HeadersInit | undefined {
+        const apiBase = (process.env.REACT_APP_API_URL || "").replace(/\/+$/, "");
+        if (apiBase && url.startsWith(`${apiBase}/files/stream/`)) {
+            return { Authorization: `Bearer ${getCookies("authToken")}` };
+        }
+        return undefined;
+    }
+
     function toCamelCase(str: string) {
         return str.replace(/_([a-z])/g, (g) => g[1].toUpperCase());
     }
@@ -219,6 +247,52 @@ function Course() {
             return newObj;
         }
         return obj;
+    }
+
+    function htmlToPlainText(value?: string): string {
+        if (!value) return "";
+        const temp = document.createElement("div");
+        temp.innerHTML = value;
+        return (temp.textContent || temp.innerText || "").replace(/\s+/g, " ").trim();
+    }
+
+    function toAccessibleSnippet(value?: string, max = 700): string {
+        const text = (value || "").replace(/\s+/g, " ").trim();
+        if (!text) return "";
+        if (text.length <= max) return text;
+        return `${text.slice(0, max)}...`;
+    }
+
+    function splitAccessibleText(value?: string, maxChunkLength = 420): string[] {
+        const text = (value || "").replace(/\s+/g, " ").trim();
+        if (!text) return [];
+
+        const sentences = text
+            .split(/(?<=[.!?])\s+/)
+            .map((part) => part.trim())
+            .filter(Boolean);
+
+        const chunks: string[] = [];
+        let current = "";
+
+        for (const sentence of sentences) {
+            if (!current) {
+                current = sentence;
+                continue;
+            }
+
+            const next = `${current} ${sentence}`;
+            if (next.length <= maxChunkLength) {
+                current = next;
+                continue;
+            }
+
+            chunks.push(current);
+            current = sentence;
+        }
+
+        if (current) chunks.push(current);
+        return chunks;
     }
 
     function handleModalMessage(data: { isError: boolean; message: string }) {
@@ -386,6 +460,23 @@ function Course() {
     }, [lessonId])
 
     React.useEffect(() => {
+        if (!courseData || !lessionData?.id) return;
+
+        localStorage.setItem(
+            "helpdesk:lastLessonContext",
+            JSON.stringify({
+                route: window.location.pathname,
+                courseId: Number(courseData.id) || undefined,
+                courseSlug: String(courseData.slug || ""),
+                courseTitle: String(courseData.title || ""),
+                lessonId: Number(lessionData.id) || undefined,
+                lessonTitle: String(lessionData.title || ""),
+                savedAt: new Date().toISOString(),
+            })
+        );
+    }, [courseData, lessionData?.id, lessionData?.title]);
+
+    React.useEffect(() => {
         if (!playbackMemory) return
         if (!lessionData) return
 
@@ -510,7 +601,10 @@ function Course() {
 
     React.useEffect(() => {
         // Só processa se for PDF e tiver extUrl definido
-        if (!lessionData || lessionData.type !== "pdf" || !lessionData.extUrl) return;
+        if (!lessionData || lessionData.type !== "pdf" || !lessionData.extUrl) {
+            setPdfAccessibleText("");
+            return;
+        }
 
         let active = true;
 
@@ -522,15 +616,11 @@ function Course() {
                 } catch {}
             }
 
-            const pdfUrl = lessionData.extUrl.startsWith("https://")
-                ? lessionData.extUrl
-                : `${process.env.REACT_APP_CDN_URL}/api/stream/${lessionData.extUrl}`;
+            const pdfUrl = toApiStreamUrl(lessionData.extUrl);
 
             const pdf = await pdfjsLib.getDocument({
                 url: pdfUrl,
-                httpHeaders: lessionData.extUrl.startsWith("https://")
-                    ? undefined
-                    : { Authorization: `Bearer ${getCookies("authToken")}` }
+                httpHeaders: buildStreamHeaders(pdfUrl)
             }).promise;
             if (!active) return;
 
@@ -538,6 +628,15 @@ function Course() {
 
             const page = await pdf.getPage(pageNumber);
             if (!active) return;
+
+            const textContent = await page.getTextContent();
+            if (!active) return;
+            const extractedText = textContent.items
+                .map((item: any) => ("str" in item ? item.str : ""))
+                .join(" ")
+                .replace(/\s+/g, " ")
+                .trim();
+            setPdfAccessibleText(extractedText);
 
             const viewport = page.getViewport({ scale: isPdfFullscreen ? 1.2 : 1 });
             const canvas = canvasRef.current;
@@ -688,16 +787,8 @@ function Course() {
                 return;
             }
 
-            let downloadUrl = url;
-            let headers: HeadersInit | undefined = undefined;
-
-            // Se não for URL absoluta, passa pelo CDN com autenticação
-            if (!url.startsWith("https://")) {
-                downloadUrl = `${process.env.REACT_APP_CDN_URL}/api/stream/${url}`;
-                headers = {
-                    Authorization: `Bearer ${getCookies("authToken")}`,
-                };
-            }
+            let downloadUrl = toApiStreamUrl(url);
+            let headers: HeadersInit | undefined = buildStreamHeaders(downloadUrl);
 
             const response = await fetch(downloadUrl, { headers });
 
@@ -728,15 +819,9 @@ function Course() {
         async function getVideo() {
             if (!lessionData?.extUrl) return;
 
-            // Se já for uma URL absoluta (https), usa direto sem passar pelo CDN
-            if (lessionData.extUrl.startsWith("https://")) {
-                setVideoSrc(lessionData.extUrl);
-                return;
-            }
-
-            // Caso contrário, passa pelo CDN com autenticação
-            const res = await fetch(`${process.env.REACT_APP_CDN_URL}/api/stream/${lessionData.extUrl}`, {
-                headers: { Authorization: `Bearer ${getCookies("authToken")}` }
+            const streamUrl = toApiStreamUrl(lessionData.extUrl);
+            const res = await fetch(streamUrl, {
+                headers: buildStreamHeaders(streamUrl)
             });
 
             const blob = await res.blob();
@@ -962,6 +1047,50 @@ function Course() {
                                         ))}
                                     </div>
                                 </div>
+
+                                {(lessionData.type === "video" || lessionData.type === "pdf") && (
+                                    <div className="media-accessibility-panel" aria-live="polite">
+                                        <b>
+                                            {lessionData.type === "video"
+                                                ? "Texto para tradução em Libras (aula em vídeo)"
+                                                : "Texto para tradução em Libras (PDF)"}
+                                        </b>
+                                        {lessionData.type === "video" ? (
+                                            <>
+                                                <p>{`Aula em vídeo: ${lessionData.title}.`}</p>
+                                                {lessionData.subTitle && <p>{`Subtítulo: ${lessionData.subTitle}.`}</p>}
+                                                {(() => {
+                                                    const transcriptChunks = splitAccessibleText(htmlToPlainText(lessionData.code));
+                                                    if (transcriptChunks.length === 0) {
+                                                        return <p>Transcrição textual não disponível para este vídeo.</p>;
+                                                    }
+
+                                                    return transcriptChunks.map((chunk, idx) => (
+                                                        <p key={`video-transcript-chunk-${idx}`}>
+                                                            {`Transcrição (parte ${idx + 1}): ${chunk}`}
+                                                        </p>
+                                                    ));
+                                                })()}
+                                            </>
+                                        ) : (
+                                            <>
+                                                <p>{`PDF "${lessionData.title}". Página ${pageNumber} de ${numPages || 1}.`}</p>
+                                                {(() => {
+                                                    const pdfChunks = splitAccessibleText(pdfAccessibleText);
+                                                    if (pdfChunks.length === 0) {
+                                                        return <p>Sem texto detectável nesta página.</p>;
+                                                    }
+
+                                                    return pdfChunks.map((chunk, idx) => (
+                                                        <p key={`pdf-text-chunk-${pageNumber}-${idx}`}>
+                                                            {`Texto do PDF (parte ${idx + 1}): ${chunk}`}
+                                                        </p>
+                                                    ));
+                                                })()}
+                                            </>
+                                        )}
+                                    </div>
+                                )}
 
                                 <div className="comments-wrapper">
                                     <form className="comment-form" onSubmit={sendComment}>

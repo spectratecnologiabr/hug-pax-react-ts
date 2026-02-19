@@ -57,13 +57,18 @@ function ConsultantDash() {
 
         const rawUrl = file.url ?? file.fileUrl ?? file.downloadUrl;
         const fileKey = file.fileKey ?? file.path;
+        const apiBase = (process.env.REACT_APP_API_URL || "").replace(/\/+$/, "");
+        const cdnBase = (process.env.REACT_APP_CDN_URL || "").replace(/\/+$/, "");
+        const cdnPrefix = `${cdnBase}/api/stream/`;
         const url =
             typeof rawUrl === "string" && rawUrl.trim()
-                ? rawUrl.startsWith("https://") || rawUrl.startsWith("http://")
-                    ? rawUrl
-                    : `${process.env.REACT_APP_CDN_URL}/api/stream/${rawUrl}`
+                ? rawUrl.startsWith(cdnPrefix)
+                    ? `${apiBase}/files/stream/${encodeURIComponent(decodeURIComponent(rawUrl.slice(cdnPrefix.length)))}`
+                    : rawUrl.startsWith("https://") || rawUrl.startsWith("http://")
+                        ? rawUrl
+                        : `${apiBase}/files/stream/${encodeURIComponent(rawUrl)}`
                 : typeof fileKey === "string" && fileKey.trim()
-                  ? `${process.env.REACT_APP_CDN_URL}/api/stream/${fileKey}`
+                  ? `${apiBase}/files/stream/${encodeURIComponent(fileKey)}`
                   : undefined;
         const type = file.type ?? file.fileType ?? file.mimeType ?? file.extension ?? file.ext;
         const mimeType = file.mimeType ?? file.mimetype ?? file.contentType;

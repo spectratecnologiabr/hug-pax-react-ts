@@ -1,0 +1,208 @@
+.legal-page {
+  --legal-border: #e2e8f0;
+  --legal-text-muted: #64748b;
+  --legal-title: #0f172a;
+  --legal-success: #10b981;
+  --legal-warning: #f59e0b;
+}
+
+.legal-page .admin-header-wrapper > div:first-child b {
+  color: var(--legal-title);
+}
+
+.legal-page .admin-header-wrapper > div:first-child span {
+  color: var(--legal-text-muted);
+}
+
+.legal-page .sap-top-actions {
+  align-items: center;
+}
+
+.legal-page .sap-top-actions .sap-secondary {
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  color: #334155;
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.legal-page .sap-top-actions .sap-secondary:hover {
+  background: #f8fafc;
+}
+
+.legal-page .legal-select select {
+  min-width: 180px;
+}
+
+.legal-page .legal-table-card {
+  border-radius: 10px;
+  border: 1px solid var(--legal-border);
+  overflow: hidden;
+}
+
+.legal-page .legal-table th {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--legal-text-muted);
+  background: #f8fafc;
+}
+
+.legal-page .legal-table td {
+  font-size: 12px;
+  color: #334155;
+}
+
+.legal-page .legal-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.legal-page .legal-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  border: 1px solid #cbd5e1;
+  color: #334155;
+  background: #ffffff;
+}
+
+.legal-page .legal-status {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.legal-page .legal-status.active {
+  color: #047857;
+  background: #d1fae5;
+}
+
+.legal-page .legal-status.archived {
+  color: #a16207;
+  background: #fef3c7;
+}
+
+.legal-page .sap-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 8px;
+}
+
+.legal-page .sap-actions-trigger {
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  color: #334155;
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: 12px;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.legal-page .sap-actions-trigger:hover {
+  background: #f8fafc;
+}
+
+.legal-page .sap-actions-trigger.legal-eye {
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.legal-page .sap-actions-trigger.legal-eye svg {
+  width: 16px;
+  height: 16px;
+}
+
+.legal-page .legal-current {
+  margin-left: auto;
+  font-size: 12px;
+  color: var(--legal-text-muted);
+}
+
+.legal-page .legal-modal-overlay {
+  justify-content: center;
+  align-items: center;
+  background: rgba(15, 23, 42, 0.45);
+}
+
+.legal-page .legal-modal-card {
+  width: 100%;
+  max-width: 640px;
+  max-height: calc(100vh - 32px);
+  margin: 0;
+  border-radius: 14px;
+  overflow-y: auto;
+}
+
+.legal-page .legal-modal-card .modal-header {
+  padding: 18px 18px 12px;
+}
+
+.legal-page .legal-modal-card .sap-form {
+  padding: 0 18px 18px;
+}
+
+.legal-page .legal-rich-editor .ProseMirror {
+  min-height: 180px;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.legal-page .legal-toggle {
+  border: 1px solid var(--legal-border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.legal-page .legal-toggle b {
+  display: block;
+  font-size: 12px;
+  color: #1e293b;
+}
+
+.legal-page .legal-toggle span {
+  display: block;
+  margin-top: 2px;
+  font-size: 11px;
+  color: var(--legal-text-muted);
+}
+
+.legal-page .legal-toggle input[type="checkbox"] {
+  width: 34px;
+  height: 18px;
+  accent-color: #228bc3;
+}
+
+.legal-page .legal-modal-actions {
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+@media (max-width: 768px) {
+  .legal-page .sap-top-actions {
+    flex-wrap: wrap;
+  }
+
+  .legal-page .legal-modal-card {
+    width: 100%;
+    max-width: 100%;
+    height: calc(100vh - 16px);
+    max-height: calc(100vh - 16px);
+    margin: 8px;
+  }
+}

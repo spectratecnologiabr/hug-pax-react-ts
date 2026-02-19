@@ -94,13 +94,18 @@ function DigitalBriefcase({
     try {
       let downloadUrl = url;
       let headers: HeadersInit | undefined;
+      const apiBaseUrl = (process.env.REACT_APP_API_URL || "").replace(/\/+$/, "");
       const cdnBaseUrl = process.env.REACT_APP_CDN_URL || "";
       const isAbsolute = downloadUrl.startsWith("https://") || downloadUrl.startsWith("http://");
 
       if (!isAbsolute) {
-        downloadUrl = `${cdnBaseUrl}/api/stream/${downloadUrl}`;
+        downloadUrl = `${apiBaseUrl}/files/stream/${encodeURIComponent(downloadUrl)}`;
+        headers = { Authorization: `Bearer ${getCookies("authToken")}` };
+      } else if (apiBaseUrl && downloadUrl.startsWith(`${apiBaseUrl}/files/stream/`)) {
         headers = { Authorization: `Bearer ${getCookies("authToken")}` };
       } else if (cdnBaseUrl && downloadUrl.startsWith(`${cdnBaseUrl}/api/stream/`)) {
+        const rawKey = decodeURIComponent(downloadUrl.slice(`${cdnBaseUrl}/api/stream/`.length))
+        downloadUrl = `${apiBaseUrl}/files/stream/${encodeURIComponent(rawKey)}`
         headers = { Authorization: `Bearer ${getCookies("authToken")}` };
       }
 

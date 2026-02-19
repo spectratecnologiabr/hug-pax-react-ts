@@ -1,0 +1,70 @@
+.helpdesk-page-container {
+  display: flex;
+  min-height: 100vh;
+  padding: 20px;
+  gap: 40px;
+  width: -webkit-fill-available;
+}
+
+.helpdesk-page-wrapper {
+  width: -webkit-fill-available;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  margin-left: 110px;
+}
+
+.helpdesk-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.helpdesk-header h1 {
+  font-family: "SF UI Display Semibold", "SF UI Display", "Segoe UI", sans-serif;
+  font-size: 38px;
+  color: #000000;
+}
+
+.helpdesk-header p {
+  margin-top: 4px;
+  font-family: "SF UI Display Light", "SF UI Display", "Segoe UI", sans-serif;
+  font-size: 15px;
+  color: #747474;
+}
+
+.helpdesk-back {
+  border: 1px solid #d0d7e2;
+  background: #ffffff;
+  color: #2b3038;
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-family: "SF UI Display Medium", "SF UI Display", "Segoe UI", sans-serif;
+  font-size: 14px;
+  cursor: pointer;
+  transition: ease-in-out .2s all;
+}
+
+.helpdesk-back:hover {
+  background: #f5f5f7;
+}
+
+.helpdesk-standalone {
+  width: 100%;
+}
+
+@media (max-width: 1000px) {
+  .helpdesk-page-container {
+    padding: 14px;
+    gap: 14px;
+  }
+
+  .helpdesk-page-wrapper {
+    margin-left: 0;
+  }
+
+  .helpdesk-header {
+    flex-direction: column;
+  }
+}

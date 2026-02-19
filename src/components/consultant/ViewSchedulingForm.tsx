@@ -123,12 +123,16 @@ function ViewSchedulingForm(props: {
 
     function formatDate(value?: string) {
       if (!value) return "";
-      return value.split("T")[0];
+      const normalized = value.trim().replace(" ", "T");
+      const match = normalized.match(/^(\d{4}-\d{2}-\d{2})/);
+      return match ? match[1] : "";
     }
 
     function formatTime(value?: string) {
       if (!value) return "";
-      return value.split("T")[1]?.substring(0, 5) || "";
+      const normalized = value.trim().replace(" ", "T");
+      const match = normalized.match(/T(\d{2}):(\d{2})/);
+      return match ? `${match[1]}:${match[2]}` : "";
     }
 
     async function handleInitVisit() {

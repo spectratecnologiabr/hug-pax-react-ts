@@ -7,9 +7,11 @@ import "../style/adminUsersPage.css";
 import { getUsersSummaryAdmin } from "../controllers/user/getUsersSummaryAdmin.controller";
 import { listUsersAdmin, type AdminUserRole, type AdminUserStatus, type IAdminUserListItem, resolveAdminUserStatus } from "../controllers/user/listUsersAdmin.controller";
 import { setUserStatusAdmin } from "../controllers/user/setUserStatusAdmin.controller";
+import { setUserVacationModeAdmin } from "../controllers/user/setUserVacationModeAdmin.controller";
 import { deleteUserAdmin } from "../controllers/user/deleteUserAdmin.controller";
 import { createUserAdmin, type ICreateUserAdminData } from "../controllers/user/createUserAdmin.controller";
 import { updateUserAdmin, type IUpdateUserAdminData } from "../controllers/user/updateUserAdmin.controller";
+import { importUsersAdmin, type IImportUsersAdminResponse } from "../controllers/user/importUsersAdmin.controller";
 import { listColleges } from "../controllers/college/listColleges.controller";
 import { getUserAdmin } from "../controllers/user/getUserAdmin.controller";
 import iconTotal from "../img/adminUsers/shield.svg";
@@ -39,6 +41,8 @@ type User = {
   status: AdminUserStatus;
   isActive?: boolean;
   isBlocked?: boolean;
+  vacationMode?: boolean;
+  vacationMessage?: string | null;
   docType?: string;
   docId?: string;
   birthDate?: string;
@@ -122,6 +126,8 @@ function mapAdminUserToRow(user: IAdminUserListItem): User {
     status: resolveAdminUserStatus(user),
     isActive: user.isActive,
     isBlocked: user.isBlocked,
+    vacationMode: Boolean(user.vacationMode),
+    vacationMessage: user.vacationMessage ?? null,
     docType: user.docType,
     docId: user.docId,
     birthDate: user.birthDate,
@@ -136,6 +142,7 @@ function mapAdminUserToRow(user: IAdminUserListItem): User {
 
 function AdminUsersPage() {
   const isMountedRef = useRef(true);
+  const importFileRef = useRef<HTMLInputElement | null>(null);
   const [summary, setSummary] = useState<Summary | null>(null);
   const [rows, setRows] = useState<User[]>([]);
   const [search, setSearch] = useState("");
@@ -173,6 +180,12 @@ function AdminUsersPage() {
     collegeId: "" as "" | number,
     management: "",
   });
+  const [importModalOpen, setImportModalOpen] = useState(false);
+  const [importUsersBuffer, setImportUsersBuffer] = useState<Array<Record<string, unknown>>>([]);
+  const [importFileName, setImportFileName] = useState("");
+  const [importSubmitting, setImportSubmitting] = useState(false);
+  const [importResult, setImportResult] = useState<IImportUsersAdminResponse | null>(null);
+  const [importError, setImportError] = useState<string | null>(null);
 
   const loadColleges = useCallback(async () => {
     if (collegesLoading) return;
@@ -419,6 +432,92 @@ function AdminUsersPage() {
     userModalRequestIdRef.current += 1;
   }
 
+  function openImportModal() {
+    setImportModalOpen(true);
+    setImportUsersBuffer([]);
+    setImportFileName("");
+    setImportSubmitting(false);
+    setImportResult(null);
+    setImportError(null);
+  }
+
+  function closeImportModal() {
+    if (importSubmitting) return;
+    setImportModalOpen(false);
+    setImportUsersBuffer([]);
+    setImportFileName("");
+    setImportResult(null);
+    setImportError(null);
+  }
+
+  function triggerImportFileSelect() {
+    importFileRef.current?.click();
+  }
+
+  async function handleImportFileChange(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+
+    setImportError(null);
+    setImportResult(null);
+
+    try {
+      const parsedUsers = await parseUsersImportFile(file);
+      if (!parsedUsers.length) {
+        setImportUsersBuffer([]);
+        setImportFileName(file.name);
+        setImportError("Arquivo sem linhas válidas para importação.");
+        return;
+      }
+
+      setImportUsersBuffer(parsedUsers);
+      setImportFileName(file.name);
+    } catch (error: any) {
+      setImportUsersBuffer([]);
+      setImportFileName(file.name);
+      setImportError(String(error?.message ?? "Falha ao ler o arquivo de importação."));
+    }
+  }
+
+  async function handleImportSubmit() {
+    if (!importUsersBuffer.length) {
+      setImportError("Selecione um arquivo CSV ou JSON com usuários antes de importar.");
+      return;
+    }
+
+    setImportSubmitting(true);
+    setImportError(null);
+
+    try {
+      const result = await importUsersAdmin({ users: importUsersBuffer });
+      setImportResult(result);
+      await loadUsers();
+    } catch (error: any) {
+      const message = error?.response?.data?.message ?? "Não foi possível concluir a importação.";
+      setImportError(String(message));
+    } finally {
+      setImportSubmitting(false);
+    }
+  }
+
+  function handleDownloadTemplateCsv() {
+    const csvTemplate = [
+      "nome;sobrenome;email;perfil;status;senha;escola;gerencia",
+      "Joao;Silva;joao.silva@exemplo.com;educator;active;;Escola Exemplo;",
+      "Maria;Souza;maria.souza@exemplo.com;consultant;active;;;Regional Sul"
+    ].join("\n");
+
+    const blob = new Blob([csvTemplate], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = "modelo-importacao-usuarios.csv";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(link.href);
+  }
+
   function openConfirm(action: ConfirmAction, user: User) {
     setConfirmError(null);
     setConfirmSubmitting(false);
@@ -490,10 +589,18 @@ function AdminUsersPage() {
     const phone = userForm.phone?.trim() || undefined;
     const language = userForm.language?.trim() || undefined;
     const collegeId = role === "educator" ? (userForm.collegeId === "" ? null : userForm.collegeId) : null;
-    const management = role === "coordinator" ? (userForm.management?.trim() || null) : null;
+    const management =
+      role === "coordinator" || role === "consultant"
+        ? (userForm.management?.trim() || null)
+        : null;
 
     if (!firstName || !lastName || !email || !role) {
       setUserModalError("Preencha nome, sobrenome, e-mail e perfil.");
+      return;
+    }
+
+    if ((role === "consultant" || role === "coordinator") && !management) {
+      setUserModalError("Regional/Gerência é obrigatória para consultor e coordenador.");
       return;
     }
 
@@ -578,6 +685,9 @@ function AdminUsersPage() {
 	            <span>Gerencie acessos ao sistema</span>
 	          </div>
 	          <div className="sap-top-actions">
+              <button className="sap-top-secondary" onClick={openImportModal}>
+                Importar usuários
+              </button>
 	            <button className="sap-primary" onClick={() => openUserModal("create")}>
 	              <img src={iconUserPlus} alt="" className="sap-btn-icon" />
 	              Novo Usuário
@@ -692,11 +802,16 @@ function AdminUsersPage() {
                   <td>
                     <span className={`sap-badge ${u.profile.toLowerCase()}`}>{u.profile}</span>
                   </td>
-	                  <td>
-	                    <span className={`sap-status ${u.status}`}>
-	                      {u.status === "active" ? "Ativo" : u.status === "inactive" ? "Inativo" : "Bloqueado"}
-	                    </span>
-	                  </td>
+		                  <td>
+		                    <span className={`sap-status ${u.status}`}>
+		                      {u.status === "active" ? "Ativo" : u.status === "inactive" ? "Inativo" : "Bloqueado"}
+		                    </span>
+                        {u.vacationMode && (
+                          <span className="sap-status inactive" style={{ marginLeft: 8 }}>
+                            Férias
+                          </span>
+                        )}
+		                  </td>
 	                  <td>{u.lastAccess}</td>
 	                  <td
                       className="sap-actions"
@@ -783,6 +898,24 @@ function AdminUsersPage() {
                   >
                     {user.status === "blocked" ? "Desbloquear" : "Bloquear"}
                   </button>
+                  {user.role === "consultant" && (
+                    <button
+                      className="sap-actions-item"
+                      role="menuitem"
+                      onClick={() => {
+                        setOpenActionsUserId(null);
+                        setUserVacationModeAdmin(
+                          user.id,
+                          !Boolean(user.vacationMode),
+                          !Boolean(user.vacationMode) ? "Aproveite seu descanso, nos vemos na volta!" : ""
+                        )
+                          .then(loadUsers)
+                          .catch(err => console.error("Failed to toggle vacation mode:", err));
+                      }}
+                    >
+                      {user.vacationMode ? "Desativar modo férias" : "Ativar modo férias"}
+                    </button>
+                  )}
                   <div className="sap-actions-sep" role="separator" />
                   <button
                     className="sap-actions-item danger"
@@ -834,6 +967,102 @@ function AdminUsersPage() {
                   </button>
                   <button className="sap-danger" onClick={handleConfirm} disabled={confirmSubmitting}>
                     {confirmSubmitting ? "Processando..." : confirmButtonLabel}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {importModalOpen && (
+            <div
+              className="sap-user-modal-overlay"
+              role="dialog"
+              aria-modal="true"
+              onMouseDown={e => {
+                if (e.target === e.currentTarget) closeImportModal();
+              }}
+            >
+              <div className="sap-modal-card sap-import-modal-card">
+                <div className="sap-modal-header">
+                  <b>Importação em massa de usuários</b>
+                  <button
+                    className="sap-modal-close"
+                    onClick={closeImportModal}
+                    aria-label="Fechar"
+                    disabled={importSubmitting}
+                  >
+                    ×
+                  </button>
+                </div>
+                <div className="sap-modal-body">
+                  <p className="sap-modal-desc" style={{ marginTop: 0 }}>
+                    Envie um arquivo `.csv` ou `.json` com os usuários. Colunas comuns: nome, sobrenome, email, perfil, status, senha, escola, gerencia.
+                  </p>
+
+                  <input
+                    ref={importFileRef}
+                    type="file"
+                    accept=".csv,.json,text/csv,application/json"
+                    style={{ display: "none" }}
+                    onChange={handleImportFileChange}
+                  />
+
+                  <div className="sap-import-actions">
+                    <button className="sap-secondary" onClick={triggerImportFileSelect} disabled={importSubmitting}>
+                      Selecionar arquivo
+                    </button>
+                    <button className="sap-secondary" onClick={handleDownloadTemplateCsv} disabled={importSubmitting}>
+                      Baixar modelo CSV
+                    </button>
+                  </div>
+
+                  {importFileName && (
+                    <div className="sap-import-meta">
+                      <b>Arquivo:</b> {importFileName}
+                    </div>
+                  )}
+
+                  {importUsersBuffer.length > 0 && (
+                    <div className="sap-import-meta">
+                      <b>Linhas prontas para importar:</b> {importUsersBuffer.length}
+                    </div>
+                  )}
+
+                  {importError && <div className="sap-modal-error">{importError}</div>}
+
+                  {importResult && (
+                    <div className="sap-import-result">
+                      <div className="sap-import-summary">
+                        <span>Total: {importResult.summary.total}</span>
+                        <span>Criados: {importResult.summary.created}</span>
+                        <span>Falhas: {importResult.summary.failed}</span>
+                      </div>
+
+                      {importResult.summary.failed > 0 && (
+                        <div className="sap-import-failures">
+                          {importResult.results
+                            .filter(item => !item.success)
+                            .slice(0, 10)
+                            .map(item => (
+                              <div key={`${item.row}-${item.email ?? "sem-email"}`} className="sap-import-failure-row">
+                                Linha {item.row} ({item.email ?? "sem e-mail"}): {item.message ?? "Erro"}
+                              </div>
+                            ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+                <div className="sap-modal-actions">
+                  <button className="sap-secondary" onClick={closeImportModal} disabled={importSubmitting}>
+                    Fechar
+                  </button>
+                  <button
+                    className="sap-primary"
+                    onClick={handleImportSubmit}
+                    disabled={importSubmitting || importUsersBuffer.length === 0}
+                  >
+                    {importSubmitting ? "Importando..." : "Importar agora"}
                   </button>
                 </div>
               </div>
@@ -1004,7 +1233,7 @@ function AdminUsersPage() {
                             ...s,
                             role,
                             collegeId: role === "educator" ? s.collegeId : "",
-                            management: role === "coordinator" ? s.management : "",
+                            management: role === "coordinator" || role === "consultant" ? s.management : "",
                           }));
                         }}
                         disabled={userModal.mode === "view" || userModalSubmitting || userModalDetailsLoading}
@@ -1039,7 +1268,7 @@ function AdminUsersPage() {
                       </label>
                     )}
 
-                    {userForm.role === "coordinator" && (
+                    {(userForm.role === "coordinator" || userForm.role === "consultant") && (
                       <label className="sap-user-field">
                         <span>Regional/Gerência</span>
                         <input
@@ -1087,18 +1316,137 @@ function AdminUsersPage() {
 }
 
 export default AdminUsersPage;
-  function formatDocId(docId: string, docType: string) {
-    if (!docId) return "";
 
-    const clean = docId.replace(/\W/g, "");
+function formatDocId(docId: string, docType: string) {
+  if (!docId) return "";
 
-    if (docType === "cpf") {
-      return clean
-        .slice(0, 11)
-        .replace(/^(\d{3})(\d)/, "$1.$2")
-        .replace(/^(\d{3})\.(\d{3})(\d)/, "$1.$2.$3")
-        .replace(/^(\d{3})\.(\d{3})\.(\d{3})(\d{1,2})/, "$1.$2.$3-$4");
+  const clean = docId.replace(/\W/g, "");
+
+  if (docType === "cpf") {
+    return clean
+      .slice(0, 11)
+      .replace(/^(\d{3})(\d)/, "$1.$2")
+      .replace(/^(\d{3})\.(\d{3})(\d)/, "$1.$2.$3")
+      .replace(/^(\d{3})\.(\d{3})\.(\d{3})(\d{1,2})/, "$1.$2.$3-$4");
+  }
+
+  return docId;
+}
+
+async function parseUsersImportFile(file: File): Promise<Array<Record<string, unknown>>> {
+  const ext = file.name.toLowerCase().split(".").pop() ?? "";
+  const text = await file.text();
+  if (!text.trim()) throw new Error("Arquivo vazio.");
+
+  if (ext === "json") {
+    const parsed = JSON.parse(text);
+    const users = Array.isArray(parsed) ? parsed : Array.isArray(parsed?.users) ? parsed.users : [];
+    if (!Array.isArray(users)) throw new Error("JSON inválido. Esperado array de usuários.");
+    return users as Array<Record<string, unknown>>;
+  }
+
+  if (ext !== "csv" && ext !== "txt") {
+    throw new Error("Formato inválido. Use arquivo .csv ou .json.");
+  }
+
+  return parseCsvUsers(text);
+}
+
+function parseCsvUsers(text: string): Array<Record<string, unknown>> {
+  const lines = text
+    .split(/\r?\n/)
+    .map(line => line.replace(/\r/g, ""))
+    .filter(line => line.trim().length > 0);
+
+  if (lines.length < 2) throw new Error("CSV inválido. Informe cabeçalho + pelo menos uma linha.");
+
+  const headerLine = lines[0].replace(/^\uFEFF/, "");
+  const separator = detectCsvSeparator(headerLine);
+  const headers = parseCsvLine(headerLine, separator).map(normalizeImportHeader);
+
+  if (!headers.length) throw new Error("Cabeçalho do CSV inválido.");
+
+  const users: Array<Record<string, unknown>> = [];
+
+  for (let i = 1; i < lines.length; i++) {
+    const values = parseCsvLine(lines[i], separator);
+    const row: Record<string, unknown> = {};
+
+    headers.forEach((header, index) => {
+      if (!header) return;
+      row[header] = String(values[index] ?? "").trim();
+    });
+
+    const hasValue = Object.values(row).some(value => String(value ?? "").trim().length > 0);
+    if (hasValue) users.push(row);
+  }
+
+  return users;
+}
+
+function detectCsvSeparator(line: string): "," | ";" {
+  const semicolonCount = (line.match(/;/g) ?? []).length;
+  const commaCount = (line.match(/,/g) ?? []).length;
+  return semicolonCount > commaCount ? ";" : ",";
+}
+
+function parseCsvLine(line: string, separator: "," | ";"): string[] {
+  const values: string[] = [];
+  let current = "";
+  let inQuotes = false;
+
+  for (let i = 0; i < line.length; i++) {
+    const char = line[i];
+    const nextChar = line[i + 1];
+
+    if (char === "\"") {
+      if (inQuotes && nextChar === "\"") {
+        current += "\"";
+        i += 1;
+      } else {
+        inQuotes = !inQuotes;
+      }
+      continue;
     }
 
-    return docId;
+    if (!inQuotes && char === separator) {
+      values.push(current.trim());
+      current = "";
+      continue;
+    }
+
+    current += char;
   }
+
+  values.push(current.trim());
+  return values;
+}
+
+function normalizeImportHeader(rawHeader: string): string {
+  const cleaned = rawHeader.replace(/^\uFEFF/, "").trim();
+  if (!cleaned) return "";
+
+  const normalized = cleaned
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, "");
+
+  if (normalized === "nome") return "firstName";
+  if (normalized === "sobrenome") return "lastName";
+  if (normalized === "email") return "email";
+  if (normalized === "perfil") return "role";
+  if (normalized === "status") return "status";
+  if (normalized === "senha") return "password";
+  if (normalized === "escola" || normalized === "college") return "escola";
+  if (normalized === "escolaid" || normalized === "collegeid") return "collegeId";
+  if (normalized === "gerencia" || normalized === "regional") return "management";
+  if (normalized === "tipodocumento") return "docType";
+  if (normalized === "numerodocumento" || normalized === "docid") return "docId";
+  if (normalized === "datanascimento") return "birthDate";
+  if (normalized === "genero") return "gender";
+  if (normalized === "telefone") return "phone";
+  if (normalized === "idioma") return "language";
+
+  return cleaned;
+}

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { authenticate } from "../controllers/user/authenticate.controller";
-import { setCookie } from "../controllers/misc/cookies.controller";
+import { removeCookies, setCookie } from "../controllers/misc/cookies.controller";
 
 import Footer from "../components/footer";
 
@@ -46,12 +46,17 @@ function Login() {
                         setCookie({ name: "userData", value: JSON.stringify(userWithoutPic) });
                         localStorage.setItem("profilePic", profilePic);
 
+                        if (userWithoutPic?.termsPending) {
+                            window.location.href = "/terms-acceptance";
+                            return;
+                        }
+
                         // Redireciona conforme o role
                         let redirectUrl = "/dashboard";
                         if (userWithoutPic.role === "consultant") {
                             redirectUrl = "/consultant";
                         } else if (userWithoutPic.role === "coordinator") {
-                            redirectUrl = "/consultant";
+                            redirectUrl = "/coordinator";
                         } else if (userWithoutPic.role === "admin") {
                             redirectUrl = "/admin";
                         } else if (userWithoutPic.role === "educator") {
@@ -59,6 +64,12 @@ function Login() {
                         }
                         window.location.href = redirectUrl;
                     } else {
+                        if (data?.code === "VACATION_MODE") {
+                            removeCookies("authToken");
+                            removeCookies("userData");
+                            window.location.href = `/consultant/vacation?message=${encodeURIComponent(data.message || "Aproveite seu descanso, nos vemos na volta!")}`;
+                            return;
+                        }
                         console.error("Login failed:", data.message);
                         handleModalMessage({
                             isError: true,

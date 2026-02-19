@@ -25,6 +25,7 @@
   top: 120%;
   left: 0;
   width: 230px;
+  max-width: calc(100vw - 24px);
   z-index: 1000;
   background: rgba(255,255,255,.98);
   border-radius: 14px;
@@ -38,6 +39,16 @@
 
 .page-selector-popup.active {
   display: flex;
+}
+
+.page-selector-popup.align-left {
+  left: 0;
+  right: auto;
+}
+
+.page-selector-popup.align-right {
+  left: auto;
+  right: 0;
 }
 
 .page-selector-popup .popup-option {
@@ -70,4 +81,10 @@
 .popup-option span {
   font-size: 12px;
   color: #6b6b6b;
+}
+
+@media (max-width: 480px) {
+  .page-selector-popup {
+    width: min(230px, calc(100vw - 24px));
+  }
 }

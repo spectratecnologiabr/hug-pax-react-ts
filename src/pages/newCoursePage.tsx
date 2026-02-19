@@ -13,6 +13,9 @@ import "../style/adminDash.css";
 import { uploadLessonFileController } from "../controllers/course/admin/uploadFile.controller";
 import { createFile } from "../controllers/course/admin/createFile.controller";
 import { updateLessonAllowDownload, updateLessonExtUrl } from "../controllers/course/admin/updateLesson.controller";
+import { deleteLesson } from "../controllers/course/admin/deleteLesson.controller";
+import { transcribeLesson } from "../controllers/course/admin/transcribeLesson.controller";
+import { listTags, setLessonTags } from "../controllers/lessonTags/lessonTags.controller";
 
 type TOverviewData = {
     completedCourses: number,
@@ -31,6 +34,14 @@ type CreateModuleResponse = {
 };
 
 type TeachingModality = { id: number; name: string; slug: string; isActive?: boolean };
+type ConfirmDeleteKind = "module" | "lesson";
+type ConfirmDeleteState = {
+    open: boolean;
+    kind: ConfirmDeleteKind | null;
+    moduleIndex: number | null;
+    lessonIndex: number | null;
+    title: string;
+};
 
 function NewCoursePage() {
     const [ newCourseData, setNewCoursedata ] = useState<ICourseData>({slug: "", title: "", subTitle: "", cover: "", workload: 0, series: []})
@@ -56,6 +67,9 @@ function NewCoursePage() {
         fileName: undefined,
     });
     const [lessonFileUploading, setLessonFileUploading] = useState(false);
+    const [transcribingLessonId, setTranscribingLessonId] = useState<number | null>(null);
+    const [availableLessonTags, setAvailableLessonTags] = useState<any[]>([]);
+    const [selectedLessonTagIds, setSelectedLessonTagIds] = useState<number[]>([]);
     const [newModuleData, setNewModuleData] = useState<IModuleData>({
         title: "",
         description: "",
@@ -65,6 +79,15 @@ function NewCoursePage() {
     const [isError, setIsError] = useState(false);
     const [modalErrorOpen, setModalErrorOpen] = useState(false);
     const [message, setMessage] = useState("");
+    const [confirmDelete, setConfirmDelete] = useState<ConfirmDeleteState>({
+        open: false,
+        kind: null,
+        moduleIndex: null,
+        lessonIndex: null,
+        title: "",
+    });
+    const [confirmDeleteSubmitting, setConfirmDeleteSubmitting] = useState(false);
+    const [confirmDeleteError, setConfirmDeleteError] = useState<string | null>(null);
     const [segments, setSegments] = useState<{ value: string; label: string }[]>([]);
     const seriesRef = useRef<HTMLDivElement | null>(null);
 
@@ -99,6 +122,24 @@ function NewCoursePage() {
             } catch {
                 if (!alive) return;
                 setSegments([]);
+            }
+        })();
+
+        return () => {
+            alive = false;
+        };
+    }, []);
+
+    useEffect(() => {
+        let alive = true;
+        (async () => {
+            try {
+                const tags = await listTags({ includeInactive: false });
+                if (!alive) return;
+                setAvailableLessonTags(Array.isArray(tags) ? tags : []);
+            } catch (error) {
+                if (!alive) return;
+                console.error("Erro ao carregar tags de aula:", error);
             }
         })();
 
@@ -162,6 +203,157 @@ function NewCoursePage() {
                           }
                 )
             );
+        }
+    }
+
+    async function handleRemoveLesson(moduleIndex: number, lessonIndex: number) {
+        const lesson = modules[moduleIndex]?.lessons?.[lessonIndex];
+        if (!lesson) return;
+
+        try {
+            if (lesson.id != null) {
+                await deleteLesson(lesson.id);
+            }
+
+            setModules(prev =>
+                prev.map((m, mi) =>
+                    mi !== moduleIndex
+                        ? m
+                        : {
+                              ...m,
+                              lessons: (m.lessons ?? []).filter((_, li) => li !== lessonIndex),
+                          }
+                )
+            );
+
+            handleModalMessage({ isError: false, message: "Aula removida com sucesso" });
+        } catch (error) {
+            console.error("Erro ao remover aula:", error);
+            handleModalMessage({ isError: true, message: "Erro ao remover a aula." });
+        }
+    }
+
+    async function handleTranscribeLesson(moduleIndex: number, lessonIndex: number) {
+        const lesson = modules[moduleIndex]?.lessons?.[lessonIndex];
+        if (!lesson?.id) {
+            handleModalMessage({ isError: true, message: "Aula sem ID para transcrição." });
+            return;
+        }
+
+        if (String(lesson.type).toLowerCase() !== "video") {
+            handleModalMessage({ isError: true, message: "Apenas aulas de vídeo podem ser transcritas." });
+            return;
+        }
+
+        try {
+            setTranscribingLessonId(lesson.id);
+            const response = await transcribeLesson(lesson.id);
+            const chars = Number(response?.data?.chars || 0);
+            const preview = String(response?.data?.preview || "").trim();
+
+            setModules(prev =>
+                prev.map((m, mi) =>
+                    mi !== moduleIndex
+                        ? m
+                        : {
+                              ...m,
+                              lessons: (m.lessons ?? []).map((l, li) =>
+                                  li === lessonIndex
+                                      ? { ...l, code: preview || l.code || "__transcribed__" }
+                                      : l
+                              ),
+                          }
+                )
+            );
+
+            handleModalMessage({
+                isError: false,
+                message: chars > 0
+                    ? `Transcrição concluída (${chars} caracteres).`
+                    : "Transcrição concluída."
+            });
+        } catch (error: any) {
+            const apiMessage = error?.response?.data?.message;
+            handleModalMessage({
+                isError: true,
+                message: apiMessage || "Não foi possível transcrever a aula."
+            });
+        } finally {
+            setTranscribingLessonId(null);
+        }
+    }
+
+    function openConfirmDelete(kind: ConfirmDeleteKind, moduleIndex: number, lessonIndex?: number) {
+        const module = modules[moduleIndex];
+        if (!module) return;
+
+        if (kind === "module") {
+            setConfirmDelete({
+                open: true,
+                kind,
+                moduleIndex,
+                lessonIndex: null,
+                title: module.title,
+            });
+            setConfirmDeleteError(null);
+            return;
+        }
+
+        const lesson = module.lessons?.[lessonIndex ?? -1];
+        if (!lesson) return;
+
+        setConfirmDelete({
+            open: true,
+            kind,
+            moduleIndex,
+            lessonIndex: lessonIndex ?? null,
+            title: lesson.title,
+        });
+        setConfirmDeleteError(null);
+    }
+
+    function closeConfirmDelete() {
+        if (confirmDeleteSubmitting) return;
+        setConfirmDelete({
+            open: false,
+            kind: null,
+            moduleIndex: null,
+            lessonIndex: null,
+            title: "",
+        });
+        setConfirmDeleteError(null);
+    }
+
+    async function handleConfirmDelete() {
+        if (!confirmDelete.kind || confirmDelete.moduleIndex == null) return;
+
+        setConfirmDeleteSubmitting(true);
+        setConfirmDeleteError(null);
+
+        try {
+            if (confirmDelete.kind === "module") {
+                const module = modules[confirmDelete.moduleIndex];
+                if (!module) return;
+
+                if (module.id != null) {
+                    const res = (await deleteModule(module.id)) as { success?: boolean; message?: string };
+                    if (res?.success === false) {
+                        throw new Error(res?.message || "Erro ao remover o módulo.");
+                    }
+                }
+
+                setModules(prev => prev.filter((_, index) => index !== confirmDelete.moduleIndex));
+                handleModalMessage({ isError: false, message: "Módulo removido com sucesso" });
+            } else if (confirmDelete.lessonIndex != null) {
+                await handleRemoveLesson(confirmDelete.moduleIndex, confirmDelete.lessonIndex);
+            }
+
+            closeConfirmDelete();
+        } catch (error: any) {
+            console.error("Erro ao confirmar remoção:", error);
+            setConfirmDeleteError(error?.message || "Não foi possível concluir a ação. Tente novamente.");
+        } finally {
+            setConfirmDeleteSubmitting(false);
         }
     }
 
@@ -231,6 +423,11 @@ function NewCoursePage() {
             return;
         }
 
+        if (!newLessonData.file) {
+            handleModalMessage({ isError: true, message: "Selecione um arquivo para a aula antes de continuar." });
+            return;
+        }
+
         const targetModule = modules[idx];
         const moduleId = targetModule?.id;
         if (!moduleId) {
@@ -278,6 +475,8 @@ function NewCoursePage() {
                 extUrlFromFileId = fileMeta.id;
             }
 
+            await setLessonTags(lessonId, selectedLessonTagIds);
+
             // Atualiza o estado dos módulos, usando extUrl = id do CDN se houver arquivo
             setModules(prev =>
                 prev.map((m, i) =>
@@ -305,6 +504,7 @@ function NewCoursePage() {
                 size: undefined,
                 fileName: undefined,
             });
+            setSelectedLessonTagIds([]);
             setShowLessonFormForModuleIndex(null);
 
         } catch (error) {
@@ -504,6 +704,7 @@ function NewCoursePage() {
                                                                     slug: "",
                                                                     type: "video",
                                                                 }));
+                                                                setSelectedLessonTagIds([]);
                                                                 setShowLessonFormForModuleIndex(index);
                                                             }}
                                                         >
@@ -512,21 +713,7 @@ function NewCoursePage() {
                                                         <button
                                                             type="button"
                                                             className="action-button remove-module"
-                                                            onClick={async () => {
-                                                                if (module.id == null) return;
-                                                                if (!window.confirm(`Remover o módulo "${module.title}"? Isso pode afetar as aulas vinculadas.`)) return;
-                                                                try {
-                                                                    const res = await deleteModule(module.id) as { success?: boolean; message?: string };
-                                                                    if (res?.success !== false) {
-                                                                        setModules(prev => prev.filter(m => m.id !== module.id));
-                                                                    } else {
-                                                                        handleModalMessage({ isError: true, message: res?.message ?? "Erro ao remover o módulo." });
-                                                                    }
-                                                                } catch (err) {
-                                                                    console.error("Erro ao remover módulo:", err);
-                                                                    handleModalMessage({ isError: true, message: "Erro ao remover o módulo." });
-                                                                }
-                                                            }}
+                                                            onClick={() => openConfirmDelete("module", index)}
                                                         >
                                                             Remover módulo
                                                         </button>
@@ -558,6 +745,38 @@ function NewCoursePage() {
                                                                         <span className="lesson-toggle-switch" aria-hidden="true" />
                                                                         <span>Download</span>
                                                                     </label>
+                                                                    {lesson.type === "video" && (
+                                                                        (() => {
+                                                                            const isTranscribing = transcribingLessonId === lesson.id;
+                                                                            const hasTranscript = Boolean(String(lesson.code || "").trim());
+                                                                            const title = isTranscribing
+                                                                                ? "Transcrevendo vídeo"
+                                                                                : hasTranscript
+                                                                                    ? "Vídeo já transcrito"
+                                                                                    : "Transcrever vídeo";
+                                                                            return (
+                                                                        <button
+                                                                            type="button"
+                                                                            className="action-button add-lesson"
+                                                                            disabled={isTranscribing}
+                                                                            onClick={() => handleTranscribeLesson(index, lessonIndex)}
+                                                                            title={title}
+                                                                            aria-label={title}
+                                                                        >
+                                                                            {isTranscribing ? "⏳" : hasTranscript ? "✅" : "📝"}
+                                                                        </button>
+                                                                            );
+                                                                        })()
+                                                                    )}
+                                                                    <button
+                                                                        type="button"
+                                                                        className="action-button remove-lesson"
+                                                                        onClick={() => openConfirmDelete("lesson", index, lessonIndex)}
+                                                                        title="Remover aula"
+                                                                        aria-label="Remover aula"
+                                                                    >
+                                                                        🗑️
+                                                                    </button>
                                                                 </div>
                                                             </div>
                                                         ))}
@@ -698,6 +917,50 @@ function NewCoursePage() {
                                                 <option value="attachment">Anexo</option>
                                             </select>
                                         </div>
+                                        {availableLessonTags.length > 0 && (
+                                            <div className="input-wrapper" style={{ gridColumn: "1 / -1" }}>
+                                                <label>Tags da aula (opcional):</label>
+                                                <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 6 }}>
+                                                    {availableLessonTags.map((tag) => {
+                                                        const tagId = Number(tag.id);
+                                                        const checked = selectedLessonTagIds.includes(tagId);
+                                                        return (
+                                                            <label
+                                                                key={`new-lesson-tag-${tag.id}`}
+                                                                style={{
+                                                                    display: "inline-flex",
+                                                                    alignItems: "center",
+                                                                    gap: 6,
+                                                                    border: "1px solid #d9dde3",
+                                                                    borderRadius: 999,
+                                                                    padding: "6px 10px",
+                                                                    background: checked ? "#eef7fd" : "#fff"
+                                                                }}
+                                                            >
+                                                                <input
+                                                                    type="checkbox"
+                                                                    checked={checked}
+                                                                    onChange={(event) => {
+                                                                        setSelectedLessonTagIds((prev) => event.target.checked
+                                                                            ? Array.from(new Set([...prev, tagId]))
+                                                                            : prev.filter((id) => id !== tagId));
+                                                                    }}
+                                                                />
+                                                                <span style={{
+                                                                    color: "#fff",
+                                                                    background: tag.categoryColor || "#3696D3",
+                                                                    borderRadius: 999,
+                                                                    padding: "2px 8px",
+                                                                    fontSize: 12
+                                                                }}>
+                                                                    {tag.name}
+                                                                </span>
+                                                            </label>
+                                                        );
+                                                    })}
+                                                </div>
+                                            </div>
+                                        )}
                                         {(newLessonData.type === "pdf" || newLessonData.type === "attachment" || newLessonData.type === "video") && (
                                             <div className="input-wrapper">
                                                 <label htmlFor="lessonFile">
@@ -769,6 +1032,7 @@ function NewCoursePage() {
                 size: undefined,
                 fileName: undefined,
             }));
+            setSelectedLessonTagIds([]);
                                             }}
                                         >
                                             Fechar
@@ -780,6 +1044,50 @@ function NewCoursePage() {
                     </div>
                 </div>
             </div>
+            {confirmDelete.open && (
+                <div
+                    className="admin-dashboard-container sap-modal-overlay"
+                    role="dialog"
+                    aria-modal="true"
+                    onMouseDown={e => {
+                        if (e.target === e.currentTarget) closeConfirmDelete();
+                    }}
+                >
+                    <div className="sap-modal-card">
+                        <div className="sap-modal-header">
+                            <b>{confirmDelete.kind === "module" ? "Remover módulo?" : "Remover aula?"}</b>
+                            <button className="sap-modal-close" onClick={closeConfirmDelete} aria-label="Fechar" disabled={confirmDeleteSubmitting}>
+                                ×
+                            </button>
+                        </div>
+                        <div className="sap-modal-body">
+                            <div className="sap-modal-user">
+                                <div className="sap-avatar" aria-hidden="true">
+                                    {confirmDelete.kind === "module" ? "M" : "A"}
+                                </div>
+                                <div className="sap-modal-user-meta">
+                                    <b>{confirmDelete.title}</b>
+                                    <span>{confirmDelete.kind === "module" ? "Módulo da trilha" : "Aula do módulo"}</span>
+                                </div>
+                            </div>
+                            <p className="sap-modal-desc">
+                                {confirmDelete.kind === "module"
+                                    ? "Essa ação pode remover vínculos com as aulas associadas."
+                                    : "Essa ação não pode ser desfeita."}
+                            </p>
+                            {confirmDeleteError && <div className="sap-modal-error">{confirmDeleteError}</div>}
+                        </div>
+                        <div className="sap-modal-actions">
+                            <button className="sap-secondary" onClick={closeConfirmDelete} disabled={confirmDeleteSubmitting}>
+                                Cancelar
+                            </button>
+                            <button className="sap-danger" onClick={handleConfirmDelete} disabled={confirmDeleteSubmitting}>
+                                {confirmDeleteSubmitting ? "Processando..." : "Remover"}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
             <div className={`warning-container ${isError ? "error" : "success" } ${modalErrorOpen ? "open" : ""}`}>
                 <button onClick={() => setModalErrorOpen(false)}>
                     <svg width="12" height="12" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">

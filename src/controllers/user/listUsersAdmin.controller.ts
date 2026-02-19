@@ -21,6 +21,10 @@ export interface IAdminUserListItem {
   role: AdminUserRole
   isActive?: boolean
   isBlocked?: boolean
+  vacationMode?: boolean
+  vacationMessage?: string | null
+  vacationStartAt?: string | null
+  vacationEndAt?: string | null
   docType?: string
   docId?: string
   birthDate?: string

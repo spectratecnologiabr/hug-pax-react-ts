@@ -102,6 +102,40 @@
   box-shadow: 0 10px 30px rgba(0,0,0,.5);
 }
 
+.sr-accessibility-text {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.media-accessibility-panel {
+  background: #f5f5f7;
+  border: 1px solid #d7d7da;
+  border-radius: 10px;
+  padding: 10px 12px;
+  margin-bottom: 10px;
+}
+
+.media-accessibility-panel b {
+  display: block;
+  font-family: 'SF UI Display Medium';
+  font-size: 13px;
+  margin-bottom: 6px;
+}
+
+.media-accessibility-panel p {
+  margin: 0;
+  font-family: 'SF UI Display Light';
+  font-size: 13px;
+  line-height: 1.4;
+}
+
 /* CONTROLES */
 .pdf-controls {
   position: absolute;

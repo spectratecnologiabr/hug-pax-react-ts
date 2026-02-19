@@ -1,0 +1,126 @@
+.terms-page {
+  min-height: 100vh;
+  background: #f8fafc;
+  padding: 24px;
+  font-family: "SF UI Display Light", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  color: #334155;
+}
+
+.terms-card {
+  max-width: 980px;
+  margin: 0 auto;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 22px;
+}
+
+.terms-card h1 {
+  margin: 0 0 14px;
+  font-size: 30px;
+  font-family: "Kit Rounded Bold", "SF UI Display", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.terms-back-button {
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  padding: 8px 12px;
+  background: #ffffff;
+  color: #334155;
+  font-size: 14px;
+  font-family: "SF UI Display", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  font-weight: 600;
+  cursor: pointer;
+  margin-bottom: 10px;
+}
+
+.terms-back-button:hover {
+  background: #f8fafc;
+}
+
+.terms-card section {
+  margin-top: 18px;
+}
+
+.terms-card h2 {
+  margin: 0 0 8px;
+  font-size: 18px;
+  font-family: "SF UI Display", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.terms-card p {
+  font-size: 14px;
+  line-height: 1.55;
+  color: #475569;
+}
+
+.terms-content {
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  padding: 14px;
+  line-height: 1.6;
+  max-height: 320px;
+  overflow-y: auto;
+  background: #ffffff;
+  font-size: 14px;
+  color: #1f2937;
+}
+
+.terms-content p {
+  margin: 0 0 10px;
+}
+
+.terms-content p:last-child {
+  margin-bottom: 0;
+}
+
+.terms-content h1,
+.terms-content h2,
+.terms-content h3,
+.terms-content h4 {
+  margin: 14px 0 8px;
+  color: #0f172a;
+  font-family: "SF UI Display", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.terms-content ul,
+.terms-content ol {
+  margin: 8px 0 12px;
+  padding-left: 22px;
+}
+
+.terms-content li {
+  margin-bottom: 6px;
+}
+
+.terms-content a {
+  color: #0f766e;
+  text-decoration: underline;
+}
+
+.terms-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 16px;
+}
+
+.terms-actions button {
+  border: none;
+  border-radius: 10px;
+  padding: 10px 14px;
+  background: #228bc3;
+  color: #ffffff;
+  font-size: 14px;
+  font-family: "SF UI Display", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.terms-actions button:disabled {
+  opacity: .7;
+  cursor: not-allowed;
+}

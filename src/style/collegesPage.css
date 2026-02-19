@@ -1,0 +1,603 @@
+.admin-dashboard-wrapper.colleges-page {
+  font-family: "SF UI Display", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  color: #29303d;
+}
+
+.admin-dashboard-wrapper.colleges-page .colleges-header {
+  margin: 0 20px 14px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.admin-dashboard-wrapper.colleges-page .colleges-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.admin-dashboard-wrapper.colleges-page .colleges-header b {
+  display: block;
+  color: #000000;
+  font-family: "SF UI Display Semibold", "SF UI Display", "Segoe UI", sans-serif;
+  font-size: 30px;
+}
+
+.admin-dashboard-wrapper.colleges-page .colleges-header span {
+  display: block;
+  margin-top: 6px;
+  color: #747474;
+  font-family: "SF UI Display Light", "SF UI Display", "Segoe UI", sans-serif;
+  font-size: 15px;
+}
+
+.admin-dashboard-wrapper.colleges-page .colleges-new-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #228bc3;
+  border-radius: 10px;
+  background: #228bc3;
+  color: #ffffff;
+  text-decoration: none;
+  font-size: 13px;
+  font-family: "SF UI Display Medium", "SF UI Display", "Segoe UI", sans-serif;
+  padding: 10px 14px;
+  transition: ease-in-out 0.2s all;
+  cursor: pointer;
+}
+
+.admin-dashboard-wrapper.colleges-page .colleges-secondary-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #d0d7e2;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #344054;
+  text-decoration: none;
+  font-size: 13px;
+  font-family: "SF UI Display Medium", "SF UI Display", "Segoe UI", sans-serif;
+  padding: 10px 14px;
+  transition: ease-in-out 0.2s all;
+  cursor: pointer;
+}
+
+.admin-dashboard-wrapper.colleges-page .colleges-secondary-button:hover {
+  background: #f8fafc;
+  border-color: #c8d3e0;
+}
+
+.admin-dashboard-wrapper.colleges-page .colleges-new-button:hover {
+  background: #ffffff;
+  color: #228bc3;
+}
+
+.admin-dashboard-wrapper.colleges-page .colleges-card {
+  margin: 0 20px;
+  background: #ffffff;
+  border: 1px solid #e0e5eb;
+  border-radius: 12px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+}
+
+.admin-dashboard-wrapper.colleges-page .colleges-card-header {
+  padding: 14px 16px;
+  border-bottom: 1px solid #e6ebf2;
+}
+
+.admin-dashboard-wrapper.colleges-page .colleges-card-header b {
+  font-size: 14px;
+  color: #29303d;
+  font-family: "SF UI Display Semibold", "SF UI Display", "Segoe UI", sans-serif;
+}
+
+.admin-dashboard-wrapper.colleges-page .colleges-table-wrap {
+  overflow-x: auto;
+}
+
+.admin-dashboard-wrapper.colleges-page .colleges-table {
+  width: 100%;
+  min-width: 900px;
+  border-collapse: collapse;
+}
+
+.admin-dashboard-wrapper.colleges-page .colleges-table thead th {
+  text-align: left;
+  font-size: 12px;
+  font-family: "SF UI Display Medium", "SF UI Display", "Segoe UI", sans-serif;
+  color: #6b7280;
+  background: #f8fafc;
+  border-bottom: 1px solid #e6ebf2;
+  padding: 12px 16px;
+}
+
+.admin-dashboard-wrapper.colleges-page .colleges-table tbody td {
+  font-size: 13px;
+  font-family: "SF UI Display", "Segoe UI", sans-serif;
+  color: #29303d;
+  border-bottom: 1px solid #eef2f7;
+  padding: 14px 16px;
+}
+
+.admin-dashboard-wrapper.colleges-page .colleges-table tbody tr:hover {
+  background: #fafcff;
+}
+
+.admin-dashboard-wrapper.colleges-page .colleges-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.admin-dashboard-wrapper.colleges-page .colleges-actions-cell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.admin-dashboard-wrapper.colleges-page .colleges-actions-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  background: transparent;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #667085;
+}
+
+.admin-dashboard-wrapper.colleges-page .colleges-actions-btn:hover {
+  background: #f3f4f6;
+  border-color: #eef2f7;
+  color: #111827;
+}
+
+.admin-dashboard-wrapper.colleges-page .colleges-actions-btn img {
+  width: 18px;
+  height: 18px;
+  display: block;
+}
+
+.colleges-actions-menu-portal {
+  position: fixed !important;
+  z-index: 100000 !important;
+  right: auto !important;
+  bottom: auto !important;
+  min-width: 190px;
+  background: #ffffff;
+  border: 1px solid #eef2f7;
+  border-radius: 12px;
+  padding: 6px;
+  box-shadow: 0 18px 40px rgba(16, 24, 40, 0.14);
+  transform: translateX(-100%);
+}
+
+.colleges-actions-item {
+  width: 100%;
+  text-align: left;
+  border: none;
+  background: transparent;
+  padding: 10px 10px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-family: "SF UI Display", "Segoe UI", sans-serif;
+  color: #29303d;
+  cursor: pointer;
+}
+
+.colleges-actions-item:hover {
+  background: #f6f8fb;
+}
+
+.colleges-actions-item:active {
+  transform: translateY(1px);
+}
+
+.admin-dashboard-wrapper.colleges-page .colleges-empty {
+  padding: 18px 16px;
+  font-size: 13px;
+  color: #6b7280;
+}
+
+@media (max-width: 780px) {
+  .admin-dashboard-wrapper.colleges-page .colleges-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .admin-dashboard-wrapper.colleges-page .colleges-header-actions {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+}
+
+.colleges-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100000;
+  background: rgba(15, 23, 42, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.colleges-modal-card {
+  width: min(980px, calc(100vw - 40px));
+  max-height: calc(100vh - 40px);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  background: #ffffff;
+  border: 1px solid #eef2f7;
+  border-radius: 14px;
+  box-shadow: 0 24px 70px rgba(16, 24, 40, 0.25);
+  font-family: "SF UI Display", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.colleges-modal-header {
+  padding: 16px 18px;
+  border-bottom: 1px solid #eef2f7;
+  background: #ffffff;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.colleges-modal-header b {
+  display: block;
+  font-size: 15px;
+  color: #111827;
+  font-family: "SF UI Display Semibold", "SF UI Display", "Segoe UI", sans-serif;
+}
+
+.colleges-modal-header span {
+  display: block;
+  margin-top: 4px;
+  font-family: "SF UI Display Light", "SF UI Display", "Segoe UI", sans-serif;
+  font-size: 13px;
+  color: #667085;
+}
+
+.colleges-modal-header-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.colleges-close-button {
+  width: 34px;
+  height: 34px;
+  border: 1px solid #eef2f7;
+  border-radius: 10px;
+  background: #ffffff;
+  font-size: 22px;
+  line-height: 1;
+  color: #667085;
+  cursor: pointer;
+}
+
+.colleges-modal-loading {
+  padding: 16px 18px;
+  color: #475467;
+  font-size: 13px;
+}
+
+.colleges-modal-body {
+  overflow: auto;
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.colleges-form-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(150px, 1fr));
+  gap: 12px;
+}
+
+.colleges-form-grid label,
+.colleges-multiselect {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.colleges-form-grid span,
+.colleges-multiselect > span {
+  font-size: 12px;
+  font-family: "SF UI Display Medium", "SF UI Display", "Segoe UI", sans-serif;
+  color: #667085;
+  font-weight: 600;
+}
+
+.colleges-form-grid input,
+.colleges-form-grid select,
+.colleges-multiselect-trigger,
+.colleges-manager-form input {
+  border: 1px solid #e6ebf2;
+  border-radius: 10px;
+  height: 40px;
+  padding: 10px 12px;
+  font-size: 13px;
+  font-family: "SF UI Display", "Segoe UI", sans-serif;
+  color: #1e1e1e;
+  background: #ffffff;
+  width: 100%;
+  outline: none;
+}
+
+.colleges-form-grid input:focus,
+.colleges-form-grid select:focus,
+.colleges-multiselect-trigger:focus,
+.colleges-manager-form input:focus {
+  border-color: #2b8ccf;
+  box-shadow: 0 0 0 3px rgba(43, 140, 207, 0.16);
+}
+
+.colleges-form-grid input:disabled,
+.colleges-form-grid select:disabled,
+.colleges-multiselect-trigger:disabled {
+  background: #f9fafb;
+  color: #667085;
+  cursor: not-allowed;
+}
+
+.colleges-multiselect {
+  position: relative;
+}
+
+.colleges-multiselect-trigger {
+  text-align: left;
+  cursor: pointer;
+}
+
+.colleges-multiselect-popup {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  z-index: 10;
+  background: #ffffff;
+  border: 1px solid #eef2f7;
+  border-radius: 10px;
+  box-shadow: 0 18px 40px rgba(16, 24, 40, 0.14);
+  max-height: 220px;
+  overflow: auto;
+  padding: 6px;
+}
+
+.colleges-multiselect-popup label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-family: "SF UI Display", "Segoe UI", sans-serif;
+  color: #2f3745;
+  padding: 6px 8px;
+  border-radius: 6px;
+}
+
+.colleges-multiselect-popup label:hover {
+  background: #f7fafc;
+}
+
+.colleges-managers-card {
+  background: #ffffff;
+  border: 1px solid #eef2f7;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.colleges-managers-head {
+  padding: 14px 16px;
+  border-bottom: 1px solid #eef2f7;
+}
+
+.colleges-managers-head b {
+  font-size: 14px;
+  font-family: "SF UI Display Semibold", "SF UI Display", "Segoe UI", sans-serif;
+  color: #29303d;
+}
+
+.colleges-managers-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.colleges-managers-table th,
+.colleges-managers-table td {
+  border-bottom: 1px solid #eef2f7;
+  padding: 12px 14px;
+  text-align: left;
+  font-size: 13px;
+  font-family: "SF UI Display", "Segoe UI", sans-serif;
+  color: #29303d;
+}
+
+.colleges-managers-table th {
+  background: #f9fafb;
+  color: #737b8c;
+  font-size: 12px;
+  font-family: "SF UI Display Medium", "SF UI Display", "Segoe UI", sans-serif;
+}
+
+.colleges-remove-manager {
+  border: 1px solid #fecdd3;
+  background: #fff1f2;
+  color: #be123c;
+  border-radius: 8px;
+  font-size: 12px;
+  font-family: "SF UI Display Medium", "SF UI Display", "Segoe UI", sans-serif;
+  padding: 4px 8px;
+  cursor: pointer;
+}
+
+.colleges-manager-form {
+  padding: 14px;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.colleges-manager-form button,
+.colleges-primary-button,
+.colleges-ghost-button {
+  border-radius: 10px;
+  font-size: 13px;
+  font-family: "SF UI Display Medium", "SF UI Display", "Segoe UI", sans-serif;
+  height: 40px;
+  padding: 10px 14px;
+  cursor: pointer;
+}
+
+.colleges-manager-form button,
+.colleges-primary-button {
+  border: 1px solid #228bc3;
+  background: #228bc3;
+  color: #ffffff;
+}
+
+.colleges-manager-form button:hover,
+.colleges-primary-button:hover {
+  background: #1e7cad;
+}
+
+.colleges-ghost-button {
+  border: 1px solid #e6ebf2;
+  background: #ffffff;
+  color: #344054;
+}
+
+.colleges-ghost-button:hover {
+  background: #f9fafb;
+}
+
+.colleges-modal-footer {
+  padding: 14px 18px;
+  border-top: 1px solid #eef2f7;
+  background: #ffffff;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.colleges-import-modal-card {
+  width: min(720px, calc(100vw - 40px));
+}
+
+.colleges-import-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.colleges-import-meta {
+  font-size: 13px;
+  color: #475467;
+}
+
+.colleges-import-error {
+  border: 1px solid #fecaca;
+  background: #fef2f2;
+  color: #b42318;
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 13px;
+}
+
+.colleges-import-result {
+  border: 1px solid #d0dceb;
+  background: #f8fbff;
+  border-radius: 12px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.colleges-import-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  color: #1d2939;
+  font-size: 13px;
+  font-family: "SF UI Display Medium", "SF UI Display", "Segoe UI", sans-serif;
+}
+
+.colleges-import-failures {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 220px;
+  overflow: auto;
+}
+
+.colleges-import-failure-row {
+  border: 1px solid #f3d4d2;
+  background: #fff8f8;
+  border-radius: 10px;
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.colleges-import-failure-row b {
+  font-size: 12px;
+  color: #7a271a;
+}
+
+.colleges-import-failure-row span {
+  font-size: 12px;
+  color: #b93815;
+}
+
+.colleges-import-failure-row small {
+  font-size: 11px;
+  color: #9a3412;
+}
+
+.colleges-toast {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  z-index: 2100;
+  border-radius: 10px;
+  padding: 10px 14px;
+  color: #ffffff;
+  font-size: 13px;
+  font-family: "SF UI Display Medium", "SF UI Display", "Segoe UI", sans-serif;
+  box-shadow: 0 10px 22px rgba(15, 23, 42, 0.25);
+}
+
+.colleges-toast.success {
+  background: #10b77f;
+}
+
+.colleges-toast.error {
+  background: #e85d4a;
+}
+
+@media (max-width: 1100px) {
+  .colleges-form-grid {
+    grid-template-columns: repeat(2, minmax(180px, 1fr));
+  }
+
+  .colleges-manager-form {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 860px) {
+  .colleges-form-grid,
+  .colleges-manager-form {
+    grid-template-columns: 1fr;
+  }
+}

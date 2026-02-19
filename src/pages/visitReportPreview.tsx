@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { findVisit } from "../controllers/consultant/findVisit.controller";
 import { findUser } from "../controllers/user/findUser.controller";
+import { getCookies } from "../controllers/misc/cookies.controller";
 
 import "../style/visitReport.css";
 
@@ -10,6 +11,7 @@ const VisitReportPreview: React.FC = () => {
   const [visitData, setVisitData] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
   const [consultantName, setConsultantName] = useState<string>("");
+  const [photoPreviewUrls, setPhotoPreviewUrls] = useState<Record<string, string>>({});
 
   useEffect(() => {
     async function fetchVisit() {
@@ -37,9 +39,10 @@ const VisitReportPreview: React.FC = () => {
 
         setVisitData(data);
 
-        if (data?.creatorId) {
+        const creatorId = Number(data?.creatorId ?? data?.creator_id);
+        if (Number.isFinite(creatorId) && creatorId > 0) {
           try {
-            const consultant = await findUser(data.creatorId);
+            const consultant = await findUser(creatorId);
             const consultantData = consultant?.data ?? consultant;
             setConsultantName(
               [consultantData.firstName, consultantData.lastName]
@@ -129,6 +132,132 @@ const VisitReportPreview: React.FC = () => {
     return VALUE_TRANSLATIONS[name]?.[rawValue] ?? rawValue ?? "";
   };
 
+  const getRawAnswer = (name: string) => {
+    const answer = formAnswers.find((f: any) => f.name === name);
+    return answer?.value ?? "";
+  };
+
+  const extractPhotoSource = (value: unknown): string => {
+    if (!value) return "";
+    if (typeof value === "string") return value.trim();
+
+    if (typeof value === "object") {
+      const obj = value as Record<string, unknown>;
+      const candidates = [
+        obj.key,
+        obj.path,
+        obj.url,
+        obj.cdnKey,
+        obj.fileKey,
+        obj.value,
+      ];
+
+      for (const candidate of candidates) {
+        if (typeof candidate === "string" && candidate.trim()) {
+          return candidate.trim();
+        }
+      }
+    }
+
+    return "";
+  };
+
+  const resolvePhotoUrl = (value: unknown) => {
+    const raw = extractPhotoSource(value);
+    if (!raw) return "";
+    if (/^https?:\/\//i.test(raw)) return raw;
+
+    const cdnBase = String(process.env.REACT_APP_CDN_URL || "").replace(/\/+$/, "");
+    if (cdnBase) return `${cdnBase}/api/stream/${encodeURIComponent(raw)}`;
+
+    const apiBase = String(process.env.REACT_APP_API_URL || "").replace(/\/+$/, "");
+    if (apiBase) return `${apiBase}/files/stream/${encodeURIComponent(raw)}`;
+
+    return "";
+  };
+
+  function resolveProtectedPhotoRequest(value: unknown) {
+    const raw = extractPhotoSource(value);
+    if (!raw) return null;
+
+    const token = getCookies("authToken");
+    const apiBaseUrl = String(process.env.REACT_APP_API_URL || "").replace(/\/+$/, "");
+    const cdnBaseUrl = String(process.env.REACT_APP_CDN_URL || "").replace(/\/+$/, "");
+
+    if (/^https?:\/\//i.test(raw)) {
+      if (apiBaseUrl && raw.startsWith(`${apiBaseUrl}/files/stream/`)) {
+        return {
+          url: raw,
+          headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+        };
+      }
+
+      if (cdnBaseUrl && raw.startsWith(`${cdnBaseUrl}/api/stream/`) && apiBaseUrl) {
+        const key = decodeURIComponent(raw.slice(`${cdnBaseUrl}/api/stream/`.length));
+        return {
+          url: `${apiBaseUrl}/files/stream/${encodeURIComponent(key)}`,
+          headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+        };
+      }
+
+      return { url: raw };
+    }
+
+    if (!apiBaseUrl) return null;
+    return {
+      url: `${apiBaseUrl}/files/stream/${encodeURIComponent(raw)}`,
+      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+    };
+  }
+
+  useEffect(() => {
+    let cancelled = false;
+    const objectUrls: string[] = [];
+
+    async function loadPhotoPreviews() {
+      const photoValues = {
+        photo1: getRawAnswer("photo1"),
+        photo2: getRawAnswer("photo2"),
+      };
+
+      const nextUrls: Record<string, string> = {};
+
+      for (const [key, value] of Object.entries(photoValues)) {
+        const request = resolveProtectedPhotoRequest(value);
+        if (!request?.url) continue;
+
+        try {
+          const response = await fetch(request.url, { headers: request.headers });
+          if (!response.ok) {
+            nextUrls[key] = resolvePhotoUrl(value);
+            continue;
+          }
+
+          const blob = await response.blob();
+          const objectUrl = window.URL.createObjectURL(blob);
+          objectUrls.push(objectUrl);
+          nextUrls[key] = objectUrl;
+        } catch {
+          nextUrls[key] = resolvePhotoUrl(value);
+        }
+      }
+
+      if (!cancelled) {
+        setPhotoPreviewUrls(nextUrls);
+      }
+    }
+
+    loadPhotoPreviews();
+
+    return () => {
+      cancelled = true;
+      objectUrls.forEach((url) => window.URL.revokeObjectURL(url));
+    };
+  }, [visitData]);
+
+  const photo1Url = photoPreviewUrls.photo1 || resolvePhotoUrl(getRawAnswer("photo1"));
+  const photo2Url = photoPreviewUrls.photo2 || resolvePhotoUrl(getRawAnswer("photo2"));
+
   const isFirstVisit = visitData?.visitType === "initial";
   const isAno1 = visitData?.institutionProfile === "Ano 1";
   const isAno2Plus = visitData?.institutionProfile === "Ano 2+";
@@ -205,6 +334,9 @@ const VisitReportPreview: React.FC = () => {
 
   return (
     <div className="report-container">
+      <button className="report-back-button" onClick={() => window.history.back()}>
+        Voltar
+      </button>
       <h1>Relatório de Visita de Consultoria Pedagógica</h1>
 
       <section className="report-section">
@@ -305,6 +437,34 @@ const VisitReportPreview: React.FC = () => {
           {renderRow("extraActionAmount")}
           {renderRow("audienceReception")}
           {renderRow("extraHighlights")}
+        </section>
+      )}
+
+      {(photo1Url || photo2Url) && (
+        <section className="report-section">
+          <h2>Registros Fotográficos</h2>
+          {photo1Url ? (
+            <div className="report-photo-block">
+              <span className="label">Foto 01:</span>
+              <a href={photo1Url} target="_blank" rel="noreferrer" className="report-photo-link">
+                <img src={photo1Url} alt="Foto 01 da visita" className="report-photo-preview" />
+              </a>
+              {getAnswer("photo1Caption") ? (
+                <p className="report-photo-caption">{getAnswer("photo1Caption")}</p>
+              ) : null}
+            </div>
+          ) : null}
+          {photo2Url ? (
+            <div className="report-photo-block">
+              <span className="label">Foto 02:</span>
+              <a href={photo2Url} target="_blank" rel="noreferrer" className="report-photo-link">
+                <img src={photo2Url} alt="Foto 02 da visita" className="report-photo-preview" />
+              </a>
+              {getAnswer("photo2Caption") ? (
+                <p className="report-photo-caption">{getAnswer("photo2Caption")}</p>
+              ) : null}
+            </div>
+          ) : null}
         </section>
       )}
 

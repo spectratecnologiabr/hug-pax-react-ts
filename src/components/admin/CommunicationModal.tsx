@@ -9,6 +9,11 @@ type Props = {
     title: string
     message: string
     link?: string
+    deliveryChannels?: Array<"in_app" | "email"> | null
+    templateId?: number | null
+    templateSlug?: string | null
+    templateLanguage?: string | null
+    templateVariables?: Record<string, unknown> | null
   }
 }
 

@@ -35,6 +35,11 @@ function AsideMenu(props: {notificationCount: number}) {
                 <a href="/certificates" className={pathname.match("/certificates") ? "menu-item active" : "menu-item"} title="Meus Certificados">
                     <img src={certIcon} alt="" className="menu-icon" />
                 </a>
+                <a href="/helpdesk" className={pathname.match("/helpdesk") ? "menu-item active" : "menu-item"} title="Helpdesk">
+                    <svg xmlns="http://www.w3.org/2000/svg" height="25" viewBox="0 0 24 24" fill="none" className="menu-icon">
+                        <path d="M8.5 9.5H15.5M8.5 13H12.5M7 20L3.5 21V5.5C3.5 4.67157 4.17157 4 5 4H19C19.8284 4 20.5 4.67157 20.5 5.5V16.5C20.5 17.3284 19.8284 18 19 18H9.5L7 20Z" stroke="white" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                </a>
                 <a href="/notifications" className={pathname.match("/notifications") ? "menu-item active" : "menu-item"} title="Notificações">
                     <img src={notificationIcon} alt="" className="menu-icon" />
                     {

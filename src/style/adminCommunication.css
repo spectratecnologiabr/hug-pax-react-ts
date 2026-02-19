@@ -179,6 +179,47 @@
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
 }
 
+.sap-channel-selector {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.sap-channel-option {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  background: #ffffff;
+  cursor: pointer;
+  transition: background-color .2s ease, border-color .2s ease;
+  user-select: none;
+}
+
+.sap-channel-option:hover {
+  background: #f9fafb;
+  border-color: #9ca3af;
+}
+
+.sap-channel-option:has(input:focus-visible) {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+.sap-channel-option:has(input:checked) {
+  background: #eff6ff;
+  border-color: #2563eb;
+}
+
+.sap-channel-option input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  accent-color: #2563eb;
+}
+
 .sap-form-actions {
   display: flex;
   justify-content: flex-end;
@@ -294,10 +335,19 @@
   color: #111827;
 }
 
+.sap-actions.open .sap-actions-trigger {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.sap-actions.open {
+  z-index: 10000;
+}
+
 .sap-actions-menu {
   position: absolute;
   right: 0;
-  top: 28px;
+  top: calc(100% + 6px);
   min-width: 160px;
   background: #ffffff;
   border: 1px solid #e5e7eb;

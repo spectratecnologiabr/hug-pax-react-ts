@@ -115,6 +115,31 @@ function monthLabelFromYYYYMM(value: string) {
   return `${monthName}/${year.slice(2)}`
 }
 
+function parseLocalSqlDateTime(value?: string | null) {
+  if (!value) return null;
+  const raw = String(value).trim();
+  if (!raw) return null;
+
+  const normalized = raw.replace(" ", "T");
+  const parsed = new Date(normalized);
+  if (!Number.isNaN(parsed.getTime())) return parsed;
+
+  const match = raw.match(
+    /^(\d{4})-(\d{2})-(\d{2})[T\s](\d{2}):(\d{2})(?::(\d{2}))?/
+  );
+  if (!match) return null;
+
+  const [, y, m, d, hh, mm, ss] = match;
+  return new Date(
+    Number(y),
+    Number(m) - 1,
+    Number(d),
+    Number(hh),
+    Number(mm),
+    Number(ss || 0)
+  );
+}
+
 function timeAgo(dateInput?: string | number | Date | null) {
   if (!dateInput) return "—";
 
@@ -351,7 +376,6 @@ function AdminDash() {
                             <b>Dashboard</b>
                             <span>Bem-vindo ao PAX Admin</span>
                         </div>
-                        <button>Exportar Relatório</button>
                     </div>
                     <div className="main-cards-wrapper">
                         <div className="card-element">
@@ -421,7 +445,7 @@ function AdminDash() {
                         </div>
 
                         <div className="evolution-wrapper">
-                            <span>Evolução de Alunos</span>
+                            <span>Evolução de Educadores</span>
 
                             <ResponsiveContainer width="100%" height={260}>
                                 <BarChart data={studentsEvolution} barGap={6}>
@@ -436,7 +460,7 @@ function AdminDash() {
                         </div>
 
                         <div className="status-pie-wrapper">
-                            <span>Status de Alunos</span>
+                            <span>Status de Educadores</span>
                             <ResponsiveContainer width="100%" height={260}>
                                 <PieChart>
                                 <Pie data={studentsStatusData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={60} outerRadius={90} paddingAngle={4}>
@@ -533,9 +557,11 @@ function AdminDash() {
                                             (() => {
                                                 const [year, month, day] = visit.visit_date.split('-').map(Number);
                                                 const date = new Date(year, month - 1, day);
-                                                const time = new Date(visit.init_visit_time)
+                                                const time = parseLocalSqlDateTime(visit.init_visit_time)
                                                 const formattedDate = date.toLocaleDateString('pt-BR');
-                                                const formattedTime = time.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+                                                const formattedTime = time
+                                                  ? time.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+                                                  : "--:--";
                                                 return `${formattedDate} às ${formattedTime}`;
                                             })()
                                         }
@@ -603,12 +629,12 @@ function AdminDash() {
                                         Logs Recentes
                                     </h3>
 
-                                    <button className="activities-link">
+                                    <a href="/admin/logs" className="activities-link">
                                         Ver histórico
                                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                             <path d="m9 18 6-6-6-6"></path>
                                         </svg>
-                                    </button>
+                                    </a>
                                 </div>
 
                                 <div className="activities-list">

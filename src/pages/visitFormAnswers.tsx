@@ -3,6 +3,7 @@ import { useParams } from "react-router-dom";
 import { getOverviewData } from "../controllers/dash/overview.controller";
 import { findVisit } from "../controllers/consultant/findVisit.controller";
 import { updateVisit } from "../controllers/consultant/updateVisit.controller";
+import { createVisitPhotoFile } from "../controllers/consultant/createVisitPhotoFile.controller";
 
 import Menubar from "../components/consultant/menubar";
 
@@ -55,6 +56,7 @@ function VisitFormAnswers() {
     const [isError, setIsError] = useState(false);
     const [modalErrorOpen, setModalErrorOpen] = useState(false);
     const [message, setMessage] = useState("");
+    const [uploadingByField, setUploadingByField] = useState<Record<string, boolean>>({});
 
     function handleModalMessage(data: { isError: boolean; message: string }) {
         const messageElement = document.getElementById("warning-message") as HTMLSpanElement;
@@ -161,6 +163,48 @@ function VisitFormAnswers() {
         });
       } catch (error) {
         console.error("Erro ao salvar campo:", error);
+      }
+    }
+
+    async function handleFileUpload(event: React.ChangeEvent<HTMLInputElement>) {
+      const { name, files } = event.target;
+      if (!name || !files?.length || !visitData?.id) return;
+
+      const file = files[0];
+      setUploadingByField((prev) => ({ ...prev, [name]: true }));
+
+      try {
+        const createdFile = await createVisitPhotoFile({
+          file,
+          name: file.name
+        });
+        const fileKey = createdFile?.fileKey || "";
+
+        if (!fileKey) {
+          throw new Error("Não foi possível obter a chave do arquivo enviado.");
+        }
+
+        const nextAnswers = (() => {
+          const existing = formAnswers.find((item) => item.name === name);
+          if (existing) {
+            return formAnswers.map((item) =>
+              item.name === name ? { ...item, value: String(fileKey) } : item
+            );
+          }
+          return [...formAnswers, { name, value: String(fileKey) }];
+        })();
+
+        setFormAnswers(nextAnswers);
+        await updateVisit(visitData.id, { formAnswers: nextAnswers });
+      } catch (error) {
+        console.error("Erro ao enviar arquivo:", error);
+        handleModalMessage({
+          isError: true,
+          message: "Erro ao enviar arquivo para o CDN. Tente novamente.",
+        });
+      } finally {
+        setUploadingByField((prev) => ({ ...prev, [name]: false }));
+        event.target.value = "";
       }
     }
 
@@ -706,8 +750,10 @@ function VisitFormAnswers() {
                                         type="file"
                                         name="photo1"
                                         accept="image/*"
-                                        onBlur={sendFormAnswers}
+                                        onChange={handleFileUpload}
                                     />
+                                    {uploadingByField.photo1 ? <small>Enviando foto 01...</small> : null}
+                                    {getAnswer("photo1") ? <small>Arquivo enviado.</small> : null}
                                     <input
                                         type="text"
                                         name="photo1Caption"
@@ -724,8 +770,10 @@ function VisitFormAnswers() {
                                         type="file"
                                         name="photo2"
                                         accept="image/*"
-                                        onBlur={sendFormAnswers}
+                                        onChange={handleFileUpload}
                                     />
+                                    {uploadingByField.photo2 ? <small>Enviando foto 02...</small> : null}
+                                    {getAnswer("photo2") ? <small>Arquivo enviado.</small> : null}
                                     <input
                                         type="text"
                                         name="photo2Caption"

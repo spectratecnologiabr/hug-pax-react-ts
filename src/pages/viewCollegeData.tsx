@@ -8,7 +8,8 @@ import { ICollegeProps } from "../controllers/college/createCollege.controller";
 import { listTeachingModalitiesAdmin } from "../controllers/education/listTeachingModalitiesAdmin.controller";
 import { listTeachingGradesAdmin } from "../controllers/education/listTeachingGradesAdmin.controller";
 
-import Menubar from "../components/consultant/menubar";
+import ConsultantMenubar from "../components/consultant/menubar";
+import AdminMenubar from "../components/admin/menubar";
 
 import "../style/adminDash.css";
 
@@ -44,6 +45,7 @@ function normalizeContractSeries(value: unknown): string[] {
 }
 
 function ViewCollegeData() {
+    const isAdminPanel = window.location.pathname.startsWith("/admin");
     const collegeId = useParams().collegeId as string;
     const [ overviewData, setOverviewData ] = useState<TOverviewData | null>(null);
     const [ collegeData, setCollegeData ] = useState<ICollegeProps>({} as ICollegeProps);
@@ -171,12 +173,26 @@ function ViewCollegeData() {
     return (
         <React.Fragment>
             <div className="admin-dashboard-container">
-                <Menubar notificationCount={Number(overviewData?.unreadNotifications)} />
+                {isAdminPanel ? (
+                    <AdminMenubar />
+                ) : (
+                    <ConsultantMenubar notificationCount={Number(overviewData?.unreadNotifications)} />
+                )}
                  <div className="admin-dashboard-wrapper">
                     <div className="form-container">
                         <div className="title-wrapper">
                             <b>Visualizar escola</b>
-                            <button onClick={() => {window.history.back()}}>Voltar</button>
+                            <div style={{ display: "flex", gap: 8 }}>
+                                <button
+                                    onClick={() => {
+                                        const base = isAdminPanel ? "/admin" : "/consultant";
+                                        window.location.href = `${base}/colleges/${collegeId}/final-report`;
+                                    }}
+                                >
+                                    Ficha Escolar
+                                </button>
+                                <button onClick={() => {window.history.back()}}>Voltar</button>
+                            </div>
                         </div>
 
                         <div className="form-wrapper">

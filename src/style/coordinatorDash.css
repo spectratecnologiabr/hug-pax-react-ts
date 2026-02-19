@@ -1,0 +1,73 @@
+.coordinator-dash-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.coordinator-main-dash {
+  gap: 20px !important;
+}
+
+.coordinator-main-dash .row {
+  gap: 16px !important;
+}
+
+.coordinator-main-dash .cards-list {
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+}
+
+.coordinator-main-dash .cards-list .card-item span {
+  font-size: 14px !important;
+}
+
+.coord-shortcuts {
+  margin: 0 20px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.coord-shortcut-card {
+  text-decoration: none;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 14px;
+  background: #ffffff;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
+}
+
+.coord-shortcut-card b {
+  color: #1d2939;
+  font-size: 15px;
+  font-family: "SF UI Display Bold", "SF UI Display", "Segoe UI", sans-serif;
+}
+
+.coord-shortcut-card span {
+  color: #64748b;
+  font-size: 13px;
+  line-height: 1.35;
+  font-family: "SF UI Display Medium", "SF UI Display", "Segoe UI", sans-serif;
+}
+
+.coord-shortcut-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(15, 23, 42, 0.08);
+  border-color: #b8c7da;
+}
+
+@media (max-width: 1100px) {
+  .coordinator-main-dash .cards-list,
+  .coord-shortcuts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 680px) {
+  .coordinator-main-dash .cards-list,
+  .coord-shortcuts {
+    grid-template-columns: 1fr;
+  }
+}

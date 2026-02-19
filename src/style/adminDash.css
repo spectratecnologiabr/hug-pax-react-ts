@@ -238,6 +238,184 @@
     background-color: #fee2e2;
 }
 
+.action-button.remove-lesson {
+    background-color: #fff1f2;
+    color: #be123c;
+    border: 1px solid #fecdd3;
+}
+
+.action-button.remove-lesson:hover {
+    background-color: #ffe4e6;
+}
+
+.admin-dashboard-container.sap-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.42);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100000;
+    padding: 24px;
+}
+
+.admin-dashboard-container .sap-modal-card {
+    width: 100%;
+    max-width: 520px;
+    background: #ffffff;
+    border-radius: 14px;
+    border: 1px solid #eef2f7;
+    box-shadow: 0 24px 70px rgba(16, 24, 40, 0.25);
+    overflow: hidden;
+    font-family: 'SF UI Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+.admin-dashboard-container .sap-modal-header {
+    padding: 16px 18px;
+    border-bottom: 1px solid #eef2f7;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.admin-dashboard-container .sap-modal-header b {
+    font-size: 18px;
+    font-family: 'SF UI Display Semibold';
+    line-height: 1.25;
+    letter-spacing: 0.01em;
+    color: #111827;
+}
+
+.admin-dashboard-container .sap-modal-close {
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    border: 1px solid #eef2f7;
+    background: #ffffff;
+    cursor: pointer;
+    font-size: 20px;
+    line-height: 1;
+    color: #667085;
+}
+
+.admin-dashboard-container .sap-modal-close:hover:not(:disabled) {
+    background: #f3f4f6;
+}
+
+.admin-dashboard-container .sap-modal-close:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.admin-dashboard-container .sap-modal-body {
+    padding: 16px 18px;
+}
+
+.admin-dashboard-container .sap-modal-user {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 10px;
+}
+
+.admin-dashboard-container .sap-modal-user .sap-avatar {
+    width: 38px;
+    height: 38px;
+    border-radius: 999px;
+    background: #eef2ff;
+    border: 1px solid #e0e7ff;
+    color: #4338ca;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-family: 'SF UI Display Semibold';
+}
+
+.admin-dashboard-container .sap-modal-user-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.admin-dashboard-container .sap-modal-user-meta b {
+    font-size: 15px;
+    font-family: 'SF UI Display Semibold';
+    color: #111827;
+}
+
+.admin-dashboard-container .sap-modal-user-meta span {
+    font-size: 13px;
+    font-family: 'SF UI Display Medium';
+    color: #737b8c;
+}
+
+.admin-dashboard-container .sap-modal-desc {
+    margin: 8px 0 0;
+    font-size: 14px;
+    font-family: 'SF UI Display Medium';
+    color: #475467;
+    line-height: 1.5;
+}
+
+.admin-dashboard-container .sap-modal-error {
+    margin-top: 12px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: #fff1f2;
+    border: 1px solid #fecaca;
+    color: #b91c1c;
+    font-size: 13px;
+}
+
+.admin-dashboard-container .sap-modal-actions {
+    padding: 14px 18px;
+    border-top: 1px solid #eef2f7;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.admin-dashboard-container .sap-secondary,
+.admin-dashboard-container .sap-danger {
+    border: none;
+    border-radius: 10px;
+    padding: 11px 16px;
+    font-size: 14px;
+    font-family: 'SF UI Display Semibold';
+    cursor: pointer;
+}
+
+.admin-dashboard-container .sap-secondary {
+    background: #ffffff;
+    color: #344054;
+    border: 1px solid #e6ebf2;
+}
+
+.admin-dashboard-container .sap-secondary:hover:not(:disabled) {
+    background: #f9fafb;
+}
+
+.admin-dashboard-container .sap-danger {
+    background: #ef4444;
+    color: #ffffff;
+    box-shadow: 0 8px 18px rgba(239, 68, 68, 0.22);
+}
+
+.admin-dashboard-container .sap-danger:hover:not(:disabled) {
+    filter: brightness(0.98);
+}
+
+.admin-dashboard-container .sap-secondary:disabled,
+.admin-dashboard-container .sap-danger:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
 .lesson-sublist {
     list-style: none;
     padding: 0;
