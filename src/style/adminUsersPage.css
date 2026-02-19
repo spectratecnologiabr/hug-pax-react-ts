@@ -108,7 +108,7 @@
 /* ===== Filters ===== */
 .admin-users-page .sap-filters {
   display: grid;
-  grid-template-columns: 1fr 220px 180px;
+  grid-template-columns: 1fr 220px 180px 240px;
   box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   gap: 14px;
   padding: 12px;
@@ -116,6 +116,12 @@
   border-radius: 12px;
   background: #ffffff;
   margin: 0 20px 16px;
+}
+
+@media (max-width: 1200px) {
+  .admin-users-page .sap-filters {
+    grid-template-columns: 1fr 220px 180px;
+  }
 }
 
 .admin-users-page .sap-input {

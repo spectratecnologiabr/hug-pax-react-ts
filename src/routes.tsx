@@ -42,7 +42,6 @@ import ConsultantVacationPage from './pages/consultantVacationPage';
 import TermsAndConditionsPage from './pages/termsAndConditionsPage';
 import TermsAcceptancePage from './pages/termsAcceptancePage';
 import AdminLegalDocumentsPage from './pages/adminLegalDocumentsPage';
-import AdminLessonTagsPage from './pages/adminLessonTagsPage';
 import SchoolFinalReportPage from './pages/schoolFinalReportPage';
 import AdminReportsCenterPage from './pages/adminReportsCenterPage';
 import EducatorReportPage from './pages/educatorReportPage';
@@ -110,7 +109,6 @@ function MyRoutes() {
                 <Route path='/admin/communications/retention' element={<AdminRoute><AdminRetentionTriggersPage/></AdminRoute>} />
                 <Route path='/admin/helpdesk' element={<AdminRoute><AdminHelpdeskPage/></AdminRoute>} />
                 <Route path='/admin/legal-documents' element={<AdminRoute><AdminLegalDocumentsPage/></AdminRoute>} />
-                <Route path='/admin/tags' element={<AdminRoute><AdminLessonTagsPage/></AdminRoute>} />
                 <Route path='/admin/users' element={<AdminRoute><AdminUsersPage/></AdminRoute>} />
                 <Route path='/admin/reports-center' element={<AdminRoute><AdminReportsCenterPage/></AdminRoute>} />
                 <Route path='/admin/certificates' element={<AdminRoute><AdminCertificatesPage/></AdminRoute>} />

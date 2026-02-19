@@ -35,6 +35,7 @@ export interface IAdminUserListItem {
   collegeId?: number | null
   collegeName?: string
   lastAccessAt?: string | null
+  updatedAt?: string | null
 }
 
 export function resolveAdminUserStatus(user: Pick<IAdminUserListItem, "isActive" | "isBlocked">): AdminUserStatus {

@@ -71,3 +71,17 @@ export async function setLessonTags(lessonId: number, tagIds: number[]) {
   })
   return response.data?.data ?? []
 }
+
+export async function listCourseTags(courseId: number) {
+  const response = await axios.get(`${apiUrl}/lesson-tags/course/${courseId}`, {
+    headers: authHeaders()
+  })
+  return response.data?.data ?? []
+}
+
+export async function setCourseTags(courseId: number, tagIds: number[]) {
+  const response = await axios.put(`${apiUrl}/lesson-tags/course/${courseId}`, { tagIds }, {
+    headers: authHeaders()
+  })
+  return response.data?.data ?? []
+}

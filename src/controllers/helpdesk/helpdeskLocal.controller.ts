@@ -32,6 +32,9 @@ export type HelpdeskTicketMessage = {
   id: string | number;
   sender: HelpdeskMessageSender;
   content: string;
+  createdBy?: string | number;
+  createdByName?: string;
+  createdByRole?: string;
   createdAt: string;
 };
 
@@ -87,6 +90,9 @@ function normalizeTicket(raw: any): HelpdeskTicket {
           id: message?.id,
           sender: message?.sender as HelpdeskMessageSender,
           content: String(message?.content ?? ""),
+          createdBy: message?.createdBy ?? message?.created_by ?? undefined,
+          createdByName: message?.createdByName ?? message?.created_by_name ?? undefined,
+          createdByRole: message?.createdByRole ?? message?.created_by_role ?? undefined,
           createdAt: String(message?.createdAt ?? message?.created_at ?? new Date().toISOString()),
         }))
       : [],

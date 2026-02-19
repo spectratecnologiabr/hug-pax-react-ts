@@ -51,9 +51,13 @@ type User = {
   language?: string;
   collegeId?: number | null;
   collegeName?: string;
+  lastAccessAt?: string | null;
+  updatedAt?: string | null;
   management?: string;
   lastAccess: string;
 };
+
+type InactivityFilter = "all" | "7" | "15" | "30" | "60" | "90" | "never";
 
 type ConfirmAction = "deactivate" | "block" | "delete";
 
@@ -85,10 +89,26 @@ function roleLabel(role: AdminUserRole): User["profile"] {
 }
 
 function formatLastAccess(lastAccessAt?: string | null) {
-  if (!lastAccessAt) return "—";
-  const date = new Date(lastAccessAt);
-  if (Number.isNaN(date.getTime())) return "—";
-  return date.toLocaleString("pt-BR");
+  const date = parseAccessDate(lastAccessAt);
+  if (!date) return "—";
+  return date.toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" });
+}
+
+function parseAccessDate(lastAccessAt?: string | null) {
+  if (!lastAccessAt) return null;
+  const raw = String(lastAccessAt).trim();
+  if (!raw) return null;
+
+  // MySQL DATETIME/TIMESTAMP may arrive without timezone, e.g. "2026-02-19 15:30:00".
+  // Treat this shape as UTC to avoid +3h drift when rendering in GMT-3.
+  const noTzSqlPattern = /^\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}(:\d{2})?$/;
+  const normalized = noTzSqlPattern.test(raw)
+    ? `${raw.replace(" ", "T")}Z`
+    : raw;
+
+  const date = new Date(normalized);
+  if (Number.isNaN(date.getTime())) return null;
+  return date;
 }
 
 function getInitials(name: string) {
@@ -136,7 +156,9 @@ function mapAdminUserToRow(user: IAdminUserListItem): User {
     language: user.language,
     collegeId: user.collegeId,
     collegeName: user.collegeName,
-    lastAccess: formatLastAccess(user.lastAccessAt),
+    lastAccessAt: user.lastAccessAt ?? null,
+    updatedAt: user.updatedAt ?? null,
+    lastAccess: formatLastAccess(user.lastAccessAt ?? user.updatedAt),
   };
 }
 
@@ -148,6 +170,7 @@ function AdminUsersPage() {
   const [search, setSearch] = useState("");
   const [profileFilter, setProfileFilter] = useState<AdminUserRole | "all">("all");
   const [statusFilter, setStatusFilter] = useState<AdminUserStatus | "all">("all");
+  const [inactivityFilter, setInactivityFilter] = useState<InactivityFilter>("all");
   const [loading, setLoading] = useState(false);
   const [openActionsUserId, setOpenActionsUserId] = useState<number | null>(null);
   const actionsMenuRef = useRef<HTMLDivElement | null>(null);
@@ -281,6 +304,21 @@ function AdminUsersPage() {
       document.removeEventListener("keydown", onKeyDown);
     };
   }, [openActionsUserId]);
+
+  const filteredRows = rows.filter((user) => {
+    if (inactivityFilter === "all") return true;
+    if (inactivityFilter === "never") return !parseAccessDate(user.lastAccessAt ?? user.updatedAt);
+
+    const date = parseAccessDate(user.lastAccessAt ?? user.updatedAt);
+    if (!date) return false;
+
+    const days = Number(inactivityFilter);
+    if (!Number.isFinite(days) || days <= 0) return true;
+
+    const diffMs = Date.now() - date.getTime();
+    const diffDays = Math.floor(diffMs / 86400000);
+    return diffDays >= days;
+  });
 
   useEffect(() => {
     if (openActionsUserId == null) return;
@@ -764,6 +802,18 @@ function AdminUsersPage() {
               <option value="blocked">Bloqueado</option>
             </select>
           </div>
+
+          <div className="sap-select">
+            <select value={inactivityFilter} onChange={e => setInactivityFilter(e.target.value as InactivityFilter)}>
+              <option value="all">Inatividade: Todos</option>
+              <option value="7">Sem acesso há 7+ dias</option>
+              <option value="15">Sem acesso há 15+ dias</option>
+              <option value="30">Sem acesso há 30+ dias</option>
+              <option value="60">Sem acesso há 60+ dias</option>
+              <option value="90">Sem acesso há 90+ dias</option>
+              <option value="never">Nunca acessou</option>
+            </select>
+          </div>
         </div>
 
         <div className="sap-card">
@@ -783,7 +833,7 @@ function AdminUsersPage() {
               </tr>
             </thead>
             <tbody>
-              {rows.map(u => (
+              {filteredRows.map(u => (
                 <tr key={u.id}>
                   <td>
                     <div className="sap-user-cell">
@@ -834,7 +884,7 @@ function AdminUsersPage() {
 
           {openActionsUserId != null &&
             (() => {
-              const user = rows.find(r => r.id === openActionsUserId);
+              const user = filteredRows.find(r => r.id === openActionsUserId);
               if (!user) return null;
               return createPortal(
                 <div

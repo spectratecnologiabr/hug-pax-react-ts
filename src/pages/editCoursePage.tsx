@@ -13,7 +13,7 @@ import { updateLessonAllowDownload, updateLessonExtUrl } from "../controllers/co
 import { updateCourse } from "../controllers/course/admin/updateCourse.controller";
 import { deleteLesson } from "../controllers/course/admin/deleteLesson.controller";
 import { transcribeLesson } from "../controllers/course/admin/transcribeLesson.controller";
-import { listTags, setLessonTags } from "../controllers/lessonTags/lessonTags.controller";
+import { createTag, createTagCategory, listTagCategories, listTags, listCourseTags, setCourseTags } from "../controllers/lessonTags/lessonTags.controller";
 
 import { getFullCourseData } from "../controllers/course/admin/getFullCourseData.controller";
 
@@ -39,6 +39,7 @@ type ICourseData = {
 };
 
 type TeachingModality = { id: number; name: string; slug: string; isActive?: boolean };
+type TagCategory = { id: number; name: string; color?: string };
 type ConfirmDeleteKind = "module" | "lesson";
 type ConfirmDeleteState = {
     open: boolean;
@@ -78,8 +79,16 @@ function EditCoursePage() {
     });
     const [lessonFileUploading, setLessonFileUploading] = useState(false);
     const [transcribingLessonId, setTranscribingLessonId] = useState<number | null>(null);
+    const [tagCategories, setTagCategories] = useState<TagCategory[]>([]);
     const [availableLessonTags, setAvailableLessonTags] = useState<any[]>([]);
-    const [selectedLessonTagIds, setSelectedLessonTagIds] = useState<number[]>([]);
+    const [courseDefaultTagIds, setCourseDefaultTagIds] = useState<number[]>([]);
+    const [newTagCategoryName, setNewTagCategoryName] = useState("");
+    const [newTagCategoryColor, setNewTagCategoryColor] = useState("#3696D3");
+    const [newTagName, setNewTagName] = useState("");
+    const [newTagCategoryId, setNewTagCategoryId] = useState<number>(0);
+    const [showCreateTagCategoryModal, setShowCreateTagCategoryModal] = useState(false);
+    const [showCreateTagModal, setShowCreateTagModal] = useState(false);
+    const [savingCourseTags, setSavingCourseTags] = useState(false);
     const [isError, setIsError] = useState(false);
     const [modalErrorOpen, setModalErrorOpen] = useState(false);
     const [message, setMessage] = useState("");
@@ -145,16 +154,42 @@ function EditCoursePage() {
       };
     }, []);
 
+    async function refreshTagData() {
+        const [categories, tags] = await Promise.all([
+            listTagCategories(false),
+            listTags({ includeInactive: false }),
+        ]);
+
+        const nextCategories = Array.isArray(categories) ? categories : [];
+        const nextTags = Array.isArray(tags) ? tags : [];
+
+        setTagCategories(nextCategories);
+        setAvailableLessonTags(nextTags);
+
+        if (!newTagCategoryId && nextCategories.length > 0) {
+            setNewTagCategoryId(Number(nextCategories[0].id));
+        }
+    }
+
     useEffect(() => {
         let alive = true;
         (async () => {
             try {
-                const tags = await listTags({ includeInactive: false });
+                const [categories, tags] = await Promise.all([
+                    listTagCategories(false),
+                    listTags({ includeInactive: false }),
+                ]);
                 if (!alive) return;
-                setAvailableLessonTags(Array.isArray(tags) ? tags : []);
+                const nextCategories = Array.isArray(categories) ? categories : [];
+                const nextTags = Array.isArray(tags) ? tags : [];
+                setTagCategories(nextCategories);
+                setAvailableLessonTags(nextTags);
+                if (nextCategories.length > 0) {
+                    setNewTagCategoryId(Number(nextCategories[0].id));
+                }
             } catch (error) {
                 if (!alive) return;
-                console.error("Erro ao carregar tags de aula:", error);
+                console.error("Erro ao carregar tags/categorias:", error);
             }
         })();
 
@@ -211,6 +246,10 @@ function EditCoursePage() {
             courseId: Number(courseId),
             order: Array.isArray(data.modules) ? data.modules.length + 1 : 1,
           }));
+
+          const tags = await listCourseTags(Number(courseId));
+          const tagIds = Array.isArray(tags) ? tags.map((tag: any) => Number(tag.id)) : [];
+          setCourseDefaultTagIds(tagIds);
         } catch (err) {
           console.error(err);
           handleModalMessage({ isError: true, message: "Erro ao buscar dados da trilha." });
@@ -240,6 +279,80 @@ function EditCoursePage() {
             .replace(/\s+/g, "-")
             .replace(/-+/g, "-");
     };
+
+    async function handleCreateTagCategory() {
+        if (!newTagCategoryName.trim()) {
+            handleModalMessage({ isError: true, message: "Informe o nome da categoria." });
+            return;
+        }
+
+        try {
+            await createTagCategory({
+                name: newTagCategoryName.trim(),
+                slug: generateSlug(newTagCategoryName),
+                color: newTagCategoryColor,
+                isActive: true,
+                visibleRoles: ["educator", "consultant", "coordinator", "admin"],
+            });
+            setNewTagCategoryName("");
+            setShowCreateTagCategoryModal(false);
+            await refreshTagData();
+            handleModalMessage({ isError: false, message: "Categoria criada com sucesso." });
+        } catch (error) {
+            console.error("Erro ao criar categoria de tags:", error);
+            handleModalMessage({ isError: true, message: "Erro ao criar categoria." });
+        }
+    }
+
+    async function handleCreateTag() {
+        if (!newTagName.trim()) {
+            handleModalMessage({ isError: true, message: "Informe o nome da tag." });
+            return;
+        }
+        if (!newTagCategoryId) {
+            handleModalMessage({ isError: true, message: "Selecione uma categoria para a tag." });
+            return;
+        }
+
+        try {
+            await createTag({
+                categoryId: newTagCategoryId,
+                name: newTagName.trim(),
+                slug: generateSlug(newTagName),
+                isActive: true,
+            });
+            setNewTagName("");
+            setShowCreateTagModal(false);
+            await refreshTagData();
+            handleModalMessage({ isError: false, message: "Tag criada com sucesso." });
+        } catch (error) {
+            console.error("Erro ao criar tag:", error);
+            handleModalMessage({ isError: true, message: "Erro ao criar tag." });
+        }
+    }
+
+    async function handleSaveCourseTags() {
+        if (!courseId) {
+            handleModalMessage({ isError: true, message: "Trilha inválida para salvar tags." });
+            return false;
+        }
+
+        setSavingCourseTags(true);
+        try {
+            await setCourseTags(Number(courseId), courseDefaultTagIds);
+            const persisted = await listCourseTags(Number(courseId));
+            const persistedIds = Array.isArray(persisted) ? persisted.map((tag: any) => Number(tag.id)) : [];
+            setCourseDefaultTagIds(persistedIds);
+            handleModalMessage({ isError: false, message: "Tags da trilha salvas com sucesso." });
+            return true;
+        } catch (error) {
+            console.error("Erro ao salvar tags da trilha:", error);
+            handleModalMessage({ isError: true, message: "Erro ao salvar tags da trilha." });
+            return false;
+        } finally {
+            setSavingCourseTags(false);
+        }
+    }
 
     async function toggleLessonDownload(moduleIndex: number, lessonIndex: number) {
         const lesson = modules[moduleIndex]?.lessons?.[lessonIndex];
@@ -511,7 +624,6 @@ function EditCoursePage() {
                 extUrlFromFileId = fileMeta.id;
             }
 
-            await setLessonTags(lessonId, selectedLessonTagIds);
             // Atualiza o estado dos módulos, usando extUrl = id do CDN se houver arquivo
             setModules(prev =>
             prev.map((m, i) =>
@@ -547,7 +659,6 @@ function EditCoursePage() {
                 size: undefined,
                 fileName: undefined,
             });
-            setSelectedLessonTagIds([]);
             setShowLessonFormForModuleIndex(null);
         } catch (error) {
             console.error("Erro ao criar aula:", error);
@@ -726,6 +837,73 @@ function EditCoursePage() {
                                 </div>
                             </div>
                         </div>
+                        <div className="form-wrapper">
+                            <div className="title-wrapper">
+                                <b>Tags da trilha</b>
+                                <div style={{ display: "flex", gap: 8 }}>
+                                    <button className="action-button" type="button" onClick={() => setShowCreateTagCategoryModal(true)}>
+                                        Nova categoria
+                                    </button>
+                                    <button className="action-button" type="button" onClick={() => setShowCreateTagModal(true)}>
+                                        Nova tag
+                                    </button>
+                                    <button
+                                        className="action-button"
+                                        type="button"
+                                        disabled={savingCourseTags}
+                                        onClick={() => { void handleSaveCourseTags(); }}
+                                    >
+                                        {savingCourseTags ? "Salvando..." : "Salvar tags"}
+                                    </button>
+                                </div>
+                            </div>
+                            {availableLessonTags.length > 0 ? (
+                                <div className="input-wrapper">
+                                    <label>Tags padrão da trilha:</label>
+                                    <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 6 }}>
+                                        {availableLessonTags.map(tag => {
+                                            const tagId = Number(tag.id);
+                                            const checked = courseDefaultTagIds.includes(tagId);
+                                            return (
+                                                <label
+                                                    key={`edit-default-course-tag-${tagId}`}
+                                                    style={{
+                                                        display: "inline-flex",
+                                                        alignItems: "center",
+                                                        gap: 6,
+                                                        border: "1px solid #d9dde3",
+                                                        borderRadius: 999,
+                                                        padding: "6px 10px",
+                                                        background: checked ? "#eef7fd" : "#fff",
+                                                    }}
+                                                >
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={checked}
+                                                        onChange={(event) => {
+                                                            setCourseDefaultTagIds((prev) => event.target.checked
+                                                                ? Array.from(new Set([...prev, tagId]))
+                                                                : prev.filter((id) => id !== tagId));
+                                                        }}
+                                                    />
+                                                    <span style={{
+                                                        color: "#fff",
+                                                        background: tag.categoryColor || "#3696D3",
+                                                        borderRadius: 999,
+                                                        padding: "2px 8px",
+                                                        fontSize: 12,
+                                                    }}>
+                                                        {tag.name}
+                                                    </span>
+                                                </label>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            ) : (
+                                <p className="module-list-empty">Nenhuma tag cadastrada. Crie uma categoria e uma tag para começar.</p>
+                            )}
+                        </div>
                         {/* Listagem de módulos: sempre visível */}
                         {createdCourseId != null && (
                             <div className="form-wrapper">
@@ -757,7 +935,6 @@ function EditCoursePage() {
                                                                     slug: "",
                                                                     type: "video",
                                                                 }));
-                                                                setSelectedLessonTagIds([]);
                                                                 setShowLessonFormForModuleIndex(index);
                                                             }}
                                                         >
@@ -847,6 +1024,90 @@ function EditCoursePage() {
                                         ))}
                                     </ul>
                                 )}
+                            </div>
+                        )}
+
+                        {showCreateTagCategoryModal && (
+                            <div className="modal-overlay">
+                                <div className="modal-content">
+                                    <div className="title-wrapper">
+                                        <b>Nova categoria de tags</b>
+                                    </div>
+                                    <div className="form-grid">
+                                        <div className="input-wrapper">
+                                            <label htmlFor="editNewTagCategoryName">Nome:</label>
+                                            <input
+                                                type="text"
+                                                id="editNewTagCategoryName"
+                                                value={newTagCategoryName}
+                                                placeholder="Ex.: Competências"
+                                                onChange={e => setNewTagCategoryName(e.target.value)}
+                                            />
+                                        </div>
+                                        <div className="input-wrapper">
+                                            <label htmlFor="editNewTagCategoryColor">Cor:</label>
+                                            <input
+                                                type="color"
+                                                id="editNewTagCategoryColor"
+                                                value={newTagCategoryColor}
+                                                onChange={e => setNewTagCategoryColor(e.target.value)}
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className="button-wrapper">
+                                        <button className="submit-button" type="button" onClick={handleCreateTagCategory}>
+                                            Criar categoria
+                                        </button>
+                                        <button className="secondary-button" type="button" onClick={() => setShowCreateTagCategoryModal(false)}>
+                                            Fechar
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {showCreateTagModal && (
+                            <div className="modal-overlay">
+                                <div className="modal-content">
+                                    <div className="title-wrapper">
+                                        <b>Nova tag</b>
+                                    </div>
+                                    <div className="form-grid">
+                                        <div className="input-wrapper">
+                                            <label htmlFor="editNewTagName">Nome:</label>
+                                            <input
+                                                type="text"
+                                                id="editNewTagName"
+                                                value={newTagName}
+                                                placeholder="Ex.: Leitura"
+                                                onChange={e => setNewTagName(e.target.value)}
+                                            />
+                                        </div>
+                                        <div className="input-wrapper">
+                                            <label htmlFor="editNewTagCategoryId">Categoria:</label>
+                                            <select
+                                                id="editNewTagCategoryId"
+                                                value={newTagCategoryId || ""}
+                                                onChange={e => setNewTagCategoryId(Number(e.target.value))}
+                                            >
+                                                <option value="">Selecione</option>
+                                                {tagCategories.map(category => (
+                                                    <option key={`edit-tag-category-${category.id}`} value={category.id}>
+                                                        {category.name}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div className="button-wrapper">
+                                        <button className="submit-button" type="button" onClick={handleCreateTag}>
+                                            Criar tag
+                                        </button>
+                                        <button className="secondary-button" type="button" onClick={() => setShowCreateTagModal(false)}>
+                                            Fechar
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
                         )}
 
@@ -978,50 +1239,6 @@ function EditCoursePage() {
                                                 <option value="attachment">Anexo</option>
                                             </select>
                                         </div>
-                                        {availableLessonTags.length > 0 && (
-                                            <div className="input-wrapper" style={{ gridColumn: "1 / -1" }}>
-                                                <label>Tags da aula (opcional):</label>
-                                                <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 6 }}>
-                                                    {availableLessonTags.map((tag) => {
-                                                        const tagId = Number(tag.id);
-                                                        const checked = selectedLessonTagIds.includes(tagId);
-                                                        return (
-                                                            <label
-                                                                key={`edit-lesson-tag-${tag.id}`}
-                                                                style={{
-                                                                    display: "inline-flex",
-                                                                    alignItems: "center",
-                                                                    gap: 6,
-                                                                    border: "1px solid #d9dde3",
-                                                                    borderRadius: 999,
-                                                                    padding: "6px 10px",
-                                                                    background: checked ? "#eef7fd" : "#fff"
-                                                                }}
-                                                            >
-                                                                <input
-                                                                    type="checkbox"
-                                                                    checked={checked}
-                                                                    onChange={(event) => {
-                                                                        setSelectedLessonTagIds((prev) => event.target.checked
-                                                                            ? Array.from(new Set([...prev, tagId]))
-                                                                            : prev.filter((id) => id !== tagId));
-                                                                    }}
-                                                                />
-                                                                <span style={{
-                                                                    color: "#fff",
-                                                                    background: tag.categoryColor || "#3696D3",
-                                                                    borderRadius: 999,
-                                                                    padding: "2px 8px",
-                                                                    fontSize: 12
-                                                                }}>
-                                                                    {tag.name}
-                                                                </span>
-                                                            </label>
-                                                        );
-                                                    })}
-                                                </div>
-                                            </div>
-                                        )}
                                         {(newLessonData.type === "pdf" || newLessonData.type === "attachment" || newLessonData.type === "video") && (
                                             <div className="input-wrapper">
                                                 <label htmlFor="lessonFile">
@@ -1093,7 +1310,6 @@ function EditCoursePage() {
                 size: undefined,
                 fileName: undefined,
             }));
-            setSelectedLessonTagIds([]);
                                             }}
                                         >
                                             Fechar

@@ -29,6 +29,25 @@ function toDisplayDate(raw: string) {
   return new Date(raw).toLocaleString("pt-BR");
 }
 
+function roleLabel(role?: string) {
+  const normalized = String(role || "").trim().toLowerCase();
+  if (normalized === "admin") return "Administrador";
+  if (normalized === "coordinator") return "Coordenador";
+  if (normalized === "consultant") return "Consultor";
+  if (normalized === "educator") return "Educador";
+  return "Administrador";
+}
+
+function messageSenderLabel(message: HelpdeskTicket["messages"][number]) {
+  if (message.sender === "agent") {
+    const name = String(message.createdByName || "").trim();
+    const role = roleLabel(message.createdByRole);
+    return name ? `${name} (${role})` : role;
+  }
+  if (message.sender === "system") return "Sistema";
+  return "Você";
+}
+
 type Props = {
   isPopup?: boolean;
   onClose?: () => void;
@@ -202,6 +221,7 @@ function HelpdeskUserPanel({ isPopup = false, onClose }: Props) {
               <div className="helpdesk-user-messages">
                 {selectedTicket.messages.map((message) => (
                   <div key={message.id} className={`msg msg-${message.sender}`}>
+                    <small className="msg-sender">{messageSenderLabel(message)}</small>
                     <p>{message.content}</p>
                     <span>{toDisplayDate(message.createdAt)}</span>
                   </div>

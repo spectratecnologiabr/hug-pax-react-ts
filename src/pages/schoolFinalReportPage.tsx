@@ -204,6 +204,28 @@ function SchoolFinalReportPage() {
             </section>
 
             <section className="sr-section">
+              <h2>Indicadores do Formulário de Visita</h2>
+              <div className="sr-table-like">
+                <div><span>Educadores cadastrados (Sim)</span><b>{report.formIndicators?.educatorsRegistered?.yes ?? 0}</b></div>
+                <div><span>Educadores cadastrados (Não)</span><b>{report.formIndicators?.educatorsRegistered?.no ?? 0}</b></div>
+                <div><span>Livros disponíveis (Sim)</span><b>{report.formIndicators?.booksAvailable?.yes ?? 0}</b></div>
+                <div><span>Livros disponíveis (Não)</span><b>{report.formIndicators?.booksAvailable?.no ?? 0}</b></div>
+                <div><span>Coleta de dados finalizada</span><b>{report.formIndicators?.dataCollectionStatus?.finished ?? 0}</b></div>
+                <div><span>Coleta em andamento</span><b>{report.formIndicators?.dataCollectionStatus?.collecting ?? 0}</b></div>
+                <div><span>Média do suporte da gestão (1-5)</span><b>{report.formIndicators?.supportRating?.avg ?? 0}</b></div>
+                <div><span>Respostas de avaliação de suporte</span><b>{report.formIndicators?.supportRating?.responses ?? 0}</b></div>
+                <div><span>Meta anterior cumprida</span><b>{report.formIndicators?.previousGoalMet?.yes ?? 0}</b></div>
+                <div><span>Meta anterior parcial</span><b>{report.formIndicators?.previousGoalMet?.partial ?? 0}</b></div>
+                <div><span>Meta anterior não cumprida</span><b>{report.formIndicators?.previousGoalMet?.no ?? 0}</b></div>
+                <div><span>Interesse em expandir programa (Sim)</span><b>{report.formIndicators?.expandInterest?.yes ?? 0}</b></div>
+                <div><span>Ações extras realizadas</span><b>{report.formIndicators?.extraAction?.yes ?? 0}</b></div>
+                <div><span>Participantes em ações extras</span><b>{report.formIndicators?.extraAction?.participantsTotal ?? 0}</b></div>
+                <div><span>Receptividade alta</span><b>{report.formIndicators?.audienceReception?.high ?? 0}</b></div>
+                <div><span>Sem evidência de prática (uso protocolar)</span><b>{report.formIndicators?.practiceEvidence?.noneOnly ?? 0}</b></div>
+              </div>
+            </section>
+
+            <section className="sr-section">
               <h2>Engajamento dos Educadores</h2>
               <div className="sr-table-like">
                 <div><span>Total de educadores</span><b>{report.educatorsEngagement.educatorsTotal}</b></div>

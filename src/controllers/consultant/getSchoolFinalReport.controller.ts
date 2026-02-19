@@ -44,6 +44,17 @@ export interface ISchoolFinalReportResponse {
       managementSupport: { evolved: number; stable: number; regressed: number }
     }
   }
+  formIndicators: {
+    educatorsRegistered: { yes: number; no: number }
+    booksAvailable: { yes: number; no: number }
+    dataCollectionStatus: { notStarted: number; initial: number; collecting: number; finished: number }
+    supportRating: { responses: number; avg: number }
+    previousGoalMet: { yes: number; partial: number; no: number }
+    expandInterest: { yes: number; no: number }
+    extraAction: { yes: number; no: number; participantsTotal: number }
+    audienceReception: { high: number; medium: number; low: number }
+    practiceEvidence: { reports: number; noneOnly: number }
+  }
   consolidated: {
     index: number
     note: string

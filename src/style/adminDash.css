@@ -1002,6 +1002,21 @@
     padding: 8px;
 }
 
+.modal-content .input-wrapper select {
+    background-color: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 4px;
+    padding: 8px;
+    font-family: 'SF UI Display Medium';
+    font-size: 14px;
+}
+
+.modal-content .input-wrapper select:focus {
+    outline: none;
+    border-color: #3696D3;
+    box-shadow: 0 0 0 2px rgba(54,150,211,0.2);
+}
+
 .modal-content .button-wrapper {
     display: flex;
     justify-content: flex-end;
