@@ -25,6 +25,15 @@ function CoordinatorMenubar() {
           <span>Início</span>
         </a>
 
+        <a href="/coordinator/performance" className={pathname.includes("/coordinator/performance") ? "menu-link selected" : "menu-link"}>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M4 18L9 12L13 15L20 7" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M20 12V7H15" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M3 21H21" stroke="white" strokeWidth="2" strokeLinecap="round"/>
+          </svg>
+          <span>Performance</span>
+        </a>
+
         <a href="/coordinator/agenda" className={pathname.includes("/coordinator/agenda") ? "menu-link selected" : "menu-link"}>
           <svg height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path fillRule="evenodd" clipRule="evenodd" d="M4.5 4.5C3.67157 4.5 3 5.17157 3 6V19.5C3 20.3284 3.67157 21 4.5 21H19.5C20.3284 21 21 20.3284 21 19.5V6C21 5.17157 20.3284 4.5 19.5 4.5H4.5ZM1.5 6C1.5 4.34315 2.84315 3 4.5 3H19.5C21.1569 3 22.5 4.34315 22.5 6V19.5C22.5 21.1569 21.1569 22.5 19.5 22.5H4.5C2.84315 22.5 1.5 21.1569 1.5 19.5V6Z" fill="white"/>

@@ -1,5 +1,6 @@
 import axios from "axios";
 import { getCookies } from "../misc/cookies.controller";
+import { formatDateInAppTimeZone } from "../../utils/timezone";
 
 /**
  * Recebe uma data (YYYY-MM-DD) e busca os agendamentos
@@ -17,8 +18,8 @@ export async function listVisitsByWeekRange(selectedDate: string, consultantId?:
     const weekEnd = new Date(weekStart);
     weekEnd.setDate(weekStart.getDate() + 6);
 
-    const startDate = weekStart.toISOString().split("T")[0];
-    const endDate = weekEnd.toISOString().split("T")[0];
+    const startDate = formatDateInAppTimeZone(weekStart);
+    const endDate = formatDateInAppTimeZone(weekEnd);
 
     const response = await axios.get(`${process.env.REACT_APP_API_URL}/visits/admin/by-week`, {
         params: {

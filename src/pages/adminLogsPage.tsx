@@ -68,7 +68,9 @@ function formatDateTime(value?: string) {
 
   const raw = value.trim();
   const hasTimezone = /[zZ]$|[+-]\d{2}:\d{2}$/.test(raw);
-  const normalized = hasTimezone ? raw : `${raw.replace(" ", "T")}Z`;
+  // Logs sem timezone explícito vêm do backend no horário local (-03:00).
+  // Não forçar UTC ("Z"), senão desloca 3 horas para trás ao exibir.
+  const normalized = hasTimezone ? raw : `${raw.replace(" ", "T")}-03:00`;
   const date = new Date(normalized);
 
   if (Number.isNaN(date.getTime())) return "—";

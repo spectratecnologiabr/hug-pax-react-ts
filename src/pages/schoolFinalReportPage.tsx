@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react"
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useParams } from "react-router-dom"
 
 import ConsultantMenubar from "../components/consultant/menubar"
@@ -9,6 +9,7 @@ import {
   getSchoolFinalReport,
   type ISchoolFinalReportResponse,
 } from "../controllers/consultant/getSchoolFinalReport.controller"
+import { exportElementToPdf } from "../utils/exportElementToPdf"
 import "../style/schoolFinalReportPage.css"
 
 function formatDate(value?: string | null) {
@@ -30,6 +31,8 @@ function SchoolFinalReportPage() {
   const [report, setReport] = useState<ISchoolFinalReportResponse | null>(null)
   const [from, setFrom] = useState("")
   const [to, setTo] = useState("")
+  const [exportingPdf, setExportingPdf] = useState(false)
+  const reportSheetRef = useRef<HTMLElement | null>(null)
 
   useEffect(() => {
     getOverviewData()
@@ -102,6 +105,37 @@ function SchoolFinalReportPage() {
     return "Período completo"
   }, [from, to])
 
+  const handleExportPdf = useCallback(async () => {
+    if (!reportSheetRef.current || !report) return
+
+    const safeSchoolName = String(report.school?.name || `escola-${parsedCollegeId}`)
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-zA-Z0-9-_]+/g, "-")
+      .replace(/^-+|-+$/g, "")
+      .toLowerCase()
+
+    try {
+      setExportingPdf(true)
+      await exportElementToPdf({
+        element: reportSheetRef.current,
+        filename: `ficha-escolar-${safeSchoolName || parsedCollegeId}.pdf`,
+        onClone: (clonedDocument) => {
+          clonedDocument
+            .querySelectorAll(".no-print")
+            .forEach((node) => ((node as HTMLElement).style.display = "none"))
+          clonedDocument
+            .querySelectorAll(".print-only")
+            .forEach((node) => ((node as HTMLElement).style.display = "block"))
+        },
+      })
+    } catch (error) {
+      console.error("Erro ao exportar PDF:", error)
+    } finally {
+      setExportingPdf(false)
+    }
+  }, [parsedCollegeId, report])
+
   return (
     <div className="admin-dashboard-container school-report-page">
       {isAdminPanel ? (
@@ -124,8 +158,8 @@ function SchoolFinalReportPage() {
             <button className="sr-secondary" onClick={() => window.history.back()}>
               Voltar
             </button>
-            <button className="sr-primary" onClick={() => window.print()}>
-              Exportar PDF
+            <button className="sr-primary" onClick={handleExportPdf} disabled={!report || exportingPdf || loading}>
+              {exportingPdf ? "Gerando PDF..." : "Exportar PDF"}
             </button>
           </div>
         </header>
@@ -148,7 +182,7 @@ function SchoolFinalReportPage() {
         {!loading && error && <div className="sr-feedback error">{error}</div>}
 
         {!loading && !error && report && (
-          <article className="school-report-sheet" aria-label="Ficha escolar consolidada">
+          <article ref={reportSheetRef} className="school-report-sheet" aria-label="Ficha escolar consolidada" data-export="school-report-sheet">
             <header className="sr-print-header print-only">
               <h1>Ficha Escolar (Relatório Final)</h1>
               <p>Período consultado: {printRangeLabel}</p>

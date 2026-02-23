@@ -1,0 +1,262 @@
+.coordinator-performance-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  font-family: "SF UI Display Medium", "SF UI Display", "Segoe UI", sans-serif;
+}
+
+.cpf-filter {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 220px;
+}
+
+.coordinator-performance-wrapper .admin-header-wrapper {
+  align-items: flex-end;
+}
+
+.coordinator-performance-wrapper .admin-header-wrapper > div:first-child {
+  flex: 1;
+  min-width: 0;
+}
+
+.coordinator-performance-wrapper .admin-header-wrapper .cpf-header-actions {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-end;
+  gap: 10px;
+  flex-wrap: nowrap;
+  margin-left: auto;
+}
+
+.coordinator-performance-wrapper .admin-header-wrapper .cpf-header-actions .cpf-filter {
+  width: 220px;
+  min-width: 220px;
+}
+
+.cpf-filter label {
+  font-size: 12px;
+  color: #475467;
+  font-family: "SF UI Display Medium", "SF UI Display", "Segoe UI", sans-serif;
+}
+
+.cpf-filter select {
+  height: 38px;
+  border-radius: 10px;
+  border: 1px solid #d0d5dd;
+  padding: 0 10px;
+  font-size: 13px;
+  color: #101828;
+  background: #fff;
+  font-family: "SF UI Display Medium", "SF UI Display", "Segoe UI", sans-serif;
+}
+
+.cpf-export-btn {
+  height: 38px;
+  border: 1px solid #89a626;
+  background: #89a626;
+  color: #fff;
+  border-radius: 10px;
+  padding: 0 14px;
+  font-size: 13px;
+  cursor: pointer;
+  font-family: "SF UI Display Semibold", "SF UI Display", "Segoe UI", sans-serif;
+  transition: filter .2s ease;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.cpf-export-btn:hover {
+  filter: brightness(0.95);
+}
+
+.cpf-error {
+  margin: 0 20px;
+  border: 1px solid #fecaca;
+  background: #fef2f2;
+  color: #b42318;
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 13px;
+  font-family: "SF UI Display Medium", "SF UI Display", "Segoe UI", sans-serif;
+}
+
+.cpf-grid-kpi {
+  margin: 0 20px;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.cpf-kpi-card {
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 14px;
+  background: #fff;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.cpf-kpi-card span {
+  font-size: 12px;
+  color: #667085;
+  font-family: "SF UI Display Medium", "SF UI Display", "Segoe UI", sans-serif;
+}
+
+.cpf-kpi-card b {
+  font-size: 26px;
+  line-height: 1;
+  color: #101828;
+  font-family: "SF UI Display Bold", "SF UI Display", "Segoe UI", sans-serif;
+}
+
+.cpf-kpi-card small {
+  font-size: 12px;
+  color: #475467;
+  font-family: "SF UI Display Medium", "SF UI Display", "Segoe UI", sans-serif;
+}
+
+.cpf-grid-main {
+  margin: 0 20px;
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 12px;
+}
+
+.cpf-panel {
+  margin: 0 20px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 14px;
+  background: #fff;
+  padding: 14px 16px;
+}
+
+.cpf-grid-main .cpf-panel {
+  margin: 0;
+}
+
+.cpf-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.cpf-panel-header b {
+  color: #101828;
+  font-size: 15px;
+  font-family: "SF UI Display Bold", "SF UI Display", "Segoe UI", sans-serif;
+}
+
+.cpf-table-wrap {
+  overflow-x: auto;
+}
+
+.cpf-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.cpf-table th,
+.cpf-table td {
+  text-align: left;
+  padding: 10px 8px;
+  border-bottom: 1px solid #eaecf0;
+  font-size: 13px;
+}
+
+.cpf-table th {
+  color: #475467;
+  font-weight: 600;
+  font-family: "SF UI Display Semibold", "SF UI Display", "Segoe UI", sans-serif;
+}
+
+.cpf-table td {
+  color: #101828;
+  font-family: "SF UI Display Medium", "SF UI Display", "Segoe UI", sans-serif;
+}
+
+.cpf-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.cpf-bar-row {
+  display: grid;
+  grid-template-columns: 120px 1fr auto;
+  align-items: center;
+  gap: 10px;
+}
+
+.cpf-bar-label,
+.cpf-bar-value {
+  font-size: 12px;
+  color: #344054;
+  font-family: "SF UI Display Medium", "SF UI Display", "Segoe UI", sans-serif;
+}
+
+.cpf-bar-track {
+  height: 8px;
+  border-radius: 99px;
+  background: #eaecf0;
+  overflow: hidden;
+}
+
+.cpf-bar-fill {
+  height: 100%;
+  border-radius: 99px;
+  background: linear-gradient(90deg, #89a626 0%, #5f7f1d 100%);
+}
+
+.cpf-alerts {
+  margin: 0;
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.cpf-alerts li {
+  color: #1d2939;
+  font-size: 13px;
+  font-family: "SF UI Display Medium", "SF UI Display", "Segoe UI", sans-serif;
+}
+
+@media (max-width: 1200px) {
+  .cpf-grid-kpi {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .cpf-grid-main {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 760px) {
+  .cpf-grid-kpi {
+    grid-template-columns: 1fr;
+  }
+
+  .cpf-bar-row {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+
+  .coordinator-performance-wrapper .admin-header-wrapper {
+    align-items: flex-start;
+  }
+
+  .coordinator-performance-wrapper .admin-header-wrapper .cpf-header-actions {
+    width: 100%;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    margin-left: 0;
+  }
+
+  .cpf-filter {
+    min-width: 180px;
+  }
+}

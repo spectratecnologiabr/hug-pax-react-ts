@@ -9,7 +9,7 @@ import Menubar from "../components/admin/menubar";
 import "../style/adminDash.css";
 import { uploadLessonFileController } from "../controllers/course/admin/uploadFile.controller";
 import { createFile } from "../controllers/course/admin/createFile.controller";
-import { updateLessonAllowDownload, updateLessonExtUrl } from "../controllers/course/admin/updateLesson.controller";
+import { updateLessonAllowDownload, updateLessonCode, updateLessonExtUrl } from "../controllers/course/admin/updateLesson.controller";
 import { updateCourse } from "../controllers/course/admin/updateCourse.controller";
 import { deleteLesson } from "../controllers/course/admin/deleteLesson.controller";
 import { transcribeLesson } from "../controllers/course/admin/transcribeLesson.controller";
@@ -48,6 +48,14 @@ type ConfirmDeleteState = {
     lessonIndex: number | null;
     title: string;
 };
+type TranscriptionReviewState = {
+    open: boolean;
+    moduleIndex: number | null;
+    lessonIndex: number | null;
+    lessonId: number | null;
+    lessonTitle: string;
+    text: string;
+};
 
 function EditCoursePage() {
     const { courseId } = useParams<{ courseId: string }>();
@@ -79,6 +87,16 @@ function EditCoursePage() {
     });
     const [lessonFileUploading, setLessonFileUploading] = useState(false);
     const [transcribingLessonId, setTranscribingLessonId] = useState<number | null>(null);
+    const [transcriptionLoadingOpen, setTranscriptionLoadingOpen] = useState(false);
+    const [savingTranscriptionReview, setSavingTranscriptionReview] = useState(false);
+    const [transcriptionReview, setTranscriptionReview] = useState<TranscriptionReviewState>({
+        open: false,
+        moduleIndex: null,
+        lessonIndex: null,
+        lessonId: null,
+        lessonTitle: "",
+        text: "",
+    });
     const [tagCategories, setTagCategories] = useState<TagCategory[]>([]);
     const [availableLessonTags, setAvailableLessonTags] = useState<any[]>([]);
     const [courseDefaultTagIds, setCourseDefaultTagIds] = useState<number[]>([]);
@@ -433,30 +451,27 @@ function EditCoursePage() {
 
         try {
             setTranscribingLessonId(lesson.id);
+            setTranscriptionLoadingOpen(true);
             const response = await transcribeLesson(lesson.id);
             const chars = Number(response?.data?.chars || 0);
+            const transcript = String(response?.data?.transcript || "").trim();
             const preview = String(response?.data?.preview || "").trim();
+            const nextText = transcript || preview || String(lesson.code || "").trim();
 
-            setModules(prev =>
-                prev.map((m, mi) =>
-                    mi !== moduleIndex
-                        ? m
-                        : {
-                              ...m,
-                              lessons: (m.lessons ?? []).map((l, li) =>
-                                  li === lessonIndex
-                                      ? { ...l, code: preview || l.code || "__transcribed__" }
-                                      : l
-                              ),
-                          }
-                )
-            );
+            setTranscriptionReview({
+                open: true,
+                moduleIndex,
+                lessonIndex,
+                lessonId: lesson.id,
+                lessonTitle: lesson.title,
+                text: nextText,
+            });
 
             handleModalMessage({
                 isError: false,
                 message: chars > 0
-                    ? `Transcrição concluída (${chars} caracteres).`
-                    : "Transcrição concluída."
+                    ? `Transcrição concluída (${chars} caracteres). Revise e aprove para salvar.`
+                    : "Transcrição concluída. Revise e aprove para salvar."
             });
         } catch (error: any) {
             const apiMessage = error?.response?.data?.message;
@@ -465,7 +480,81 @@ function EditCoursePage() {
                 message: apiMessage || "Não foi possível transcrever a aula."
             });
         } finally {
+            setTranscriptionLoadingOpen(false);
             setTranscribingLessonId(null);
+        }
+    }
+
+    function openSavedTranscriptionEditor(moduleIndex: number, lessonIndex: number) {
+        const lesson = modules[moduleIndex]?.lessons?.[lessonIndex];
+        if (!lesson?.id) {
+            handleModalMessage({ isError: true, message: "Aula sem ID para edição da transcrição." });
+            return;
+        }
+
+        const existingText = String(lesson.code || "").trim();
+        if (!existingText) {
+            handleModalMessage({ isError: true, message: "Essa aula ainda não possui transcrição salva." });
+            return;
+        }
+
+        setTranscriptionReview({
+            open: true,
+            moduleIndex,
+            lessonIndex,
+            lessonId: lesson.id,
+            lessonTitle: lesson.title,
+            text: existingText,
+        });
+    }
+
+    function closeTranscriptionReview() {
+        if (savingTranscriptionReview) return;
+        setTranscriptionReview({
+            open: false,
+            moduleIndex: null,
+            lessonIndex: null,
+            lessonId: null,
+            lessonTitle: "",
+            text: "",
+        });
+    }
+
+    async function approveTranscriptionReview() {
+        if (!transcriptionReview.lessonId || transcriptionReview.moduleIndex == null || transcriptionReview.lessonIndex == null) {
+            return;
+        }
+
+        const approvedText = String(transcriptionReview.text || "").trim();
+        if (!approvedText) {
+            handleModalMessage({ isError: true, message: "A transcrição não pode ficar vazia." });
+            return;
+        }
+
+        setSavingTranscriptionReview(true);
+        try {
+            await updateLessonCode(transcriptionReview.lessonId, approvedText);
+
+            setModules(prev =>
+                prev.map((m, mi) =>
+                    mi !== transcriptionReview.moduleIndex
+                        ? m
+                        : {
+                            ...m,
+                            lessons: (m.lessons ?? []).map((l, li) =>
+                                li === transcriptionReview.lessonIndex ? { ...l, code: approvedText } : l
+                            ),
+                        }
+                )
+            );
+
+            closeTranscriptionReview();
+            handleModalMessage({ isError: false, message: "Transcrição aprovada e salva na aula." });
+        } catch (error: any) {
+            const apiMessage = error?.response?.data?.message;
+            handleModalMessage({ isError: true, message: apiMessage || "Erro ao salvar transcrição da aula." });
+        } finally {
+            setSavingTranscriptionReview(false);
         }
     }
 
@@ -990,18 +1079,22 @@ function EditCoursePage() {
                                                                   const title = isTranscribing
                                                                     ? "Transcrevendo vídeo"
                                                                     : hasTranscript
-                                                                      ? "Vídeo já transcrito"
+                                                                      ? "Editar transcrição"
                                                                       : "Transcrever vídeo";
                                                                   return (
                                                                 <button
                                                                   type="button"
                                                                   className="action-button add-lesson"
                                                                   disabled={isTranscribing}
-                                                                  onClick={() => handleTranscribeLesson(index, lessonIndex)}
+                                                                  onClick={() =>
+                                                                      hasTranscript
+                                                                          ? openSavedTranscriptionEditor(index, lessonIndex)
+                                                                          : handleTranscribeLesson(index, lessonIndex)
+                                                                  }
                                                                   title={title}
                                                                   aria-label={title}
                                                                 >
-                                                                  {isTranscribing ? "⏳" : hasTranscript ? "✅" : "📝"}
+                                                                  {isTranscribing ? "⏳" : hasTranscript ? "✏️" : "📝"}
                                                                 </button>
                                                                   );
                                                                 })()
@@ -1024,6 +1117,64 @@ function EditCoursePage() {
                                         ))}
                                     </ul>
                                 )}
+                            </div>
+                        )}
+
+                        {transcriptionLoadingOpen && (
+                            <div className="modal-overlay" role="dialog" aria-modal="true" aria-label="Transcrevendo aula">
+                                <div className="modal-content" style={{ maxWidth: 420, textAlign: "center" }}>
+                                    <div className="title-wrapper">
+                                        <b>Transcrevendo aula...</b>
+                                    </div>
+                                    <div style={{ display: "flex", justifyContent: "center" }}>
+                                        <div className="transcription-loader" aria-hidden="true" />
+                                    </div>
+                                    <span style={{ fontFamily: "SF UI Display Medium", color: "#4b5563" }}>
+                                        Aguarde. Isso pode levar alguns minutos.
+                                    </span>
+                                </div>
+                            </div>
+                        )}
+
+                        {transcriptionReview.open && (
+                            <div className="modal-overlay" role="dialog" aria-modal="true" aria-label="Revisar transcrição da aula">
+                                <div className="modal-content" style={{ maxWidth: 900 }}>
+                                    <div className="title-wrapper">
+                                        <b>Revisar transcrição: {transcriptionReview.lessonTitle}</b>
+                                    </div>
+                                    <div className="input-wrapper">
+                                        <label htmlFor="transcriptionReviewEdit">Edite o texto antes de aprovar:</label>
+                                        <textarea
+                                            id="transcriptionReviewEdit"
+                                            rows={14}
+                                            value={transcriptionReview.text}
+                                            onChange={e =>
+                                                setTranscriptionReview(prev => ({
+                                                    ...prev,
+                                                    text: e.target.value,
+                                                }))
+                                            }
+                                        />
+                                    </div>
+                                    <div className="button-wrapper">
+                                        <button
+                                            className="secondary-button"
+                                            type="button"
+                                            disabled={savingTranscriptionReview}
+                                            onClick={closeTranscriptionReview}
+                                        >
+                                            Cancelar
+                                        </button>
+                                        <button
+                                            className="submit-button"
+                                            type="button"
+                                            disabled={savingTranscriptionReview}
+                                            onClick={approveTranscriptionReview}
+                                        >
+                                            {savingTranscriptionReview ? "Salvando..." : "Aprovar e salvar"}
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
                         )}
 

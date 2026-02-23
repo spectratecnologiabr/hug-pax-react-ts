@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import { findVisit } from "../controllers/consultant/findVisit.controller";
 import { findUser } from "../controllers/user/findUser.controller";
 import { getCookies } from "../controllers/misc/cookies.controller";
+import { exportElementToPdf } from "../utils/exportElementToPdf";
 
 import "../style/visitReport.css";
 
@@ -12,6 +13,8 @@ const VisitReportPreview: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [consultantName, setConsultantName] = useState<string>("");
   const [photoPreviewUrls, setPhotoPreviewUrls] = useState<Record<string, string>>({});
+  const [exportingPdf, setExportingPdf] = useState(false);
+  const reportRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     async function fetchVisit() {
@@ -258,6 +261,27 @@ const VisitReportPreview: React.FC = () => {
   const photo1Url = photoPreviewUrls.photo1 || resolvePhotoUrl(getRawAnswer("photo1"));
   const photo2Url = photoPreviewUrls.photo2 || resolvePhotoUrl(getRawAnswer("photo2"));
 
+  const handleExportPdf = useCallback(async () => {
+    if (!reportRef.current) return;
+
+    try {
+      setExportingPdf(true);
+      await exportElementToPdf({
+        element: reportRef.current,
+        filename: `relatorio-visita-${visitData?.id ?? visitId ?? "detalhes"}.pdf`,
+        onClone: (clonedDocument) => {
+          clonedDocument
+            .querySelectorAll(".no-print")
+            .forEach((node) => ((node as HTMLElement).style.display = "none"));
+        },
+      });
+    } catch (error) {
+      console.error("Erro ao exportar PDF:", error);
+    } finally {
+      setExportingPdf(false);
+    }
+  }, [visitData?.id, visitId]);
+
   const isFirstVisit = visitData?.visitType === "initial";
   const isAno1 = visitData?.institutionProfile === "Ano 1";
   const isAno2Plus = visitData?.institutionProfile === "Ano 2+";
@@ -333,8 +357,8 @@ const VisitReportPreview: React.FC = () => {
 
 
   return (
-    <div className="report-container">
-      <button className="report-back-button" onClick={() => window.history.back()}>
+    <div className="report-container" ref={reportRef} data-export="visit-report">
+      <button className="report-back-button no-print" onClick={() => window.history.back()}>
         Voltar
       </button>
       <h1>Relatório de Visita de Consultoria Pedagógica</h1>
@@ -468,8 +492,8 @@ const VisitReportPreview: React.FC = () => {
         </section>
       )}
 
-      <button className="report-print-button" onClick={() => window.print()}>
-        Gerar PDF
+      <button className="report-print-button no-print" onClick={handleExportPdf} disabled={exportingPdf}>
+        {exportingPdf ? "Gerando PDF..." : "Gerar PDF"}
       </button>
     </div>
   );

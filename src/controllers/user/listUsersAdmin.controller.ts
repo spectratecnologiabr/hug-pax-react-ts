@@ -10,6 +10,7 @@ export interface IListUsersAdminQuery {
   status?: AdminUserStatus
   page?: number
   limit?: number
+  pageSize?: number
 }
 
 export interface IAdminUserListItem {
@@ -45,9 +46,17 @@ export function resolveAdminUserStatus(user: Pick<IAdminUserListItem, "isActive"
 }
 
 export async function listUsersAdmin(query: IListUsersAdminQuery = {}) {
+  const params = {
+    search: query.search,
+    role: query.role,
+    status: query.status,
+    page: query.page,
+    pageSize: query.pageSize ?? query.limit,
+  }
+
   const response = await axios.get(`${process.env.REACT_APP_API_URL}/user/admin/users`, {
     headers: { Authorization: `Bearer ${getCookies("authToken")}` },
-    params: query,
+    params,
   })
 
   return response.data?.data ?? response.data

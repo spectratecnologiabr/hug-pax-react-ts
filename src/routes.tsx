@@ -52,6 +52,7 @@ import CoordinatorDash from './pages/coordinatorDash';
 import CoordinatorAgendaPage from './pages/coordinatorAgendaPage';
 import CoordinatorConsultantsPage from './pages/coordinatorConsultantsPage';
 import CoordinatorReportsCenterPage from './pages/coordinatorReportsCenterPage';
+import CoordinatorPerformancePage from './pages/coordinatorPerformancePage';
 
 function MyRoutes() {
     return (
@@ -83,6 +84,7 @@ function MyRoutes() {
                 <Route path='/consultant/colleges/:collegeId/final-report' element={<AdminRoute><SchoolFinalReportPage/></AdminRoute>} />
 
                 <Route path='/coordinator' element={<CoordinatorRoute><CoordinatorDash/></CoordinatorRoute>} />
+                <Route path='/coordinator/performance' element={<CoordinatorRoute><CoordinatorPerformancePage/></CoordinatorRoute>} />
                 <Route path='/coordinator/agenda' element={<CoordinatorRoute><CoordinatorAgendaPage/></CoordinatorRoute>} />
                 <Route path='/coordinator/consultants' element={<CoordinatorRoute><CoordinatorConsultantsPage/></CoordinatorRoute>} />
                 <Route path='/coordinator/colleges' element={<CoordinatorRoute><CollegesPage/></CoordinatorRoute>} />
@@ -94,6 +96,7 @@ function MyRoutes() {
                 <Route path='/coordinator/educators/:educatorId/report' element={<CoordinatorRoute><EducatorReportPage/></CoordinatorRoute>} />
 
                 <Route path='/admin' element={<AdminRoute><AdminDash/></AdminRoute>} />
+                <Route path='/admin/performance' element={<AdminRoute><CoordinatorPerformancePage/></AdminRoute>} />
                 <Route path='/admin/agenda' element={<AdminRoute><AgendaAdminPage/></AdminRoute>} />
                 <Route path='/admin/courses' element={<AdminRoute><Courses/></AdminRoute>} />
                 <Route path='/admin/courses/add' element={<AdminRoute><NewCoursePage/></AdminRoute>} />

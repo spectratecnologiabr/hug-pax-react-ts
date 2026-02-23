@@ -10,6 +10,7 @@ import Menubar from "../components/coordinator/menubar";
 import NewSchedulingForm from "../components/admin/NewSchedulingForm";
 import AdminDatePicker from "../components/admin/AdminDatePicker";
 import ViewSchedulingForm from "../components/admin/ViewSchedulingForm";
+import { formatDateInAppTimeZone } from "../utils/timezone";
 
 import "../style/agendaAdminPage.css"
 
@@ -70,8 +71,8 @@ function getWeekRange(date: Date) {
 
 function groupVisitsByDay(visits: TVisit[]) {
   return visits.reduce<Record<string, TVisit[]>>((acc, visit) => {
-    const [y, m, d] = visit.visit_date.split("-").map(Number);
-    const key = new Date(y, m - 1, d).toISOString().slice(0, 10);
+    const match = String(visit.visit_date || "").match(/^(\d{4}-\d{2}-\d{2})/);
+    const key = match ? match[1] : String(visit.visit_date || "");
     acc[key] = acc[key] || [];
     acc[key].push(visit);
     return acc;
@@ -209,7 +210,7 @@ function CoordinatorAgendaPage() {
     useEffect(() => {
       async function fetchWeekVisits() {
         try {
-          const dateBase = selectedDate.toISOString().split("T")[0];
+          const dateBase = formatDateInAppTimeZone(selectedDate);
 
           const data = await listVisitsByWeekRange(
             dateBase,
@@ -451,14 +452,14 @@ function CoordinatorAgendaPage() {
                                         const dayDate = new Date(weekRange.start);
                                         dayDate.setDate(weekRange.start.getDate() + index);
 
-                                        const dayKey = dayDate.toISOString().slice(0, 10);
+                                        const dayKey = formatDateInAppTimeZone(dayDate);
                                         const dayVisits = weekVisits[dayKey] || [];
 
                                         return (
                                           <div
                                             key={dayKey}
                                             className={`agenda-week-day ${
-                                              dayKey === new Date().toISOString().slice(0, 10) ? "is-today" : ""
+                                              dayKey === formatDateInAppTimeZone(new Date()) ? "is-today" : ""
                                             }`}
                                           >
                                             <div className="agenda-week-day-header">

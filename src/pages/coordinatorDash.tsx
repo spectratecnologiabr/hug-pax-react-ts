@@ -98,6 +98,10 @@ function CoordinatorDash() {
           </div>
 
           <div className="coord-shortcuts">
+            <a href="/coordinator/performance" className="coord-shortcut-card">
+              <b>Performance</b>
+              <span>KPI da regional, ranking de consultores e alertas operacionais.</span>
+            </a>
             <a href="/coordinator/agenda" className="coord-shortcut-card">
               <b>Gestão de Agendas</b>
               <span>Visualizar e acompanhar visitas por período.</span>

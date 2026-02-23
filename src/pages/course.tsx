@@ -132,6 +132,8 @@ function Course() {
     const [lessonComments, setLessonComments] = useState([] as Array<TComment>)
     const canvasRef = React.useRef<HTMLCanvasElement | null>(null);
     const renderTaskRef = React.useRef<any>(null);
+    const ocrWorkerRef = React.useRef<any>(null);
+    const ocrRequestIdRef = React.useRef(0);
     const [search, setSearch] = useState("");
     const [isSearching, setIsSearching] = useState(false);
     const [searchResult, setSearchResult] = useState<TSearchResult>()
@@ -179,6 +181,8 @@ function Course() {
     const [modalErrorOpen, setModalErrorOpen] = React.useState(false);
     const [message, setMessage] = React.useState("");
     const [pdfAccessibleText, setPdfAccessibleText] = React.useState("");
+    const [isPdfOcrRunning, setIsPdfOcrRunning] = React.useState(false);
+    const [pdfTextSource, setPdfTextSource] = React.useState<"pdfjs" | "pdfjs-cleaned" | "ocr" | "none">("none");
 
     function coerceBoolean(value: any): boolean | undefined {
         if (value === true || value === "true" || value === 1 || value === "1") return true;
@@ -263,8 +267,47 @@ function Course() {
         return `${text.slice(0, max)}...`;
     }
 
-    function splitAccessibleText(value?: string, maxChunkLength = 420): string[] {
-        const text = (value || "").replace(/\s+/g, " ").trim();
+    function normalizeRandomUppercase(value?: string): string {
+        const text = String(value || "");
+        if (!text) return "";
+
+        return text.replace(/\b[\p{L}]{3,}\b/gu, (word) => {
+            const letters = Array.from(word).filter((char) => /\p{L}/u.test(char));
+            if (letters.length < 3) return word;
+
+            const hasUpper = letters.some((char) => char === char.toUpperCase() && char !== char.toLowerCase());
+            const hasLower = letters.some((char) => char === char.toLowerCase() && char !== char.toUpperCase());
+            if (!hasUpper || !hasLower) return word;
+
+            const transitions = letters.reduce((acc, char, idx) => {
+                if (idx === 0) return 0;
+                const prev = letters[idx - 1];
+                const prevUpper = prev === prev.toUpperCase() && prev !== prev.toLowerCase();
+                const currentUpper = char === char.toUpperCase() && char !== char.toLowerCase();
+                return acc + (prevUpper !== currentUpper ? 1 : 0);
+            }, 0);
+
+            const upperCount = letters.filter((char) => char === char.toUpperCase() && char !== char.toLowerCase()).length;
+            const upperRatio = upperCount / letters.length;
+            const isLikelyAcronym = word === word.toUpperCase() && letters.length <= 5;
+
+            if (isLikelyAcronym) return word;
+            if (transitions >= 2 && upperRatio >= 0.2 && upperRatio <= 0.8) {
+                return word.toLowerCase();
+            }
+
+            return word;
+        });
+    }
+
+    function splitAccessibleText(
+        value?: string,
+        maxChunkLength = 420,
+        options?: { normalizeRandomCase?: boolean }
+    ): string[] {
+        const shouldNormalizeRandomCase = options?.normalizeRandomCase === true;
+        const baseText = (value || "").replace(/\s+/g, " ").trim();
+        const text = shouldNormalizeRandomCase ? normalizeRandomUppercase(baseText) : baseText;
         if (!text) return [];
 
         const sentences = text
@@ -293,6 +336,60 @@ function Course() {
 
         if (current) chunks.push(current);
         return chunks;
+    }
+
+    function normalizeExtractedPdfText(value?: string): string {
+        return String(value || "")
+            .replace(/\u00AD/g, "") // soft hyphen
+            .replace(/-\s+/g, "") // broken words across line breaks
+            .replace(/\s+/g, " ")
+            .trim();
+    }
+
+    function hasPrivateUseCodepoint(value: string): boolean {
+        for (const ch of value) {
+            const cp = ch.codePointAt(0) || 0;
+            const isBmpPua = cp >= 0xe000 && cp <= 0xf8ff;
+            const isSupPua1 = cp >= 0xf0000 && cp <= 0xffffd;
+            const isSupPua2 = cp >= 0x100000 && cp <= 0x10fffd;
+            if (isBmpPua || isSupPua1 || isSupPua2) return true;
+        }
+        return false;
+    }
+
+    function isCorruptedToken(token: string): boolean {
+        if (!token) return false;
+        if (/[�□■▮█]/.test(token)) return true;
+        if (hasPrivateUseCodepoint(token)) return true;
+        if (/(?:Ã.|Â.|â.|Ð.|Ñ.|¤|¦)/.test(token)) return true;
+        return false;
+    }
+
+    function analyzePdfTextQuality(value?: string) {
+        const text = normalizeExtractedPdfText(value);
+        const total = text.length || 1;
+        const letterOrDigitCount = (text.match(/[A-Za-zÀ-ÖØ-öø-ÿ0-9]/g) || []).length;
+        const readableRatio = letterOrDigitCount / total;
+        const tokens = text.split(/\s+/).filter(Boolean);
+        const corruptedTokens = tokens.filter((token) => isCorruptedToken(token)).length;
+        const corruptedTokenRatio = corruptedTokens / Math.max(1, tokens.length);
+
+        return {
+            text,
+            readableRatio,
+            tokenCount: tokens.length,
+            corruptedTokens,
+            corruptedTokenRatio,
+        };
+    }
+
+    function cleanCorruptedPdfText(value?: string): string {
+        const text = normalizeExtractedPdfText(value);
+        if (!text) return "";
+
+        const tokens = text.split(/\s+/).filter(Boolean);
+        const cleaned = tokens.filter((token) => !isCorruptedToken(token)).join(" ");
+        return normalizeExtractedPdfText(cleaned);
     }
 
     function handleModalMessage(data: { isError: boolean; message: string }) {
@@ -344,6 +441,16 @@ function Course() {
 
         return () => clearTimeout(delay);
     }, [search]);
+
+    React.useEffect(() => {
+        return () => {
+            const worker = ocrWorkerRef.current;
+            if (worker?.terminate) {
+                worker.terminate().catch(() => undefined);
+            }
+            ocrWorkerRef.current = null;
+        };
+    }, []);
 
     React.useEffect(() => {
         if (videoRef.current) {
@@ -603,12 +710,16 @@ function Course() {
         // Só processa se for PDF e tiver extUrl definido
         if (!lessionData || lessionData.type !== "pdf" || !lessionData.extUrl) {
             setPdfAccessibleText("");
+            setPdfTextSource("none");
+            setIsPdfOcrRunning(false);
             return;
         }
 
         let active = true;
 
         const renderPdf = async () => {
+            const requestId = ++ocrRequestIdRef.current;
+
             // Cancela render anterior
             if (renderTaskRef.current) {
                 try {
@@ -636,7 +747,7 @@ function Course() {
                 .join(" ")
                 .replace(/\s+/g, " ")
                 .trim();
-            setPdfAccessibleText(extractedText);
+            const normalizedExtractedText = normalizeExtractedPdfText(extractedText);
 
             const viewport = page.getViewport({ scale: isPdfFullscreen ? 1.2 : 1 });
             const canvas = canvasRef.current;
@@ -655,6 +766,64 @@ function Course() {
                 if (err?.name !== "RenderingCancelledException") {
                     console.error(err);
                 }
+                return;
+            }
+
+            if (!active || requestId !== ocrRequestIdRef.current) return;
+
+            const quality = analyzePdfTextQuality(normalizedExtractedText);
+            const cleanedExtractedText = cleanCorruptedPdfText(normalizedExtractedText);
+
+            if (quality.corruptedTokens === 0 && quality.readableRatio >= 0.5) {
+                setPdfAccessibleText(normalizedExtractedText);
+                setPdfTextSource("pdfjs");
+                setIsPdfOcrRunning(false);
+                return;
+            }
+
+            // For low/medium corruption, keep PDF native order and drop broken tokens.
+            const cleanedLooksUsable =
+                cleanedExtractedText.length >= 80 &&
+                cleanedExtractedText.length >= normalizedExtractedText.length * 0.55 &&
+                quality.corruptedTokenRatio <= 0.18;
+
+            if (cleanedLooksUsable) {
+                setPdfAccessibleText(cleanedExtractedText);
+                setPdfTextSource("pdfjs-cleaned");
+                setIsPdfOcrRunning(false);
+                return;
+            }
+
+            setIsPdfOcrRunning(true);
+            try {
+                const { createWorker } = await import("tesseract.js");
+                let worker = ocrWorkerRef.current;
+
+                if (!worker) {
+                    worker = await createWorker("por+eng");
+                    ocrWorkerRef.current = worker;
+                }
+
+                const { data } = await worker.recognize(canvas);
+                if (!active || requestId !== ocrRequestIdRef.current) return;
+
+                const ocrText = normalizeExtractedPdfText(String(data?.text || ""));
+                if (ocrText) {
+                    setPdfAccessibleText(ocrText);
+                    setPdfTextSource("ocr");
+                } else {
+                    setPdfAccessibleText(normalizedExtractedText);
+                    setPdfTextSource("pdfjs");
+                }
+            } catch (error) {
+                console.error("OCR fallback failed:", error);
+                if (!active || requestId !== ocrRequestIdRef.current) return;
+                setPdfAccessibleText(normalizedExtractedText);
+                setPdfTextSource("pdfjs");
+            } finally {
+                if (active && requestId === ocrRequestIdRef.current) {
+                    setIsPdfOcrRunning(false);
+                }
             }
         };
 
@@ -667,6 +836,7 @@ function Course() {
                     renderTaskRef.current.cancel();
                 } catch {}
             }
+            setIsPdfOcrRunning(false);
         };
     }, [lessionData, pageNumber, isPdfFullscreen]);
 
@@ -1067,7 +1237,7 @@ function Course() {
 
                                                     return transcriptChunks.map((chunk, idx) => (
                                                         <p key={`video-transcript-chunk-${idx}`}>
-                                                            {`Transcrição (parte ${idx + 1}): ${chunk}`}
+                                                            {chunk}
                                                         </p>
                                                     ));
                                                 })()}
@@ -1075,15 +1245,20 @@ function Course() {
                                         ) : (
                                             <>
                                                 <p>{`PDF "${lessionData.title}". Página ${pageNumber} de ${numPages || 1}.`}</p>
+                                                {isPdfOcrRunning && <p>Detectando texto com OCR para melhorar leitura da página...</p>}
+                                                {!isPdfOcrRunning && pdfTextSource === "ocr" && <p>Texto obtido por OCR (fonte diferenciada detectada).</p>}
+                                                {!isPdfOcrRunning && pdfTextSource === "pdfjs-cleaned" && <p>Texto obtido do PDF com limpeza automática de caracteres corrompidos.</p>}
                                                 {(() => {
-                                                    const pdfChunks = splitAccessibleText(pdfAccessibleText);
+                                                    const pdfChunks = splitAccessibleText(pdfAccessibleText, 420, {
+                                                        normalizeRandomCase: true,
+                                                    });
                                                     if (pdfChunks.length === 0) {
                                                         return <p>Sem texto detectável nesta página.</p>;
                                                     }
 
                                                     return pdfChunks.map((chunk, idx) => (
                                                         <p key={`pdf-text-chunk-${pageNumber}-${idx}`}>
-                                                            {`Texto do PDF (parte ${idx + 1}): ${chunk}`}
+                                                            {chunk}
                                                         </p>
                                                     ));
                                                 })()}
