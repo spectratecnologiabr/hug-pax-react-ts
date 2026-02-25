@@ -296,7 +296,7 @@ function ContractsPage() {
                     type="text"
                     value={form.name}
                     onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))}
-                    placeholder="Ex.: Contrato Regional Norte 2026"
+                    placeholder="Ex.: Contrato Rede Norte 2026"
                   />
                 </label>
                 <label className="contracts-field">

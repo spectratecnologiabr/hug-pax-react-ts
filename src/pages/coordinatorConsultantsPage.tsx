@@ -312,7 +312,7 @@ function CoordinatorConsultantsPage() {
           <div className="colleges-header">
             <div>
               <b>Gestão de Consultores</b>
-              <span>Listagem com filtros de status e controle de modo férias por regional.</span>
+              <span>Listagem com filtros de status e controle de modo férias por rede.</span>
             </div>
           </div>
 

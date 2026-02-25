@@ -12,6 +12,8 @@ export interface IListUsersAdminQuery {
   page?: number
   limit?: number
   pageSize?: number
+  sortBy?: "name" | "created_at"
+  sortDir?: "asc" | "desc"
 }
 
 export interface IAdminUserListItem {
@@ -36,6 +38,7 @@ export interface IAdminUserListItem {
   language?: string
   collegeId?: number | null
   collegeName?: string
+  createdAt?: string | null
   lastAccessAt?: string | null
   updatedAt?: string | null
   management?: string | null
@@ -55,6 +58,8 @@ export async function listUsersAdmin(query: IListUsersAdminQuery = {}) {
     management: query.management,
     page: query.page,
     pageSize: query.pageSize ?? query.limit,
+    sortBy: query.sortBy,
+    sortDir: query.sortDir,
   }
 
   const response = await axios.get(`${process.env.REACT_APP_API_URL}/user/admin/users`, {

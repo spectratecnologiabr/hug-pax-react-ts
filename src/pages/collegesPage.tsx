@@ -288,6 +288,8 @@ function CollegesPage() {
   const [colleges, setColleges] = useState<TCollege[]>([]);
   const [userRole, setUserRole] = useState<TRole | null>(null);
   const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  const [pagination, setPagination] = useState({ page: 1, pageSize: 50, total: 0 });
 
   const [modalOpen, setModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<TFormMode>("create");
@@ -326,14 +328,67 @@ function CollegesPage() {
     [contracts, collegeForm.contractId]
   );
 
-  async function loadColleges() {
+  const totalPages = useMemo(() => {
+    if (!pagination.total || pagination.pageSize <= 0) return 1;
+    return Math.max(1, Math.ceil(pagination.total / pagination.pageSize));
+  }, [pagination.total, pagination.pageSize]);
+
+  async function loadColleges(params?: { page?: number; search?: string }) {
     setLoading(true);
     try {
-      const collegesList = await listColleges();
-      setColleges(Array.isArray(collegesList) ? collegesList.map(normalizeCollegeRecord) : []);
+      const requestedPage = Math.max(1, Number(params?.page ?? pagination.page));
+      const requestedSearch = String(params?.search ?? search).trim();
+
+      const response: any = await listColleges({
+        search: requestedSearch || undefined,
+        page: requestedPage,
+        pageSize: pagination.pageSize,
+      });
+
+      const isPaginatedPayload = Array.isArray(response?.items) && response?.pagination;
+      let rows: TCollege[] = [];
+      let total = 0;
+      let resolvedPage = requestedPage;
+
+      if (isPaginatedPayload) {
+        const items = Array.isArray(response?.items) ? response.items : [];
+        rows = items.map(normalizeCollegeRecord);
+        total = Number(response?.pagination?.total ?? rows.length);
+        resolvedPage = Math.max(1, Number(response?.pagination?.page ?? requestedPage));
+      } else {
+        // Fallback: if API responds with full list, paginate/search on client side.
+        const fullList = Array.isArray(response) ? response.map(normalizeCollegeRecord) : [];
+        const filtered = requestedSearch
+          ? fullList.filter((item) => {
+              const q = requestedSearch.toLowerCase();
+              return (
+                String(item.name ?? "").toLowerCase().includes(q)
+                || String(item.city ?? "").toLowerCase().includes(q)
+                || String(item.state ?? "").toLowerCase().includes(q)
+                || String(item.partner ?? "").toLowerCase().includes(q)
+                || String(item.management ?? "").toLowerCase().includes(q)
+                || String(item.salesManager ?? "").toLowerCase().includes(q)
+                || String(item.collegeCode ?? "").toLowerCase().includes(q)
+              );
+            })
+          : fullList;
+
+        total = filtered.length;
+        const start = (requestedPage - 1) * pagination.pageSize;
+        const end = start + pagination.pageSize;
+        rows = filtered.slice(start, end);
+      }
+
+      setColleges(rows);
+      setPagination((prev) => ({
+        ...prev,
+        page: resolvedPage,
+        total: Number.isFinite(total) ? total : rows.length,
+      }));
     } catch (error) {
       console.error("Error fetching colleges list:", error);
       setColleges([]);
+      setPagination((prev) => ({ ...prev, total: 0 }));
     } finally {
       setLoading(false);
     }
@@ -358,10 +413,22 @@ function CollegesPage() {
       } catch (error) {
         console.error("Bootstrap colleges page error:", error);
       }
-      await Promise.all([loadColleges(), loadContracts()]);
+      await Promise.all([loadColleges({ page: 1, search: "" }), loadContracts()]);
     }
     void bootstrap();
   }, []);
+
+  function handleSearchChange(value: string) {
+    setSearch(value);
+    setPagination((prev) => ({ ...prev, page: 1 }));
+    void loadColleges({ search: value, page: 1 });
+  }
+
+  function handlePageChange(nextPage: number) {
+    const safePage = Math.min(Math.max(1, nextPage), totalPages);
+    setPagination((prev) => ({ ...prev, page: safePage }));
+    void loadColleges({ page: safePage });
+  }
 
   useEffect(() => {
     if (!toast) return;
@@ -703,9 +770,9 @@ function mapCollegeToForm(college: any): TCollegeForm {
 
   function handleDownloadCollegeTemplateCsv() {
     const csvTemplate = [
-      "codigo_escola;data_inicio;nome;parceiro;endereco;numero;estado;cidade;gerencia;comercial;contract_id;segmentos;series_contratadas;status",
-      "1001;2026-01-15;Escola Exemplo;Grupo Exemplo;Rua Alfa;123;SP;Sao Paulo;Regional 1;Joao Comercial;1;1,2;3,4;active",
-      "1002;15/02/2026;Escola Modelo;Grupo Modelo;Rua Beta;45;RJ;Rio de Janeiro;Regional 2;Maria Comercial;2;2;5;inactive"
+      "codigo_escola;data_inicio;nome;parceiro;endereco;numero;estado;cidade;gerencia;comercial;contrato;segmentos;series_contratadas;status",
+      "1001;2026-01-15;Escola Exemplo;Grupo Exemplo;Rua Alfa;123;SP;Sao Paulo;Rede 1;Joao Comercial;Contrato Rede 1;Ensino Fundamental I;1º Ano,2º Ano;active",
+      "1002;15/02/2026;Escola Modelo;Grupo Modelo;Rua Beta;45;RJ;Rio de Janeiro;Rede 2;Maria Comercial;Contrato Rede 2;Ensino Médio;1ª Série;inactive"
     ]
       .join(String.fromCharCode(10))
       .replace(/\\n/g, "\n");
@@ -754,6 +821,13 @@ function mapCollegeToForm(college: any): TCollegeForm {
           <div className="colleges-card">
             <div className="colleges-card-header">
               <b>Lista de Escolas</b>
+              <input
+                className="colleges-search-input"
+                type="text"
+                value={search}
+                onChange={(e) => handleSearchChange(e.target.value)}
+                placeholder="Buscar por nome, cidade, parceiro..."
+              />
             </div>
 
             {loading ? (
@@ -806,6 +880,36 @@ function mapCollegeToForm(college: any): TCollegeForm {
                 </table>
               </div>
             )}
+
+            <div
+              className="colleges-modal-footer"
+              style={{ borderTop: "1px solid #e5e7eb", justifyContent: "space-between" }}
+            >
+              <span style={{ fontSize: 13, color: "#6b7280" }}>
+                Total: {pagination.total} escola(s)
+              </span>
+              <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                <button
+                  type="button"
+                  className="colleges-ghost-button"
+                  onClick={() => handlePageChange(pagination.page - 1)}
+                  disabled={loading || pagination.page <= 1}
+                >
+                  Anterior
+                </button>
+                <span style={{ fontSize: 13, color: "#374151" }}>
+                  Página {pagination.page} de {totalPages}
+                </span>
+                <button
+                  type="button"
+                  className="colleges-ghost-button"
+                  onClick={() => handlePageChange(pagination.page + 1)}
+                  disabled={loading || pagination.page >= totalPages}
+                >
+                  Próxima
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -892,7 +996,7 @@ function mapCollegeToForm(college: any): TCollegeForm {
                     <input value={collegeForm.city} disabled={isViewMode} onChange={(e) => setCollegeForm((prev) => ({ ...prev, city: e.target.value }))} />
                   </label>
                   <label>
-                    <span>Contrato*</span>
+                    <span>Rede*</span>
                     <input value={collegeForm.management} disabled={isViewMode} onChange={(e) => setCollegeForm((prev) => ({ ...prev, management: e.target.value }))} />
                   </label>
 
@@ -1290,10 +1394,14 @@ function normalizeCollegeImportHeader(rawHeader: string): string {
   if (normalized === "numero" || normalized === "addressnumber") return "addressNumber";
   if (normalized === "estado" || normalized === "state") return "state";
   if (normalized === "cidade" || normalized === "city") return "city";
-  if (normalized === "gerencia" || normalized === "regional" || normalized === "management") return "management";
+  if (normalized === "gerencia" || normalized === "regional" || normalized === "management" || normalized === "rede") return "management";
   if (normalized === "comercial" || normalized === "salesmanager") return "salesManager";
   if (normalized === "contractid" || normalized === "contratoid") return "contractId";
-  if (normalized === "consultor" || normalized === "consultorid") return "consultorId";
+  if (normalized === "contractname" || normalized === "contrato" || normalized === "nomecontrato") return "contractName";
+  if (normalized === "consultorid" || normalized === "consultorresponsavelid") return "consultorId";
+  if (normalized === "consultoremail" || normalized === "emailconsultor" || normalized === "consultorresponsavelemail") return "consultorEmail";
+  if (normalized === "consultornome" || normalized === "consultorname" || normalized === "consultorresponsavelnome") return "consultorNome";
+  if (normalized === "consultor") return "consultor";
   if (normalized === "segmentos" || normalized === "collegeseries") return "collegeSeries";
   if (normalized === "seriescontratadas" || normalized === "contractseries") return "contractSeries";
   if (normalized === "gestaointerna" || normalized === "internalmanagement") return "internalManagement";

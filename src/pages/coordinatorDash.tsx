@@ -56,7 +56,7 @@ function CoordinatorDash() {
         <div className="admin-header-wrapper">
           <div>
             <b>Painel do Coordenador</b>
-            <span>Visão consolidada da sua regional para consultores, escolas, educadores e indicadores gerais.</span>
+            <span>Visão consolidada da sua rede para consultores, escolas, educadores e indicadores gerais.</span>
           </div>
         </div>
 
@@ -100,7 +100,7 @@ function CoordinatorDash() {
           <div className="coord-shortcuts">
             <a href="/coordinator/performance" className="coord-shortcut-card">
               <b>Performance</b>
-              <span>KPI da regional, ranking de consultores e alertas operacionais.</span>
+              <span>KPI da rede, ranking de consultores e alertas operacionais.</span>
             </a>
             <a href="/coordinator/agenda" className="coord-shortcut-card">
               <b>Gestão de Agendas</b>
@@ -108,11 +108,11 @@ function CoordinatorDash() {
             </a>
             <a href="/coordinator/consultants" className="coord-shortcut-card">
               <b>Gestão de Consultores</b>
-              <span>Status, férias e controle por regional.</span>
+              <span>Status, férias e controle por rede.</span>
             </a>
             <a href="/coordinator/colleges" className="coord-shortcut-card">
               <b>Escolas e Educadores</b>
-              <span>Cadastros da regional com vínculo de consultor.</span>
+              <span>Cadastros da rede com vínculo de consultor.</span>
             </a>
             <a href="/coordinator/educators" className="coord-shortcut-card">
               <b>Perfis de Educadores</b>

@@ -29,7 +29,7 @@ function CoordinatorModulePage() {
 
         <div style={{ margin: "0 20px", background: "#fff", border: "1px solid #e6ebf2", borderRadius: 12, padding: 16 }}>
           <p style={{ margin: 0, color: "#475467", fontSize: 14 }}>
-            Próximo passo: ligar esta tela aos endpoints coordenador com ACL e escopo regional.
+            Próximo passo: ligar esta tela aos endpoints coordenador com ACL e escopo de rede.
           </p>
         </div>
       </div>

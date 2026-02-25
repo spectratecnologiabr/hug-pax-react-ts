@@ -108,7 +108,7 @@
 /* ===== Filters ===== */
 .admin-users-page .sap-filters {
   display: grid;
-  grid-template-columns: minmax(320px, 1fr) 210px 170px 260px 230px;
+  grid-template-columns: minmax(340px, 1fr) repeat(5, minmax(140px, 220px));
   box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   gap: 14px;
   padding: 12px;
@@ -116,9 +116,22 @@
   border-radius: 12px;
   background: #ffffff;
   margin: 0 20px 16px;
+  align-items: center;
 }
 
-@media (max-width: 1200px) {
+@media (max-width: 1680px) {
+  .admin-users-page .sap-filters {
+    grid-template-columns: repeat(3, minmax(220px, 1fr));
+  }
+}
+
+@media (max-width: 1024px) {
+  .admin-users-page .sap-filters {
+    grid-template-columns: repeat(2, minmax(220px, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
   .admin-users-page .sap-filters {
     grid-template-columns: 1fr;
   }

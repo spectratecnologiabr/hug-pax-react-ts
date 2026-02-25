@@ -58,6 +58,7 @@ type User = {
   language?: string;
   collegeId?: number | null;
   collegeName?: string;
+  createdAt?: string | null;
   lastAccessAt?: string | null;
   updatedAt?: string | null;
   management?: string;
@@ -65,6 +66,7 @@ type User = {
 };
 
 type InactivityFilter = "all" | "7" | "15" | "30" | "60" | "90" | "never";
+type SortOrder = "name_asc" | "name_desc" | "created_asc" | "created_desc";
 
 type ConfirmAction = "deactivate" | "block" | "delete";
 
@@ -143,6 +145,12 @@ function normalizeManagement(value: unknown) {
   return String(value ?? "").trim();
 }
 
+function sortCollegesByName<T extends { name?: string }>(items: T[]): T[] {
+  return [...items].sort((a, b) =>
+    String(a?.name ?? "").localeCompare(String(b?.name ?? ""), "pt-BR", { sensitivity: "base" })
+  );
+}
+
 const EMPTY_MANAGEMENT_FILTER = "__EMPTY__";
 
 function mapAdminUserToRow(user: IAdminUserListItem): User {
@@ -169,6 +177,7 @@ function mapAdminUserToRow(user: IAdminUserListItem): User {
     language: user.language,
     collegeId: user.collegeId,
     collegeName: user.collegeName,
+    createdAt: user.createdAt ?? null,
     lastAccessAt: user.lastAccessAt ?? null,
     updatedAt: user.updatedAt ?? null,
     management: user.management ?? "",
@@ -187,6 +196,7 @@ function AdminUsersPage() {
   const [statusFilter, setStatusFilter] = useState<AdminUserStatus | "all">("all");
   const [managementFilter, setManagementFilter] = useState<string>("all");
   const [inactivityFilter, setInactivityFilter] = useState<InactivityFilter>("all");
+  const [sortOrder, setSortOrder] = useState<SortOrder>("created_desc");
   const [loading, setLoading] = useState(false);
   const [openActionsUserId, setOpenActionsUserId] = useState<number | null>(null);
   const actionsMenuRef = useRef<HTMLDivElement | null>(null);
@@ -233,13 +243,13 @@ function AdminUsersPage() {
     try {
       const collegesList = await listColleges();
       if (Array.isArray(collegesList)) {
-        setColleges(collegesList);
+        setColleges(sortCollegesByName(collegesList));
         return;
       }
 
       const payload = collegesList?.data ?? collegesList;
       if (Array.isArray(payload)) {
-        setColleges(payload);
+        setColleges(sortCollegesByName(payload));
         return;
       }
 
@@ -265,7 +275,7 @@ function AdminUsersPage() {
           )
         );
       } catch (error) {
-        console.error("Erro ao carregar opções de regional/gerência", error);
+        console.error("Erro ao carregar opções de rede", error);
         if (!alive) return;
         setManagementOptionsFromRegistry([]);
       }
@@ -283,6 +293,20 @@ function AdminUsersPage() {
     };
   }, []);
 
+  const apiSort = useMemo(() => {
+    switch (sortOrder) {
+      case "name_asc":
+        return { sortBy: "name" as const, sortDir: "asc" as const };
+      case "name_desc":
+        return { sortBy: "name" as const, sortDir: "desc" as const };
+      case "created_asc":
+        return { sortBy: "created_at" as const, sortDir: "asc" as const };
+      case "created_desc":
+      default:
+        return { sortBy: "created_at" as const, sortDir: "desc" as const };
+    }
+  }, [sortOrder]);
+
   const loadUsers = useCallback(async () => {
     if (!isMountedRef.current) return;
     setLoading(true);
@@ -295,6 +319,8 @@ function AdminUsersPage() {
           management: managementFilter === "all" ? undefined : managementFilter,
           page: pagination.page,
           pageSize: pagination.pageSize,
+          sortBy: apiSort.sortBy,
+          sortDir: apiSort.sortDir,
         }),
         getUsersSummaryAdmin({
           search: search.trim() || undefined,
@@ -321,11 +347,11 @@ function AdminUsersPage() {
     } finally {
       if (isMountedRef.current) setLoading(false);
     }
-  }, [managementFilter, pagination.page, pagination.pageSize, profileFilter, search, statusFilter]);
+  }, [apiSort.sortBy, apiSort.sortDir, managementFilter, pagination.page, pagination.pageSize, profileFilter, search, statusFilter]);
 
   useEffect(() => {
     setPagination(prev => ({ ...prev, page: 1 }));
-  }, [search, profileFilter, statusFilter, managementFilter, inactivityFilter]);
+  }, [search, profileFilter, statusFilter, managementFilter, inactivityFilter, sortOrder]);
 
   useEffect(() => {
     let cancelled = false;
@@ -622,9 +648,9 @@ function AdminUsersPage() {
 
   function handleDownloadTemplateCsv() {
     const csvTemplate = [
-      "nome;sobrenome;email;perfil;status;senha;escola;gerencia",
+      "nome;sobrenome;email;perfil;status;senha;escola;rede",
       "Joao;Silva;joao.silva@exemplo.com;educator;active;;Escola Exemplo;",
-      "Maria;Souza;maria.souza@exemplo.com;consultant;active;;;Regional Sul"
+      "Maria;Souza;maria.souza@exemplo.com;consultant;active;;;Rede Sul"
     ].join("\n");
 
     const blob = new Blob([csvTemplate], { type: "text/csv;charset=utf-8;" });
@@ -716,7 +742,7 @@ function AdminUsersPage() {
     }
 
     if ((role === "consultant" || role === "coordinator") && !management) {
-      setUserModalError("Contrato é obrigatório para consultor e coordenador.");
+      setUserModalError("Rede é obrigatória para consultor e coordenador.");
       return;
     }
 
@@ -902,6 +928,15 @@ function AdminUsersPage() {
               <option value="60">Sem acesso há 60+ dias</option>
               <option value="90">Sem acesso há 90+ dias</option>
               <option value="never">Nunca acessou</option>
+            </select>
+          </div>
+
+          <div className="sap-select">
+            <select value={sortOrder} onChange={e => setSortOrder(e.target.value as SortOrder)}>
+              <option value="name_asc">Ordem: A-Z</option>
+              <option value="name_desc">Ordem: Z-A</option>
+              <option value="created_desc">Criação: mais recente</option>
+              <option value="created_asc">Criação: mais antiga</option>
             </select>
           </div>
         </div>
@@ -1183,7 +1218,7 @@ function AdminUsersPage() {
                 </div>
                 <div className="sap-modal-body">
                   <p className="sap-modal-desc" style={{ marginTop: 0 }}>
-                    Envie um arquivo `.csv` ou `.json` com os usuários. Colunas comuns: nome, sobrenome, email, perfil, status, senha, escola, gerencia.
+                    Envie um arquivo `.csv` ou `.json` com os usuários. Colunas comuns: nome, sobrenome, email, perfil, status, senha, escola, rede.
                   </p>
 
                   <input
@@ -1456,12 +1491,12 @@ function AdminUsersPage() {
 
                     {(userForm.role === "coordinator" || userForm.role === "consultant" || userForm.role === "educator") && (
                       <label className="sap-user-field">
-                        <span>Contrato</span>
+                        <span>Rede</span>
                         <input
                           value={userForm.management}
                           onChange={e => setUserForm(s => ({ ...s, management: e.target.value }))}
                           disabled={userModal.mode === "view" || userModalSubmitting || userModalDetailsLoading}
-                          placeholder="Ex.: Contrato Regional Sul"
+                          placeholder="Ex.: Rede Sul"
                         />
                       </label>
                     )}
@@ -1626,7 +1661,7 @@ function normalizeImportHeader(rawHeader: string): string {
   if (normalized === "senha") return "password";
   if (normalized === "escola" || normalized === "college") return "escola";
   if (normalized === "escolaid" || normalized === "collegeid") return "collegeId";
-  if (normalized === "gerencia" || normalized === "regional") return "management";
+  if (normalized === "gerencia" || normalized === "regional" || normalized === "rede") return "management";
   if (normalized === "tipodocumento") return "docType";
   if (normalized === "numerodocumento" || normalized === "docid") return "docId";
   if (normalized === "datanascimento") return "birthDate";

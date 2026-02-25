@@ -703,7 +703,7 @@ function CoordinatorPerformancePage() {
     const now = new Date();
     const stamp = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, "0")}${String(now.getDate()).padStart(2, "0")}`;
     link.href = url;
-    link.download = `performance-regional-${stamp}.csv`;
+    link.download = `performance-rede-${stamp}.csv`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -723,7 +723,7 @@ function CoordinatorPerformancePage() {
           <div className="cpf-header-actions">
             {isAdminPath && (
               <div className="cpf-filter">
-                <label htmlFor="managementFilter">Regional</label>
+                <label htmlFor="managementFilter">Rede</label>
                 <select
                   id="managementFilter"
                   value={managementFilter}
@@ -774,7 +774,7 @@ function CoordinatorPerformancePage() {
             <small>Em férias: {loading ? "—" : formatMetric(summary.consultantsOnVacation)}</small>
           </article>
           <article className="cpf-kpi-card">
-            <span>Educadores (Regional)</span>
+            <span>Educadores (Rede)</span>
             <b>{loading ? "—" : formatMetric(summary.totalEducators)}</b>
             <small>Escolas: {loading ? "—" : formatMetric(summary.totalSchools)}</small>
           </article>
