@@ -46,6 +46,11 @@ function Login() {
                         setCookie({ name: "userData", value: JSON.stringify(userWithoutPic) });
                         localStorage.setItem("profilePic", profilePic);
 
+                        if (userWithoutPic?.mustChangePassword) {
+                            window.location.href = "/profile?forcePassword=1";
+                            return;
+                        }
+
                         if (userWithoutPic?.termsPending) {
                             window.location.href = "/terms-acceptance";
                             return;

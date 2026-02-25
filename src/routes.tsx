@@ -53,6 +53,7 @@ import CoordinatorAgendaPage from './pages/coordinatorAgendaPage';
 import CoordinatorConsultantsPage from './pages/coordinatorConsultantsPage';
 import CoordinatorReportsCenterPage from './pages/coordinatorReportsCenterPage';
 import CoordinatorPerformancePage from './pages/coordinatorPerformancePage';
+import ContractsPage from './pages/contractsPage';
 
 function MyRoutes() {
     return (
@@ -88,6 +89,7 @@ function MyRoutes() {
                 <Route path='/coordinator/agenda' element={<CoordinatorRoute><CoordinatorAgendaPage/></CoordinatorRoute>} />
                 <Route path='/coordinator/consultants' element={<CoordinatorRoute><CoordinatorConsultantsPage/></CoordinatorRoute>} />
                 <Route path='/coordinator/colleges' element={<CoordinatorRoute><CollegesPage/></CoordinatorRoute>} />
+                <Route path='/coordinator/contracts' element={<CoordinatorRoute><ContractsPage/></CoordinatorRoute>} />
                 <Route path='/coordinator/educators' element={<CoordinatorRoute><EducatorsList/></CoordinatorRoute>} />
                 <Route path='/coordinator/reports-center' element={<CoordinatorRoute><CoordinatorReportsCenterPage/></CoordinatorRoute>} />
                 <Route path='/coordinator/certificates' element={<CoordinatorRoute><AdminCertificatesPage/></CoordinatorRoute>} />
@@ -102,6 +104,7 @@ function MyRoutes() {
                 <Route path='/admin/courses/add' element={<AdminRoute><NewCoursePage/></AdminRoute>} />
                 <Route path='/admin/courses/edit/:courseId' element={<AdminRoute><EditCoursePage/></AdminRoute>} />
                 <Route path='/admin/colleges' element={<AdminRoute><CollegesPage/></AdminRoute>} />
+                <Route path='/admin/contracts' element={<AdminRoute><ContractsPage/></AdminRoute>} />
                 <Route path='/admin/educators/:educatorId' element={<AdminRoute><ViewEducatorData/></AdminRoute>} />
                 <Route path='/admin/educators/:educatorId/report' element={<AdminRoute><EducatorReportPage/></AdminRoute>} />
                 <Route path='/admin/visits/:visitId/report-preview' element={<AdminRoute><VisitReportPreview /></AdminRoute>} />

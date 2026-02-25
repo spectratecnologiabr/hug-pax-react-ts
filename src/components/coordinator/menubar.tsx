@@ -61,6 +61,16 @@ function CoordinatorMenubar() {
           <span>Escolas</span>
         </a>
 
+        <a href="/coordinator/contracts" className={pathname.includes("/coordinator/contracts") ? "menu-link selected" : "menu-link"}>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M7 4H17L20 7V20H4V4H7Z" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M14 4V8H20" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M8 12H16" stroke="white" strokeWidth="1.8" strokeLinecap="round"/>
+            <path d="M8 16H14" stroke="white" strokeWidth="1.8" strokeLinecap="round"/>
+          </svg>
+          <span>Contratos</span>
+        </a>
+
         <a href="/coordinator/educators" className={pathname.includes("/coordinator/educators") ? "menu-link selected" : "menu-link"}>
           <svg height="20" viewBox="0 0 27 20" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path fillRule="evenodd" clipRule="evenodd" d="M17.4889 0C16.1828 0 15.0027 0.492533 14.1733 1.37682C13.3418 2.26346 12.9111 3.49254 13.0089 4.87201C13.1905 7.43655 15.1229 9.6203 17.4889 9.6203C19.8557 9.6203 21.7842 7.43499 21.9688 4.87299C22.1693 2.09557 20.1625 0 17.4889 0ZM15.4492 2.57337C14.9775 3.07634 14.6875 3.8151 14.7536 4.74829C14.8869 6.63092 16.2582 7.87116 17.4889 7.87116C18.7187 7.87116 20.0884 6.63135 20.2242 4.74731C20.3516 2.98358 19.1476 1.74915 17.4889 1.74915C16.6287 1.74915 15.9231 2.06805 15.4492 2.57337Z" fill="white"/>

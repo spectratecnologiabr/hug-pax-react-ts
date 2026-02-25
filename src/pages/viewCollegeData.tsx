@@ -234,7 +234,7 @@ function ViewCollegeData() {
                                     <input type="text" id="city" name="city" value={collegeData.city || ""} disabled/>
                                 </div>
                                 <div className="input-wrapper">
-                                    <label htmlFor="management">Regional/Gerência:*</label>
+                                    <label htmlFor="management">Contrato:*</label>
                                     <input type="text" id="management" name="management" value={collegeData.management || ""} disabled/>
                                 </div>
                                 <div className="input-wrapper">

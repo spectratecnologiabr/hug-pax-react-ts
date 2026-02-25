@@ -14,7 +14,8 @@ export interface ICollegeProps {
     collegeSeries: string,
     contractSeries: string,
     salesManager: string,
-    consultorId: number,
+    contractId: number,
+    consultorId?: number,
     internalManagement: any[]
     isActive?: boolean
 }

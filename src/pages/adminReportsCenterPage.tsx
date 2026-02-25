@@ -117,6 +117,8 @@ function AdminReportsCenterPage() {
   const [schoolSearch, setSchoolSearch] = useState("");
   const [selectedSchoolId, setSelectedSchoolId] = useState("all");
   const [selectedType, setSelectedType] = useState<"all" | TReportType>("all");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
 
   useEffect(() => {
     let cancelled = false;
@@ -256,10 +258,20 @@ function AdminReportsCenterPage() {
   const filteredRows = useMemo(() => {
     const schoolFilter = selectedSchoolId === "all" ? null : Number(selectedSchoolId);
     const schoolSearchNormalized = schoolSearch.trim().toLowerCase();
+    const startDateTime = startDate ? new Date(`${startDate}T00:00:00`) : null;
+    const endDateTime = endDate ? new Date(`${endDate}T23:59:59.999`) : null;
+    const hasStartDate = Boolean(startDateTime && !Number.isNaN(startDateTime.getTime()));
+    const hasEndDate = Boolean(endDateTime && !Number.isNaN(endDateTime.getTime()));
 
     return rows.filter((row) => {
       if (selectedType !== "all" && row.reportType !== selectedType) return false;
       if (schoolFilter && row.schoolId !== schoolFilter) return false;
+      if (hasStartDate || hasEndDate) {
+        const rowDate = toDate(row.sentAt);
+        if (!rowDate) return false;
+        if (hasStartDate && rowDate < (startDateTime as Date)) return false;
+        if (hasEndDate && rowDate > (endDateTime as Date)) return false;
+      }
 
       if (schoolSearchNormalized) {
         const bySchool = row.schoolName.toLowerCase().includes(schoolSearchNormalized);
@@ -269,7 +281,7 @@ function AdminReportsCenterPage() {
 
       return true;
     });
-  }, [rows, selectedType, selectedSchoolId, schoolSearch]);
+  }, [rows, selectedType, selectedSchoolId, schoolSearch, startDate, endDate]);
 
   return (
     <div className="admin-dashboard-container reports-center-page">
@@ -320,6 +332,24 @@ function AdminReportsCenterPage() {
               <option value="school">Escolas</option>
               <option value="educator">Educadores</option>
             </select>
+          </label>
+
+          <label>
+            <span>Data inicial</span>
+            <input
+              type="date"
+              value={startDate}
+              onChange={(event) => setStartDate(event.target.value)}
+            />
+          </label>
+
+          <label>
+            <span>Data final</span>
+            <input
+              type="date"
+              value={endDate}
+              onChange={(event) => setEndDate(event.target.value)}
+            />
           </label>
         </section>
 

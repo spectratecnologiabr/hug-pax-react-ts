@@ -13,7 +13,7 @@ export interface ICollegeUpdateProps {
     city?: string,
     management?: string,
     salesManager?: string,
-    consultor?: string,
+    contractId?: number,
     collegeSeries?: string,
     contractSeries?: string,
     internalManagement?: any[],

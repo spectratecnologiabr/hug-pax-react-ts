@@ -71,6 +71,16 @@ function Menubar() {
                     <span>Escolas</span>
                 </a>
 
+                <a href="/admin/contracts" className={pathname.includes("/admin/contracts") ? "menu-link selected" : "menu-link"}>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M7 4H17L20 7V20H4V4H7Z" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                        <path d="M14 4V8H20" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                        <path d="M8 12H16" stroke="white" strokeWidth="1.8" strokeLinecap="round"/>
+                        <path d="M8 16H14" stroke="white" strokeWidth="1.8" strokeLinecap="round"/>
+                    </svg>
+                    <span>Contratos</span>
+                </a>
+
                 <a href="/admin/courses" className={pathname.includes("/admin/courses") ? "menu-link selected" : "menu-link"}>
                     <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M4 1.00012H2C1.44772 1.00012 1 1.44784 1 2.00012V16.0001C1 16.5524 1.44772 17.0001 2 17.0001H4C4.55228 17.0001 5 16.5524 5 16.0001V2.00012C5 1.44784 4.55228 1.00012 4 1.00012Z" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>

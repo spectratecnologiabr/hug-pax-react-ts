@@ -24,7 +24,8 @@ type TUser = {
     language: string,
     courses: [],
     role: string,
-    isActive: boolean
+    isActive: boolean,
+    mustChangePassword?: boolean
 }
 
 type TOverviewData = {
@@ -45,6 +46,10 @@ function Profile() {
     const [isError, setIsError] = useState(false);
     const [modalErrorOpen, setModalErrorOpen] = useState(false);
     const [message, setMessage] = useState("");
+
+    function updateUserDataCookie(nextUserData: TUser) {
+        document.cookie = `userData=${encodeURIComponent(JSON.stringify(nextUserData))}; path=/`;
+    }
 
     function handleModalMessage(data: { isError: boolean; message: string }) {
         const messageElement = document.getElementById("warning-message") as HTMLSpanElement;
@@ -72,6 +77,22 @@ function Profile() {
 
         fetchOverviewData();
     }, [])
+
+    React.useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        const forcePassword = params.get("forcePassword");
+        if (forcePassword !== "1") return;
+
+        handleModalMessage({
+            isError: true,
+            message: "Por segurança, altere sua senha padrão para continuar."
+        });
+
+        const passwordSection = document.querySelector(".main-data-wrapper.password");
+        if (passwordSection) {
+            passwordSection.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+    }, []);
 
     const previewImage =
         updateData.profilePic ||
@@ -178,7 +199,7 @@ function Profile() {
 
             // Atualiza cookie local pra refletir o novo estado
             const newUserData = { ...userData, ...updateData };
-            document.cookie = `userData=${encodeURIComponent(JSON.stringify(newUserData))}; path=/`;
+            updateUserDataCookie(newUserData);
 
             setUpdateData({} as TUser);
             window.location.reload();
@@ -217,6 +238,9 @@ function Profile() {
             }
 
             handleModalMessage({ isError: false, message: "Senha alterada com sucesso!" });
+
+            const nextUserData = { ...userData, mustChangePassword: false };
+            updateUserDataCookie(nextUserData);
 
             // Limpa os campos por segurança
             setOldPassword("");

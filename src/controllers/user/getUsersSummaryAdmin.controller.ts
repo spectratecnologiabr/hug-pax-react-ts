@@ -8,11 +8,21 @@ export interface IUsersSummaryAdmin {
   blocked: number
 }
 
-export async function getUsersSummaryAdmin() {
+export interface IUsersSummaryAdminQuery {
+  search?: string
+  role?: "admin" | "educator" | "consultant" | "coordinator"
+  management?: string
+}
+
+export async function getUsersSummaryAdmin(query: IUsersSummaryAdminQuery = {}) {
   const response = await axios.get(`${process.env.REACT_APP_API_URL}/user/admin/stats`, {
     headers: { Authorization: `Bearer ${getCookies("authToken")}` },
+    params: {
+      search: query.search,
+      role: query.role,
+      management: query.management,
+    },
   })
 
   return (response.data?.data ?? response.data) as IUsersSummaryAdmin
 }
-

@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import Menubar from "../components/admin/menubar";
 import Footer from "../components/footer";
@@ -6,6 +6,7 @@ import "../style/adminUsersPage.css";
 
 import { getUsersSummaryAdmin } from "../controllers/user/getUsersSummaryAdmin.controller";
 import { listUsersAdmin, type AdminUserRole, type AdminUserStatus, type IAdminUserListItem, resolveAdminUserStatus } from "../controllers/user/listUsersAdmin.controller";
+import { listManagementsAdmin } from "../controllers/user/listManagementsAdmin.controller";
 import { setUserStatusAdmin } from "../controllers/user/setUserStatusAdmin.controller";
 import { setUserVacationModeAdmin } from "../controllers/user/setUserVacationModeAdmin.controller";
 import { deleteUserAdmin } from "../controllers/user/deleteUserAdmin.controller";
@@ -28,6 +29,12 @@ type Summary = {
   active: number;
   inactive: number;
   blocked: number;
+};
+
+type PaginationState = {
+  page: number;
+  pageSize: number;
+  total: number;
 };
 
 type User = {
@@ -132,6 +139,12 @@ function splitNameFallback(name: string) {
   };
 }
 
+function normalizeManagement(value: unknown) {
+  return String(value ?? "").trim();
+}
+
+const EMPTY_MANAGEMENT_FILTER = "__EMPTY__";
+
 function mapAdminUserToRow(user: IAdminUserListItem): User {
   const name = user.name?.trim() || `${user.firstName ?? ""} ${user.lastName ?? ""}`.trim() || "—";
   const { firstName, lastName } = splitNameFallback(name);
@@ -158,6 +171,7 @@ function mapAdminUserToRow(user: IAdminUserListItem): User {
     collegeName: user.collegeName,
     lastAccessAt: user.lastAccessAt ?? null,
     updatedAt: user.updatedAt ?? null,
+    management: user.management ?? "",
     lastAccess: formatLastAccess(user.lastAccessAt ?? user.updatedAt),
   };
 }
@@ -167,9 +181,11 @@ function AdminUsersPage() {
   const importFileRef = useRef<HTMLInputElement | null>(null);
   const [summary, setSummary] = useState<Summary | null>(null);
   const [rows, setRows] = useState<User[]>([]);
+  const [pagination, setPagination] = useState<PaginationState>({ page: 1, pageSize: 20, total: 0 });
   const [search, setSearch] = useState("");
   const [profileFilter, setProfileFilter] = useState<AdminUserRole | "all">("all");
   const [statusFilter, setStatusFilter] = useState<AdminUserStatus | "all">("all");
+  const [managementFilter, setManagementFilter] = useState<string>("all");
   const [inactivityFilter, setInactivityFilter] = useState<InactivityFilter>("all");
   const [loading, setLoading] = useState(false);
   const [openActionsUserId, setOpenActionsUserId] = useState<number | null>(null);
@@ -185,6 +201,7 @@ function AdminUsersPage() {
   const [userModalDetailsLoading, setUserModalDetailsLoading] = useState(false);
   const userModalRequestIdRef = useRef(0);
   const [colleges, setColleges] = useState<Array<{ id: number; name: string }>>([]);
+  const [managementOptionsFromRegistry, setManagementOptionsFromRegistry] = useState<string[]>([]);
   const [collegesLoading, setCollegesLoading] = useState(false);
   const [userForm, setUserForm] = useState({
     firstName: "",
@@ -236,6 +253,30 @@ function AdminUsersPage() {
   }, [collegesLoading]);
 
   useEffect(() => {
+    let alive = true;
+    (async () => {
+      try {
+        const values = await listManagementsAdmin();
+
+        if (!alive) return;
+        setManagementOptionsFromRegistry(
+          Array.from(new Set(values.map((value) => normalizeManagement(value)).filter(Boolean))).sort((a, b) =>
+            a.localeCompare(b, "pt-BR")
+          )
+        );
+      } catch (error) {
+        console.error("Erro ao carregar opções de regional/gerência", error);
+        if (!alive) return;
+        setManagementOptionsFromRegistry([]);
+      }
+    })();
+
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  useEffect(() => {
     isMountedRef.current = true;
     return () => {
       isMountedRef.current = false;
@@ -251,23 +292,40 @@ function AdminUsersPage() {
           search: search.trim() || undefined,
           role: profileFilter === "all" ? undefined : profileFilter,
           status: statusFilter === "all" ? undefined : statusFilter,
+          management: managementFilter === "all" ? undefined : managementFilter,
+          page: pagination.page,
+          pageSize: pagination.pageSize,
         }),
-        getUsersSummaryAdmin(),
+        getUsersSummaryAdmin({
+          search: search.trim() || undefined,
+          role: profileFilter === "all" ? undefined : profileFilter,
+          management: managementFilter === "all" ? undefined : managementFilter,
+        }),
       ]);
 
       if (!isMountedRef.current) return;
       const list: IAdminUserListItem[] = Array.isArray(users) ? users : users?.users ?? users?.items ?? [];
+      const rawPagination = !Array.isArray(users) ? users?.pagination : undefined;
+      const total = Number(rawPagination?.total ?? list.length ?? 0);
+      const page = Math.max(1, Number(rawPagination?.page ?? pagination.page));
+      const pageSize = Math.max(1, Number(rawPagination?.pageSize ?? pagination.pageSize));
       setRows(list.map(mapAdminUserToRow));
+      setPagination({ page, pageSize, total });
       setSummary(summaryData);
     } catch (e) {
       console.error("Failed to load admin users:", e);
       if (!isMountedRef.current) return;
       setRows([]);
+      setPagination(prev => ({ ...prev, total: 0 }));
       setSummary(null);
     } finally {
       if (isMountedRef.current) setLoading(false);
     }
-  }, [profileFilter, search, statusFilter]);
+  }, [managementFilter, pagination.page, pagination.pageSize, profileFilter, search, statusFilter]);
+
+  useEffect(() => {
+    setPagination(prev => ({ ...prev, page: 1 }));
+  }, [search, profileFilter, statusFilter, managementFilter, inactivityFilter]);
 
   useEffect(() => {
     let cancelled = false;
@@ -319,6 +377,29 @@ function AdminUsersPage() {
     const diffDays = Math.floor(diffMs / 86400000);
     return diffDays >= days;
   });
+
+  const managementOptions = useMemo(() => {
+    const values = new Set<string>();
+    managementOptionsFromRegistry.forEach((value) => {
+      const normalized = normalizeManagement(value);
+      if (normalized) values.add(normalized);
+    });
+    rows.forEach((user) => {
+      const normalized = normalizeManagement(user.management);
+      if (normalized) values.add(normalized);
+    });
+    return Array.from(values).sort((a, b) => a.localeCompare(b, "pt-BR"));
+  }, [managementOptionsFromRegistry, rows]);
+
+  const totalPages = useMemo(() => {
+    if (pagination.total <= 0 || pagination.pageSize <= 0) return 1;
+    return Math.max(1, Math.ceil(pagination.total / pagination.pageSize));
+  }, [pagination.pageSize, pagination.total]);
+
+  useEffect(() => {
+    if (pagination.page <= totalPages) return;
+    setPagination(prev => ({ ...prev, page: totalPages }));
+  }, [pagination.page, totalPages]);
 
   useEffect(() => {
     if (openActionsUserId == null) return;
@@ -627,10 +708,7 @@ function AdminUsersPage() {
     const phone = userForm.phone?.trim() || undefined;
     const language = userForm.language?.trim() || undefined;
     const collegeId = role === "educator" ? (userForm.collegeId === "" ? null : userForm.collegeId) : null;
-    const management =
-      role === "coordinator" || role === "consultant"
-        ? (userForm.management?.trim() || null)
-        : null;
+    const management = userForm.management?.trim() || null;
 
     if (!firstName || !lastName || !email || !role) {
       setUserModalError("Preencha nome, sobrenome, e-mail e perfil.");
@@ -638,7 +716,7 @@ function AdminUsersPage() {
     }
 
     if ((role === "consultant" || role === "coordinator") && !management) {
-      setUserModalError("Regional/Gerência é obrigatória para consultor e coordenador.");
+      setUserModalError("Contrato é obrigatório para consultor e coordenador.");
       return;
     }
 
@@ -804,6 +882,18 @@ function AdminUsersPage() {
           </div>
 
           <div className="sap-select">
+            <select value={managementFilter} onChange={e => setManagementFilter(e.target.value)}>
+              <option value="all">Todos os contratos</option>
+              <option value={EMPTY_MANAGEMENT_FILTER}>Sem contrato</option>
+              {managementOptions.map((management) => (
+                <option key={management} value={management}>
+                  {management}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="sap-select">
             <select value={inactivityFilter} onChange={e => setInactivityFilter(e.target.value as InactivityFilter)}>
               <option value="all">Inatividade: Todos</option>
               <option value="7">Sem acesso há 7+ dias</option>
@@ -880,6 +970,53 @@ function AdminUsersPage() {
 	              ))}
 	            </tbody>
 	          </table>
+          <div className="sap-pagination">
+            <div className="sap-pagination-info">
+              {pagination.total > 0
+                ? `${Math.min((pagination.page - 1) * pagination.pageSize + 1, pagination.total)}-${Math.min(
+                    pagination.page * pagination.pageSize,
+                    pagination.total
+                  )} de ${pagination.total}`
+                : "0 resultados"}
+            </div>
+            <div className="sap-pagination-controls">
+              <label className="sap-pagination-size">
+                <span>Itens por página</span>
+                <select
+                  value={String(pagination.pageSize)}
+                  onChange={e => {
+                    const nextSize = Number(e.target.value);
+                    if (!Number.isFinite(nextSize) || nextSize <= 0) return;
+                    setPagination(prev => ({ ...prev, page: 1, pageSize: nextSize }));
+                  }}
+                >
+                  <option value="10">10</option>
+                  <option value="20">20</option>
+                  <option value="50">50</option>
+                  <option value="100">100</option>
+                </select>
+              </label>
+              <button
+                className="sap-top-secondary"
+                onClick={() => setPagination(prev => ({ ...prev, page: Math.max(1, prev.page - 1) }))}
+                disabled={loading || pagination.page <= 1}
+              >
+                Anterior
+              </button>
+              <span className="sap-pagination-page">
+                Página {pagination.page} de {totalPages}
+              </span>
+              <button
+                className="sap-top-secondary"
+                onClick={() =>
+                  setPagination(prev => ({ ...prev, page: Math.min(totalPages, prev.page + 1) }))
+                }
+                disabled={loading || pagination.page >= totalPages}
+              >
+                Próxima
+              </button>
+            </div>
+          </div>
 	        </div>
 
           {openActionsUserId != null &&
@@ -1283,7 +1420,6 @@ function AdminUsersPage() {
                             ...s,
                             role,
                             collegeId: role === "educator" ? s.collegeId : "",
-                            management: role === "coordinator" || role === "consultant" ? s.management : "",
                           }));
                         }}
                         disabled={userModal.mode === "view" || userModalSubmitting || userModalDetailsLoading}
@@ -1318,14 +1454,14 @@ function AdminUsersPage() {
                       </label>
                     )}
 
-                    {(userForm.role === "coordinator" || userForm.role === "consultant") && (
+                    {(userForm.role === "coordinator" || userForm.role === "consultant" || userForm.role === "educator") && (
                       <label className="sap-user-field">
-                        <span>Regional/Gerência</span>
+                        <span>Contrato</span>
                         <input
                           value={userForm.management}
                           onChange={e => setUserForm(s => ({ ...s, management: e.target.value }))}
                           disabled={userModal.mode === "view" || userModalSubmitting || userModalDetailsLoading}
-                          placeholder="Ex.: Regional Sul"
+                          placeholder="Ex.: Contrato Regional Sul"
                         />
                       </label>
                     )}

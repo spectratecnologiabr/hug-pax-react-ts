@@ -108,7 +108,7 @@
 /* ===== Filters ===== */
 .admin-users-page .sap-filters {
   display: grid;
-  grid-template-columns: 1fr 220px 180px 240px;
+  grid-template-columns: minmax(320px, 1fr) 210px 170px 260px 230px;
   box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   gap: 14px;
   padding: 12px;
@@ -120,7 +120,7 @@
 
 @media (max-width: 1200px) {
   .admin-users-page .sap-filters {
-    grid-template-columns: 1fr 220px 180px;
+    grid-template-columns: 1fr;
   }
 }
 
@@ -213,6 +213,55 @@
 
 .admin-users-page .sap-table tbody tr:last-child td {
   border-bottom: none;
+}
+
+.admin-users-page .sap-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 18px;
+  border-top: 1px solid #eef2f7;
+}
+
+.admin-users-page .sap-pagination-info {
+  font-size: 12px;
+  color: #667085;
+}
+
+.admin-users-page .sap-pagination-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.admin-users-page .sap-pagination-size {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: #667085;
+}
+
+.admin-users-page .sap-pagination-size select {
+  border: 1px solid #d0d5dd;
+  background: #ffffff;
+  color: #344054;
+  border-radius: 8px;
+  padding: 6px 8px;
+  font-size: 12px;
+}
+
+.admin-users-page .sap-pagination-page {
+  font-size: 12px;
+  color: #344054;
+}
+
+@media (max-width: 900px) {
+  .admin-users-page .sap-pagination {
+    flex-direction: column;
+    align-items: flex-start;
+  }
 }
 
 /* ===== User Cell ===== */

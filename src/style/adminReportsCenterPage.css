@@ -59,7 +59,7 @@
   padding: 12px;
   background: #ffffff;
   display: grid;
-  grid-template-columns: 1.7fr 1fr 1fr;
+  grid-template-columns: minmax(220px, 1.7fr) repeat(4, minmax(140px, 1fr));
   gap: 10px;
   margin-bottom: 14px;
 }

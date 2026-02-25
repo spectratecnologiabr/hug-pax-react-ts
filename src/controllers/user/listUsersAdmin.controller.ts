@@ -8,6 +8,7 @@ export interface IListUsersAdminQuery {
   search?: string
   role?: AdminUserRole
   status?: AdminUserStatus
+  management?: string
   page?: number
   limit?: number
   pageSize?: number
@@ -37,6 +38,7 @@ export interface IAdminUserListItem {
   collegeName?: string
   lastAccessAt?: string | null
   updatedAt?: string | null
+  management?: string | null
 }
 
 export function resolveAdminUserStatus(user: Pick<IAdminUserListItem, "isActive" | "isBlocked">): AdminUserStatus {
@@ -50,6 +52,7 @@ export async function listUsersAdmin(query: IListUsersAdminQuery = {}) {
     search: query.search,
     role: query.role,
     status: query.status,
+    management: query.management,
     page: query.page,
     pageSize: query.pageSize ?? query.limit,
   }

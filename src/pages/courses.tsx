@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from "react";
-import { getOverviewData } from "../controllers/dash/overview.controller";
+import React, { useCallback, useState, useEffect } from "react";
 import { listCourses } from "../controllers/course/admin/listCourses.controller";
+import { deleteCourse } from "../controllers/course/admin/deleteCourse.controller";
 import { listTeachingModalities } from "../controllers/education/listTeachingModalities.controller";
 
 import Menubar from "../components/admin/menubar";
@@ -35,17 +35,19 @@ function Courses() {
     const [statusFilter, setStatusFilter] = useState('');
     const [modalityFilter, setModalityFilter] = useState('');
     const [modalities, setModalities] = useState<TModality[]>([]);
+    const [deletingCourseId, setDeletingCourseId] = useState<number | null>(null);
+    const [feedback, setFeedback] = useState<{ type: "success" | "error"; message: string } | null>(null);
+
+    const loadCourses = useCallback(async () => {
+      try {
+        const coursesList = await listCourses();
+        setCourses(coursesList);
+      } catch (error) {
+        console.error("Error fetching courses list:", error);
+      }
+    }, []);
 
     useEffect(() => {
-        async function fetchCourses() {
-            try {
-                const coursesList = await listCourses();
-                setCourses(coursesList);
-            } catch (error) {
-                console.error("Error fetching courses list:", error);
-            }
-        }
-
         async function fetchModalities() {
           try {
             const data = await listTeachingModalities();
@@ -55,22 +57,37 @@ function Courses() {
           }
         }
 
-        fetchCourses()
+        loadCourses()
         fetchModalities();
-    }, []);
+    }, [loadCourses]);
 
-    const formatDate = (date: string) => {
-        const d = new Date(date);
+    useEffect(() => {
+      if (!feedback) return;
+      const timeout = window.setTimeout(() => setFeedback(null), 3500);
+      return () => window.clearTimeout(timeout);
+    }, [feedback]);
 
-        const dia = String(d.getDate()).padStart(2, '0');
-        const mes = String(d.getMonth() + 1).padStart(2, '0');
-        const ano = d.getFullYear();
+    async function handleDeleteCourse(course: TCourse) {
+      const confirmed = window.confirm(`Excluir a trilha "${course.title}"? Essa ação não pode ser desfeita.`);
+      if (!confirmed) return;
 
-        const hora = String(d.getHours() + 3).padStart(2, '0');
-        const minuto = String(d.getMinutes()).padStart(2, '0');
+      setDeletingCourseId(course.id);
+      try {
+        const response = await deleteCourse(course.id);
+        if (response?.success === false) {
+          setFeedback({ type: "error", message: response?.message ?? "Não foi possível excluir a trilha." });
+          return;
+        }
 
-        return `${dia}/${mes}/${ano} - ${hora}:${minuto}`;
-    };
+        setFeedback({ type: "success", message: "Trilha excluída com sucesso." });
+        await loadCourses();
+      } catch (error: any) {
+        const message = String(error?.response?.data?.message ?? "Não foi possível excluir a trilha.");
+        setFeedback({ type: "error", message });
+      } finally {
+        setDeletingCourseId(null);
+      }
+    }
 
     return (
         <React.Fragment>
@@ -118,6 +135,11 @@ function Courses() {
                           <option value="draft">Rascunho</option>
                         </select>
                     </div>
+                    {feedback ? (
+                      <div className={`library-feedback ${feedback.type}`}>
+                        {feedback.message}
+                      </div>
+                    ) : null}
 
                     <div className="library-grid">
                         {courses
@@ -150,15 +172,25 @@ function Courses() {
                                     </span>
                                 </div>
 
-                            <div className="library-card-body">
+                                <div className="library-card-body">
                                 <div className="library-card-title-row">
                                     <h3>{course.title}</h3>
-                                    <button className="library-edit-button" onClick={() => window.location.href = `/admin/courses/edit/${course.id}`} title="Editar trilha" >
-                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                            <path d="M12 20h9" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                                            <path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4 12.5-12.5z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                                        </svg>
-                                    </button>
+                                    <div className="library-card-actions">
+                                      <button className="library-edit-button" onClick={() => window.location.href = `/admin/courses/edit/${course.id}`} title="Editar trilha" >
+                                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                              <path d="M12 20h9" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                                              <path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4 12.5-12.5z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                          </svg>
+                                      </button>
+                                      <button
+                                        className="library-delete-button"
+                                        onClick={() => void handleDeleteCourse(course)}
+                                        title="Excluir trilha"
+                                        disabled={deletingCourseId === course.id}
+                                      >
+                                        {deletingCourseId === course.id ? "..." : "Excluir"}
+                                      </button>
+                                    </div>
                                 </div>
                                 <p>{course.sub_title || 'Trilha completa de aprendizagem'}</p>
 

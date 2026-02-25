@@ -5,12 +5,12 @@ import { listColleges } from "../controllers/college/listColleges.controller";
 import { findCollege } from "../controllers/college/findCollege.controller";
 import { createCollege } from "../controllers/college/createCollege.controller";
 import { updateCollege } from "../controllers/college/updateCollege.controller";
+import { listContracts, type TContractItem } from "../controllers/contract/listContracts.controller";
 import {
   importCollegesAdmin,
   type IImportCollegesAdminResponse,
 } from "../controllers/college/importCollegesAdmin.controller";
 import { checkSession } from "../controllers/user/checkSession.controller";
-import { listConsultants } from "../controllers/user/listConsultants.controller";
 import { listTeachingModalitiesAdmin } from "../controllers/education/listTeachingModalitiesAdmin.controller";
 import { listTeachingGradesAdmin } from "../controllers/education/listTeachingGradesAdmin.controller";
 
@@ -35,27 +35,163 @@ type TCollege = {
   partner: string;
   address: string;
   addressNumber: number;
+  address_number?: number;
   state: string;
   city: string;
   management: string;
   salesManager: string;
+  sales_manager?: string;
+  contractId?: number;
+  contract_id?: number;
   consultorId?: number;
   collegeSeries: unknown;
+  college_series?: unknown;
   contractSeries: unknown;
+  contract_series?: unknown;
   internalManagement: unknown;
+  internal_management?: unknown;
   educatorsLength: number;
   collegeCode?: number;
+  college_code?: number;
   initDate?: string;
+  init_date?: string;
   isActive?: boolean;
+  is_active?: boolean;
 };
+
+function normalizeContractId(value: unknown): number | undefined {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : undefined;
+}
+
+function normalizeDateForDateInput(value: unknown): string {
+  if (typeof value === "number" && Number.isFinite(value)) {
+    const fromTimestamp = new Date(value);
+    if (!Number.isNaN(fromTimestamp.getTime())) {
+      const year = fromTimestamp.getFullYear();
+      const month = String(fromTimestamp.getMonth() + 1).padStart(2, "0");
+      const day = String(fromTimestamp.getDate()).padStart(2, "0");
+      return `${year}-${month}-${day}`;
+    }
+  }
+
+  if (value instanceof Date && !Number.isNaN(value.getTime())) {
+    const year = value.getFullYear();
+    const month = String(value.getMonth() + 1).padStart(2, "0");
+    const day = String(value.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  }
+
+  const raw = String(value ?? "").trim();
+  if (!raw) return "";
+
+  if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) return raw;
+
+  const isoWithTime = raw.match(/^(\d{4}-\d{2}-\d{2})[T\s].*$/);
+  if (isoWithTime) return isoWithTime[1];
+
+  const ymdLoose = raw.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+  if (ymdLoose) {
+    const [, year, month, day] = ymdLoose;
+    return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
+  }
+
+  const isoWithSlash = raw.match(/^(\d{4})\/(\d{2})\/(\d{2})$/);
+  if (isoWithSlash) {
+    const [, year, month, day] = isoWithSlash;
+    return `${year}-${month}-${day}`;
+  }
+
+  const ymdSlashLoose = raw.match(/^(\d{4})\/(\d{1,2})\/(\d{1,2})$/);
+  if (ymdSlashLoose) {
+    const [, year, month, day] = ymdSlashLoose;
+    return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
+  }
+
+  const brMatch = raw.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  if (brMatch) {
+    const [, day, month, year] = brMatch;
+    return `${year}-${month}-${day}`;
+  }
+
+  const brLoose = raw.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (brLoose) {
+    const [, day, month, year] = brLoose;
+    return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
+  }
+
+  const brWithDash = raw.match(/^(\d{2})-(\d{2})-(\d{4})$/);
+  if (brWithDash) {
+    const [, day, month, year] = brWithDash;
+    return `${year}-${month}-${day}`;
+  }
+
+  const ymdInside = raw.match(/(\d{4})[-/](\d{1,2})[-/](\d{1,2})/);
+  if (ymdInside) {
+    const [, year, month, day] = ymdInside;
+    return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
+  }
+
+  const dmyInside = raw.match(/(\d{1,2})[-/](\d{1,2})[-/](\d{4})/);
+  if (dmyInside) {
+    const [, day, month, year] = dmyInside;
+    return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
+  }
+
+  const parsedDate = new Date(raw);
+  if (!Number.isNaN(parsedDate.getTime())) {
+    const year = parsedDate.getFullYear();
+    const month = String(parsedDate.getMonth() + 1).padStart(2, "0");
+    const day = String(parsedDate.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  }
+
+  return "";
+}
+
+function unwrapCollegePayload(payload: any): any {
+  if (!payload || typeof payload !== "object" || Array.isArray(payload)) return payload;
+  if (payload?.college && typeof payload.college === "object") return payload.college;
+  if (payload?.data && typeof payload.data === "object" && !Array.isArray(payload.data)) return payload.data;
+  return payload;
+}
+
+function normalizeCollegeRecord(college: any): TCollege {
+  const contractId = normalizeContractId(college?.contractId ?? college?.contract_id);
+  const collegeCode = Number(college?.collegeCode ?? college?.college_code) || undefined;
+  const addressNumber = Number(college?.addressNumber ?? college?.address_number) || 0;
+  const initDate = normalizeDateForDateInput(college?.initDate ?? college?.init_date);
+  const salesManager = String(college?.salesManager ?? college?.sales_manager ?? "");
+  const collegeSeries = college?.collegeSeries ?? college?.college_series;
+  const contractSeries = college?.contractSeries ?? college?.contract_series;
+  const internalManagement = college?.internalManagement ?? college?.internal_management;
+  const isActiveRaw = college?.isActive ?? college?.is_active;
+  const isActive = typeof isActiveRaw === "boolean" ? isActiveRaw : Number(isActiveRaw) === 1;
+
+  return {
+    ...college,
+    collegeCode,
+    college_code: collegeCode,
+    addressNumber,
+    address_number: addressNumber,
+    initDate,
+    init_date: initDate,
+    salesManager,
+    sales_manager: salesManager,
+    contractId,
+    contract_id: contractId,
+    collegeSeries,
+    college_series: collegeSeries,
+    contractSeries,
+    contract_series: contractSeries,
+    internalManagement,
+    internal_management: internalManagement,
+    isActive,
+    is_active: isActive,
+  };
+}
 
 type TRole = "consultant" | "coordinator" | "admin";
-
-type TConsultant = {
-  id: number;
-  firstName: string;
-  lastName: string;
-};
 
 type TInternalManager = {
   name: string;
@@ -81,7 +217,7 @@ type TCollegeForm = {
   city: string;
   management: string;
   salesManager: string;
-  consultorId: number | "";
+  contractId: number | "";
   collegeSeries: string[];
   contractSeries: string[];
   internalManagement: TInternalManager[];
@@ -131,7 +267,7 @@ function emptyForm(): TCollegeForm {
     city: "",
     management: "",
     salesManager: "",
-    consultorId: "",
+    contractId: "",
     collegeSeries: [],
     contractSeries: [],
     internalManagement: [],
@@ -160,7 +296,7 @@ function CollegesPage() {
   const [collegeForm, setCollegeForm] = useState<TCollegeForm>(emptyForm());
   const [managerDraft, setManagerDraft] = useState<TInternalManager>({ name: "", role: "", email: "", phone: "" });
 
-  const [consultants, setConsultants] = useState<TConsultant[]>([]);
+  const [contracts, setContracts] = useState<TContractItem[]>([]);
   const [segments, setSegments] = useState<Array<{ value: string; label: string }>>([]);
   const [seriesBySegment, setSeriesBySegment] = useState<Record<string, Array<{ value: string; label: string }>>>({});
   const [segmentsOpen, setSegmentsOpen] = useState(false);
@@ -185,16 +321,31 @@ function CollegesPage() {
     return collegeForm.collegeSeries.flatMap((segmentKey) => seriesBySegment[segmentKey] || []);
   }, [collegeForm.collegeSeries, seriesBySegment]);
 
+  const selectedContract = useMemo(
+    () => contracts.find((item) => item.id === Number(collegeForm.contractId)) ?? null,
+    [contracts, collegeForm.contractId]
+  );
+
   async function loadColleges() {
     setLoading(true);
     try {
       const collegesList = await listColleges();
-      setColleges(Array.isArray(collegesList) ? collegesList : []);
+      setColleges(Array.isArray(collegesList) ? collegesList.map(normalizeCollegeRecord) : []);
     } catch (error) {
       console.error("Error fetching colleges list:", error);
       setColleges([]);
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function loadContracts() {
+    try {
+      const data = await listContracts();
+      setContracts(Array.isArray(data) ? data : []);
+    } catch (error) {
+      console.error("Error loading contracts:", error);
+      setContracts([]);
     }
   }
 
@@ -207,7 +358,7 @@ function CollegesPage() {
       } catch (error) {
         console.error("Bootstrap colleges page error:", error);
       }
-      await loadColleges();
+      await Promise.all([loadColleges(), loadContracts()]);
     }
     void bootstrap();
   }, []);
@@ -272,11 +423,11 @@ function CollegesPage() {
 
   async function ensureFormDependencies() {
     try {
-      const [consultantsData, modalitiesResp] = await Promise.all([
-        listConsultants(),
+      const [contractsData, modalitiesResp] = await Promise.all([
+        listContracts(),
         listTeachingModalitiesAdmin(),
       ]);
-      setConsultants(Array.isArray(consultantsData) ? consultantsData : []);
+      setContracts(Array.isArray(contractsData) ? contractsData : []);
 
       const modalities: TeachingModality[] = Array.isArray(modalitiesResp?.data)
         ? modalitiesResp.data
@@ -314,30 +465,31 @@ function CollegesPage() {
       setSeriesBySegment(bySegment);
     } catch (error) {
       console.error("Error loading form dependencies:", error);
-      setConsultants([]);
+      setContracts([]);
       setSegments([]);
       setSeriesBySegment({});
     }
   }
 
-  function mapCollegeToForm(college: any): TCollegeForm {
+function mapCollegeToForm(college: any): TCollegeForm {
+    const normalizedContractId = normalizeContractId(college?.contractId ?? college?.contract_id);
     return {
       id: Number(college?.id) || undefined,
-      collegeCode: Number(college?.collegeCode) || "",
-      initDate: String(college?.initDate || ""),
+      collegeCode: Number(college?.collegeCode ?? college?.college_code) || "",
+      initDate: normalizeDateForDateInput(college?.initDate ?? college?.init_date),
       name: String(college?.name || ""),
       partner: String(college?.partner || ""),
       address: String(college?.address || ""),
-      addressNumber: Number(college?.addressNumber) || "",
+      addressNumber: Number(college?.addressNumber ?? college?.address_number) || "",
       state: String(college?.state || ""),
       city: String(college?.city || ""),
       management: String(college?.management || ""),
-      salesManager: String(college?.salesManager || ""),
-      consultorId: Number(college?.consultorId) || "",
-      collegeSeries: normalizeArray(college?.collegeSeries),
-      contractSeries: normalizeArray(college?.contractSeries),
-      internalManagement: normalizeManagers(college?.internalManagement),
-      isActive: Boolean(college?.isActive ?? true),
+      salesManager: String(college?.salesManager ?? college?.sales_manager ?? ""),
+      contractId: normalizedContractId || "",
+      collegeSeries: normalizeArray(college?.collegeSeries ?? college?.college_series),
+      contractSeries: normalizeArray(college?.contractSeries ?? college?.contract_series),
+      internalManagement: normalizeManagers(college?.internalManagement ?? college?.internal_management),
+      isActive: Boolean(college?.isActive ?? college?.is_active ?? true),
     };
   }
 
@@ -355,7 +507,11 @@ function CollegesPage() {
 
       if ((mode === "view" || mode === "edit") && collegeId) {
         const collegeData = await findCollege(String(collegeId));
-        setCollegeForm(mapCollegeToForm(collegeData));
+        const fromList = colleges.find((item) => Number(item.id) === Number(collegeId));
+        const rawPayload = unwrapCollegePayload(collegeData);
+        const mergedPayload = { ...(fromList || {}), ...(rawPayload || {}) };
+        const normalizedCollege = normalizeCollegeRecord(mergedPayload);
+        setCollegeForm(mapCollegeToForm(normalizedCollege));
       } else {
         setCollegeForm(emptyForm());
       }
@@ -420,6 +576,10 @@ function CollegesPage() {
 
   async function submitCollege() {
     if (isViewMode) return;
+    if (!Number(collegeForm.contractId)) {
+      setToast({ type: "error", text: "Selecione um contrato para a escola." });
+      return;
+    }
 
     setFormSubmitting(true);
     try {
@@ -434,7 +594,7 @@ function CollegesPage() {
         city: collegeForm.city,
         management: collegeForm.management,
         salesManager: collegeForm.salesManager,
-        consultorId: Number(collegeForm.consultorId) || 0,
+        contractId: Number(collegeForm.contractId) || 0,
         collegeSeries: collegeForm.collegeSeries,
         contractSeries: collegeForm.contractSeries,
         internalManagement: collegeForm.internalManagement,
@@ -459,7 +619,14 @@ function CollegesPage() {
       await loadColleges();
     } catch (error) {
       console.error("Erro ao salvar escola:", error);
-      setToast({ type: "error", text: "Não foi possível salvar a escola." });
+      const apiMessage =
+        (error as any)?.response?.data?.message ||
+        (error as any)?.response?.data?.error ||
+        (error as any)?.message;
+      setToast({
+        type: "error",
+        text: apiMessage ? String(apiMessage) : "Não foi possível salvar a escola.",
+      });
     } finally {
       setFormSubmitting(false);
     }
@@ -536,9 +703,9 @@ function CollegesPage() {
 
   function handleDownloadCollegeTemplateCsv() {
     const csvTemplate = [
-      "codigo_escola;data_inicio;nome;parceiro;endereco;numero;estado;cidade;gerencia;comercial;consultor_id;segmentos;series_contratadas;status",
-      "1001;2026-01-15;Escola Exemplo;Grupo Exemplo;Rua Alfa;123;SP;Sao Paulo;Regional 1;Joao Comercial;10;1,2;3,4;active",
-      "1002;15/02/2026;Escola Modelo;Grupo Modelo;Rua Beta;45;RJ;Rio de Janeiro;Regional 2;Maria Comercial;12;2;5;inactive"
+      "codigo_escola;data_inicio;nome;parceiro;endereco;numero;estado;cidade;gerencia;comercial;contract_id;segmentos;series_contratadas;status",
+      "1001;2026-01-15;Escola Exemplo;Grupo Exemplo;Rua Alfa;123;SP;Sao Paulo;Regional 1;Joao Comercial;1;1,2;3,4;active",
+      "1002;15/02/2026;Escola Modelo;Grupo Modelo;Rua Beta;45;RJ;Rio de Janeiro;Regional 2;Maria Comercial;2;2;5;inactive"
     ]
       .join(String.fromCharCode(10))
       .replace(/\\n/g, "\n");
@@ -601,6 +768,7 @@ function CollegesPage() {
                       <th>Nome</th>
                       <th>Cidade / UF</th>
                       <th>Parceiro Contratante</th>
+                      <th>Contrato</th>
                       <th>Educadores</th>
                       <th>Séries Contratadas</th>
                       <th>Ações</th>
@@ -612,6 +780,7 @@ function CollegesPage() {
                         <td>{college.name}</td>
                         <td>{college.city} - {college.state}</td>
                         <td>{college.partner}</td>
+                        <td>#{Number(college.contractId ?? college.contract_id) || "-"}</td>
                         <td>{college.educatorsLength}</td>
                         <td>{normalizeArray(college.contractSeries).length}</td>
                         <td className="colleges-actions-cell">
@@ -723,7 +892,7 @@ function CollegesPage() {
                     <input value={collegeForm.city} disabled={isViewMode} onChange={(e) => setCollegeForm((prev) => ({ ...prev, city: e.target.value }))} />
                   </label>
                   <label>
-                    <span>Regional/Gerência*</span>
+                    <span>Contrato*</span>
                     <input value={collegeForm.management} disabled={isViewMode} onChange={(e) => setCollegeForm((prev) => ({ ...prev, management: e.target.value }))} />
                   </label>
 
@@ -766,21 +935,43 @@ function CollegesPage() {
                     <input value={collegeForm.salesManager} disabled={isViewMode} onChange={(e) => setCollegeForm((prev) => ({ ...prev, salesManager: e.target.value }))} />
                   </label>
 
-                  <label>
-                    <span>Consultor responsável*</span>
-                    <select
-                      value={collegeForm.consultorId}
-                      disabled={isViewMode}
-                      onChange={(e) => setCollegeForm((prev) => ({ ...prev, consultorId: Number(e.target.value) || "" }))}
-                    >
-                      <option value="">Selecione um consultor</option>
-                      {consultants.map((consultant) => (
-                        <option key={consultant.id} value={consultant.id}>
-                          {consultant.firstName} {consultant.lastName}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
+                  <div className="colleges-contract-field">
+                    <label>
+                      <span>Contrato*</span>
+                      <select
+                        value={collegeForm.contractId}
+                        disabled={isViewMode}
+                        onChange={(e) => setCollegeForm((prev) => ({ ...prev, contractId: Number(e.target.value) || "" }))}
+                      >
+                        <option value="">Selecione um contrato</option>
+                        {contracts.map((contract) => (
+                          <option key={contract.id} value={contract.id}>
+                            {contract.name} - #{contract.id} - {contract.coordinatorName} ({contract.consultants.length} consultor(es))
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                    {selectedContract ? (
+                      <div className="colleges-contract-summary">
+                        <div className="colleges-contract-summary-row">
+                          <b>Contrato:</b>
+                          <span>{selectedContract.name}</span>
+                        </div>
+                        <div className="colleges-contract-summary-row">
+                          <b>Coordenador:</b>
+                          <span>{selectedContract.coordinatorName}</span>
+                        </div>
+                        <div className="colleges-contract-summary-row">
+                          <b>Consultores:</b>
+                          <span>
+                            {selectedContract.consultants.length
+                              ? selectedContract.consultants.map((c) => `${c.firstName} ${c.lastName}`).join(", ")
+                              : "Sem consultores vinculados"}
+                          </span>
+                        </div>
+                      </div>
+                    ) : null}
+                  </div>
 
                   <label>
                     <span>Status da escola*</span>
@@ -1101,6 +1292,7 @@ function normalizeCollegeImportHeader(rawHeader: string): string {
   if (normalized === "cidade" || normalized === "city") return "city";
   if (normalized === "gerencia" || normalized === "regional" || normalized === "management") return "management";
   if (normalized === "comercial" || normalized === "salesmanager") return "salesManager";
+  if (normalized === "contractid" || normalized === "contratoid") return "contractId";
   if (normalized === "consultor" || normalized === "consultorid") return "consultorId";
   if (normalized === "segmentos" || normalized === "collegeseries") return "collegeSeries";
   if (normalized === "seriescontratadas" || normalized === "contractseries") return "contractSeries";

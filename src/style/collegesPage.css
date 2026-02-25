@@ -297,7 +297,7 @@
 
 .colleges-form-grid {
   display: grid;
-  grid-template-columns: repeat(5, minmax(150px, 1fr));
+  grid-template-columns: repeat(4, minmax(170px, 1fr));
   gap: 12px;
 }
 
@@ -317,7 +317,7 @@
   font-weight: 600;
 }
 
-.colleges-form-grid input,
+.colleges-form-grid input:not([type="checkbox"]):not([type="radio"]),
 .colleges-form-grid select,
 .colleges-multiselect-trigger,
 .colleges-manager-form input {
@@ -331,9 +331,10 @@
   background: #ffffff;
   width: 100%;
   outline: none;
+  transition: border-color .2s ease, box-shadow .2s ease;
 }
 
-.colleges-form-grid input:focus,
+.colleges-form-grid input:not([type="checkbox"]):not([type="radio"]):focus,
 .colleges-form-grid select:focus,
 .colleges-multiselect-trigger:focus,
 .colleges-manager-form input:focus {
@@ -341,7 +342,7 @@
   box-shadow: 0 0 0 3px rgba(43, 140, 207, 0.16);
 }
 
-.colleges-form-grid input:disabled,
+.colleges-form-grid input:not([type="checkbox"]):not([type="radio"]):disabled,
 .colleges-form-grid select:disabled,
 .colleges-multiselect-trigger:disabled {
   background: #f9fafb;
@@ -375,17 +376,120 @@
 
 .colleges-multiselect-popup label {
   display: flex;
+  flex-direction: row;
   align-items: center;
+  justify-content: flex-start;
   gap: 8px;
   font-size: 13px;
   font-family: "SF UI Display", "Segoe UI", sans-serif;
   color: #2f3745;
   padding: 6px 8px;
   border-radius: 6px;
+  text-align: left;
+}
+
+.colleges-form-grid .colleges-multiselect .colleges-multiselect-popup label {
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.colleges-multiselect-popup label > span {
+  display: inline;
+  flex: 0 1 auto;
+  margin: 0;
+}
+
+.colleges-multiselect-popup input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  flex: 0 0 16px;
+  accent-color: #228bc3;
 }
 
 .colleges-multiselect-popup label:hover {
   background: #f7fafc;
+}
+
+.colleges-contract-field {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  grid-column: 1 / -1;
+}
+
+.colleges-contract-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.colleges-contract-summary {
+  color: #475467;
+  font-size: 12px;
+  line-height: 1.45;
+  background: #f8fafc;
+  border: 1px solid #e6ebf2;
+  border-radius: 10px;
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: fit-content;
+  max-width: 100%;
+}
+
+.colleges-contract-summary-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.colleges-contract-summary-row b {
+  color: #344054;
+  font-family: "SF UI Display Semibold", "SF UI Display", "Segoe UI", sans-serif;
+  white-space: nowrap;
+}
+
+.colleges-contract-summary-row span {
+  color: #475467;
+  word-break: break-word;
+}
+
+.colleges-contract-consultants {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 8px;
+  padding: 12px 14px;
+}
+
+.colleges-contract-consultants label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #29303d;
+  font-size: 13px;
+  padding: 8px 10px;
+  border: 1px solid #eef2f7;
+  border-radius: 10px;
+  background: #fff;
+}
+
+.colleges-contract-consultants label:hover {
+  background: #f8fafc;
+}
+
+.colleges-contract-modal-card {
+  width: min(920px, calc(100vw - 40px));
+}
+
+.colleges-contract-modal-body .colleges-form-grid {
+  grid-template-columns: repeat(2, minmax(220px, 1fr));
+}
+
+.colleges-contract-modal-body .colleges-form-grid label:first-child {
+  grid-column: span 2;
 }
 
 .colleges-managers-card {
@@ -599,5 +703,9 @@
   .colleges-form-grid,
   .colleges-manager-form {
     grid-template-columns: 1fr;
+  }
+
+  .colleges-contract-modal-body .colleges-form-grid label:first-child {
+    grid-column: span 1;
   }
 }

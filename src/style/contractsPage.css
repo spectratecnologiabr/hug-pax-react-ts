@@ -1,0 +1,339 @@
+.admin-dashboard-wrapper.contracts-page {
+  font-family: "SF UI Display", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  color: #29303d;
+}
+
+.admin-dashboard-wrapper.contracts-page .contracts-header {
+  margin: 0 20px 14px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.admin-dashboard-wrapper.contracts-page .contracts-header b {
+  display: block;
+  color: #000;
+  font-size: 30px;
+  font-family: "SF UI Display Semibold", "SF UI Display", "Segoe UI", sans-serif;
+}
+
+.admin-dashboard-wrapper.contracts-page .contracts-header span {
+  display: block;
+  margin-top: 6px;
+  color: #747474;
+  font-size: 15px;
+}
+
+.contracts-new-button,
+.contracts-edit-button,
+.contracts-primary-button,
+.contracts-ghost-button {
+  border-radius: 10px;
+  font-size: 13px;
+  font-family: "SF UI Display Medium", "SF UI Display", "Segoe UI", sans-serif;
+  cursor: pointer;
+}
+
+.contracts-new-button,
+.contracts-primary-button {
+  border: 1px solid #228bc3;
+  background: #228bc3;
+  color: #fff;
+  padding: 10px 14px;
+}
+
+.contracts-new-button:hover,
+.contracts-primary-button:hover {
+  background: #1e7cad;
+}
+
+.contracts-edit-button {
+  border: 1px solid #d5dbe5;
+  background: #fff;
+  color: #344054;
+  padding: 8px 12px;
+}
+
+.contracts-card {
+  margin: 0 20px;
+  background: #fff;
+  border: 1px solid #e0e5eb;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.contracts-card-header {
+  padding: 14px 16px;
+  border-bottom: 1px solid #e6ebf2;
+}
+
+.contracts-table-wrap {
+  overflow-x: auto;
+}
+
+.contracts-table {
+  width: 100%;
+  min-width: 800px;
+  border-collapse: collapse;
+}
+
+.contracts-table th,
+.contracts-table td {
+  text-align: left;
+  padding: 12px 16px;
+  border-bottom: 1px solid #eef2f7;
+  font-size: 13px;
+}
+
+.contracts-table th {
+  background: #f8fafc;
+  color: #6b7280;
+  font-size: 12px;
+}
+
+.contracts-empty {
+  padding: 18px 16px;
+  font-size: 13px;
+  color: #6b7280;
+}
+
+.contracts-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100000;
+  background: rgba(15, 23, 42, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.contracts-modal-card {
+  width: min(760px, calc(100vw - 40px));
+  max-height: calc(100vh - 40px);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  border: 1px solid #eef2f7;
+  border-radius: 14px;
+}
+
+.contracts-modal-header,
+.contracts-modal-footer {
+  padding: 14px 18px;
+  border-bottom: 1px solid #eef2f7;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.contracts-modal-header > div {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.contracts-modal-header b {
+  display: block;
+  font-size: 16px;
+  line-height: 1.2;
+  color: #101828;
+  font-family: "SF UI Display Semibold", "SF UI Display", "Segoe UI", sans-serif;
+}
+
+.contracts-modal-header span {
+  display: block;
+  margin: 0;
+  line-height: 1.35;
+  font-size: 13px;
+  color: #667085;
+  font-family: "SF UI Display", "Segoe UI", sans-serif;
+}
+
+.contracts-modal-footer {
+  border-bottom: none;
+  border-top: 1px solid #eef2f7;
+  justify-content: flex-end;
+}
+
+.contracts-close-button {
+  width: 34px;
+  height: 34px;
+  border: 1px solid #eef2f7;
+  border-radius: 10px;
+  background: #fff;
+  font-size: 22px;
+  cursor: pointer;
+}
+
+.contracts-modal-body {
+  padding: 16px 18px;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.contracts-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(200px, 1fr));
+  gap: 12px;
+}
+
+.contracts-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.contracts-field-full {
+  grid-column: 1 / -1;
+}
+
+.contracts-field > span {
+  font-size: 12px;
+  color: #667085;
+  font-family: "SF UI Display Medium", "SF UI Display", "Segoe UI", sans-serif;
+}
+
+.contracts-field select {
+  border: 1px solid #e6ebf2;
+  border-radius: 10px;
+  height: 40px;
+  padding: 10px 12px;
+  width: 100%;
+  outline: none;
+  transition: border-color .2s ease, box-shadow .2s ease;
+  font-family: "SF UI Display", "Segoe UI", sans-serif;
+  font-size: 13px;
+  color: #1e1e1e;
+}
+
+.contracts-field input[type="text"] {
+  border: 1px solid #e6ebf2;
+  border-radius: 10px;
+  height: 40px;
+  padding: 10px 12px;
+  width: 100%;
+  outline: none;
+  transition: border-color .2s ease, box-shadow .2s ease;
+  font-family: "SF UI Display", "Segoe UI", sans-serif;
+  font-size: 13px;
+  color: #1e1e1e;
+}
+
+.contracts-field select:focus,
+.contracts-field input[type="text"]:focus {
+  border-color: #2b8ccf;
+  box-shadow: 0 0 0 3px rgba(43, 140, 207, 0.16);
+}
+
+.contracts-consultants-card {
+  border: 1px solid #eef2f7;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.contracts-consultants-head {
+  padding: 12px 14px;
+  border-bottom: 1px solid #eef2f7;
+  background: #fff;
+}
+
+.contracts-consultants-head b {
+  font-size: 14px;
+  font-family: "SF UI Display Semibold", "SF UI Display", "Segoe UI", sans-serif;
+  color: #29303d;
+}
+
+.contracts-consultants {
+  padding: 12px 14px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 8px;
+  background: #ffffff;
+}
+
+.contracts-consultants label {
+  display: flex;
+  align-items: center;
+  flex-direction: row;
+  gap: 8px;
+  border: 1px solid #eef2f7;
+  border-radius: 10px;
+  padding: 8px 10px;
+  background: #fff;
+}
+
+.contracts-consultants label:hover {
+  background: #f8fafc;
+}
+
+.contracts-consultants label input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  flex: 0 0 auto;
+}
+
+.contracts-consultants label span {
+  line-height: 1.25;
+  font-family: "SF UI Display", "Segoe UI", sans-serif;
+  font-size: 13px;
+}
+
+.contracts-ghost-button {
+  border: 1px solid #e6ebf2;
+  background: #fff;
+  color: #344054;
+  height: 40px;
+  padding: 10px 14px;
+}
+
+.contracts-toast {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  z-index: 2100;
+  max-width: min(420px, calc(100vw - 24px));
+  border-radius: 12px;
+  padding: 11px 14px;
+  border: 1px solid transparent;
+  color: #ffffff;
+  font-size: 13px;
+  line-height: 1.35;
+  font-family: "SF UI Display Medium", "SF UI Display", "Segoe UI", sans-serif;
+  box-shadow: 0 12px 26px rgba(15, 23, 42, 0.22);
+}
+
+.contracts-toast.success {
+  background: #10b77f;
+  border-color: #0f9f6f;
+}
+
+.contracts-toast.error {
+  background: #e85d4a;
+  border-color: #d94841;
+}
+
+@media (max-width: 860px) {
+  .admin-dashboard-wrapper.contracts-page .contracts-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .contracts-table {
+    min-width: 680px;
+  }
+
+  .contracts-form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .contracts-field-full {
+    grid-column: auto;
+  }
+}
