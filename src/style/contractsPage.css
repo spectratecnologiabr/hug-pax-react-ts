@@ -212,7 +212,8 @@
   color: #1e1e1e;
 }
 
-.contracts-field input[type="text"] {
+.contracts-field input[type="text"],
+.contracts-field input[type="number"] {
   border: 1px solid #e6ebf2;
   border-radius: 10px;
   height: 40px;
@@ -226,9 +227,21 @@
 }
 
 .contracts-field select:focus,
-.contracts-field input[type="text"]:focus {
+.contracts-field input[type="text"]:focus,
+.contracts-field input[type="number"]:focus {
   border-color: #2b8ccf;
   box-shadow: 0 0 0 3px rgba(43, 140, 207, 0.16);
+}
+
+.contracts-field input[type="number"] {
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+
+.contracts-field input[type="number"]::-webkit-outer-spin-button,
+.contracts-field input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
 }
 
 .contracts-consultants-card {

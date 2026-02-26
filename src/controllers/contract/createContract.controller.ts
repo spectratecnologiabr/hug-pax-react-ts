@@ -5,6 +5,9 @@ export interface ICreateContractPayload {
   name: string;
   coordinatorId?: number;
   consultantIds: number[];
+  studentsCount: number;
+  teachersCount: number;
+  booksCount: number;
 }
 
 export async function createContract(data: ICreateContractPayload) {

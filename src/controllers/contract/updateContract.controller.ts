@@ -6,6 +6,9 @@ export interface IUpdateContractPayload {
   name: string;
   coordinatorId?: number;
   consultantIds: number[];
+  studentsCount: number;
+  teachersCount: number;
+  booksCount: number;
 }
 
 export async function updateContract(data: IUpdateContractPayload) {
@@ -15,6 +18,9 @@ export async function updateContract(data: IUpdateContractPayload) {
       name: data.name,
       coordinatorId: data.coordinatorId,
       consultantIds: data.consultantIds,
+      studentsCount: data.studentsCount,
+      teachersCount: data.teachersCount,
+      booksCount: data.booksCount,
     },
     {
       headers: {

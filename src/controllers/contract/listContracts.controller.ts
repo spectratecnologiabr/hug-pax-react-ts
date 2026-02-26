@@ -12,6 +12,9 @@ export type TContractItem = {
   id: number;
   name: string;
   coordinatorId: number;
+  studentsCount: number;
+  teachersCount: number;
+  booksCount: number;
   coordinatorName: string;
   coordinatorManagement?: string | null;
   consultants: TContractConsultant[];

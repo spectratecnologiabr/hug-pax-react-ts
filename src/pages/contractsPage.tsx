@@ -20,12 +20,14 @@ type TCoordinator = {
   id: number;
   firstName: string;
   lastName: string;
+  management?: string | null;
 };
 
 type TConsultant = {
   id: number;
   firstName: string;
   lastName: string;
+  management?: string | null;
 };
 
 type TOverviewData = {
@@ -39,6 +41,9 @@ type TContractForm = {
   name: string;
   coordinatorId: number | "";
   consultantIds: number[];
+  studentsCount: number;
+  teachersCount: number;
+  booksCount: number;
 };
 
 function emptyForm(): TContractForm {
@@ -46,6 +51,9 @@ function emptyForm(): TContractForm {
     name: "",
     coordinatorId: "",
     consultantIds: [],
+    studentsCount: 0,
+    teachersCount: 0,
+    booksCount: 0,
   };
 }
 
@@ -81,6 +89,22 @@ function ContractsPage() {
     return map;
   }, [coordinators]);
 
+  const selectedCoordinatorManagement = useMemo(() => {
+    const coordinatorId = Number(form.coordinatorId);
+    if (!Number.isFinite(coordinatorId) || coordinatorId <= 0) return "";
+    const coordinator = coordinators.find((item) => item.id === coordinatorId);
+    return String(coordinator?.management || "").trim();
+  }, [coordinators, form.coordinatorId]);
+
+  const filteredConsultants = useMemo(() => {
+    if (!selectedCoordinatorManagement) {
+      return role === "coordinator" ? consultants : [];
+    }
+    return consultants.filter(
+      (item) => String(item.management || "").trim() === selectedCoordinatorManagement
+    );
+  }, [consultants, role, selectedCoordinatorManagement]);
+
   async function loadData() {
     setLoading(true);
     try {
@@ -109,6 +133,7 @@ function ContractsPage() {
               id: Number(item?.id),
               firstName: String(item?.firstName || ""),
               lastName: String(item?.lastName || ""),
+              management: item?.management ? String(item.management) : null,
             }))
             .filter((item: TCoordinator) => item.id > 0)
         );
@@ -119,6 +144,7 @@ function ContractsPage() {
             id: Number(me?.id) || userId,
             firstName: String(me?.firstName || "Coordenador"),
             lastName: String(me?.lastName || ""),
+            management: me?.management ? String(me.management) : null,
           },
         ]);
       } else {
@@ -144,6 +170,9 @@ function ContractsPage() {
       name: "",
       coordinatorId: role === "coordinator" ? Number(sessionUserId) || "" : "",
       consultantIds: [],
+      studentsCount: 0,
+      teachersCount: 0,
+      booksCount: 0,
     });
     setModalOpen(true);
   }
@@ -155,6 +184,9 @@ function ContractsPage() {
       name: String(contract.name || ""),
       coordinatorId: contract.coordinatorId,
       consultantIds: contract.consultantIds,
+      studentsCount: Number(contract.studentsCount) || 0,
+      teachersCount: Number(contract.teachersCount) || 0,
+      booksCount: Number(contract.booksCount) || 0,
     });
     setModalOpen(true);
   }
@@ -177,6 +209,15 @@ function ContractsPage() {
     });
   }
 
+  useEffect(() => {
+    if (!modalOpen) return;
+    const allowedIds = new Set(filteredConsultants.map((item) => item.id));
+    setForm((prev) => ({
+      ...prev,
+      consultantIds: prev.consultantIds.filter((id) => allowedIds.has(id)),
+    }));
+  }, [filteredConsultants, modalOpen]);
+
   async function submit() {
     if (!form.consultantIds.length) {
       setToast({ type: "error", text: "Selecione pelo menos um consultor." });
@@ -190,12 +231,25 @@ function ContractsPage() {
     setSubmitting(true);
     try {
       if (modalMode === "create") {
-        const payload: any = { name: form.name.trim(), consultantIds: form.consultantIds };
+        const payload: any = {
+          name: form.name.trim(),
+          consultantIds: form.consultantIds,
+          studentsCount: form.studentsCount,
+          teachersCount: form.teachersCount,
+          booksCount: form.booksCount,
+        };
         if (role === "admin") payload.coordinatorId = Number(form.coordinatorId) || 0;
         await createContract(payload);
         setToast({ type: "success", text: "Contrato criado com sucesso." });
       } else if (form.id) {
-        const payload: any = { id: form.id, name: form.name.trim(), consultantIds: form.consultantIds };
+        const payload: any = {
+          id: form.id,
+          name: form.name.trim(),
+          consultantIds: form.consultantIds,
+          studentsCount: form.studentsCount,
+          teachersCount: form.teachersCount,
+          booksCount: form.booksCount,
+        };
         if (role === "admin") payload.coordinatorId = Number(form.coordinatorId) || 0;
         await updateContract(payload);
         setToast({ type: "success", text: "Contrato atualizado com sucesso." });
@@ -205,7 +259,11 @@ function ContractsPage() {
       await loadData();
     } catch (error) {
       console.error("Error saving contract:", error);
-      setToast({ type: "error", text: "Não foi possível salvar o contrato." });
+      const message =
+        (error as any)?.response?.data?.message ||
+        (error as any)?.message ||
+        "Não foi possível salvar o contrato.";
+      setToast({ type: "error", text: String(message) });
     } finally {
       setSubmitting(false);
     }
@@ -250,6 +308,9 @@ function ContractsPage() {
                       <th>Nome</th>
                       <th>Coordenador</th>
                       <th>Gerência</th>
+                      <th>Alunos</th>
+                      <th>Professores</th>
+                      <th>Livros</th>
                       <th>Consultores</th>
                       <th>Ações</th>
                     </tr>
@@ -261,6 +322,9 @@ function ContractsPage() {
                         <td>{item.name}</td>
                         <td>{item.coordinatorName || coordinatorLabelById.get(item.coordinatorId) || `#${item.coordinatorId}`}</td>
                         <td>{item.coordinatorManagement || "-"}</td>
+                        <td>{Number(item.studentsCount) || 0}</td>
+                        <td>{Number(item.teachersCount) || 0}</td>
+                        <td>{Number(item.booksCount) || 0}</td>
                         <td>{item.consultants.map((c) => `${c.firstName} ${c.lastName}`).join(", ") || "-"}</td>
                         <td>
                           <button type="button" className="contracts-edit-button" onClick={() => openEdit(item)}>
@@ -314,6 +378,36 @@ function ContractsPage() {
                     ))}
                   </select>
                 </label>
+                <label className="contracts-field">
+                  <span>Quantitativo de alunos*</span>
+                  <input
+                    type="number"
+                    min={0}
+                    step={1}
+                    value={form.studentsCount}
+                    onChange={(e) => setForm((prev) => ({ ...prev, studentsCount: Math.max(0, Number(e.target.value) || 0) }))}
+                  />
+                </label>
+                <label className="contracts-field">
+                  <span>Quantitativo de professores*</span>
+                  <input
+                    type="number"
+                    min={0}
+                    step={1}
+                    value={form.teachersCount}
+                    onChange={(e) => setForm((prev) => ({ ...prev, teachersCount: Math.max(0, Number(e.target.value) || 0) }))}
+                  />
+                </label>
+                <label className="contracts-field">
+                  <span>Quantitativo de livros*</span>
+                  <input
+                    type="number"
+                    min={0}
+                    step={1}
+                    value={form.booksCount}
+                    onChange={(e) => setForm((prev) => ({ ...prev, booksCount: Math.max(0, Number(e.target.value) || 0) }))}
+                  />
+                </label>
               </div>
 
               <div className="contracts-consultants-card">
@@ -321,7 +415,10 @@ function ContractsPage() {
                   <b>Consultores do contrato</b>
                 </div>
                 <div className="contracts-consultants">
-                  {consultants.map((consultant) => (
+                  {!filteredConsultants.length ? (
+                    <span>Nenhum consultor disponível para a rede do coordenador selecionado.</span>
+                  ) : null}
+                  {filteredConsultants.map((consultant) => (
                     <label key={consultant.id}>
                       <input
                         type="checkbox"
