@@ -44,7 +44,7 @@ type User = {
   name: string;
   email: string;
   role: AdminUserRole;
-  profile: "Administrador" | "Educador" | "Consultor" | "Coordenador";
+  profile: "Administrador" | "Educador" | "Consultor" | "Coordenador" | "Consultor especialista";
   status: AdminUserStatus;
   isActive?: boolean;
   isBlocked?: boolean;
@@ -94,6 +94,8 @@ function roleLabel(role: AdminUserRole): User["profile"] {
       return "Consultor";
     case "coordinator":
       return "Coordenador";
+    case "specialist_consultant":
+      return "Consultor especialista";
   }
 }
 
@@ -741,8 +743,8 @@ function AdminUsersPage() {
       return;
     }
 
-    if ((role === "consultant" || role === "coordinator") && !management) {
-      setUserModalError("Rede é obrigatória para consultor e coordenador.");
+    if ((role === "consultant" || role === "coordinator" || role === "specialist_consultant") && !management) {
+      setUserModalError("Rede é obrigatória para consultor, coordenador e consultor especialista.");
       return;
     }
 
@@ -893,6 +895,7 @@ function AdminUsersPage() {
               <option value="all">Todos os perfis</option>
               <option value="admin">Administrador</option>
               <option value="coordinator">Coordenador</option>
+              <option value="specialist_consultant">Consultor especialista</option>
               <option value="educator">Educador</option>
               <option value="consultant">Consultor</option>
             </select>
@@ -1461,6 +1464,7 @@ function AdminUsersPage() {
                       >
                         <option value="admin">Administrador</option>
                         <option value="coordinator">Coordenador</option>
+                        <option value="specialist_consultant">Consultor especialista</option>
                         <option value="educator">Educador</option>
                         <option value="consultant">Consultor</option>
                       </select>
@@ -1489,14 +1493,14 @@ function AdminUsersPage() {
                       </label>
                     )}
 
-                    {(userForm.role === "coordinator" || userForm.role === "consultant" || userForm.role === "educator") && (
+                    {(userForm.role === "coordinator" || userForm.role === "specialist_consultant" || userForm.role === "consultant" || userForm.role === "educator") && (
                       <label className="sap-user-field">
-                        <span>Rede</span>
+                        <span>Gerência</span>
                         <input
                           value={userForm.management}
                           onChange={e => setUserForm(s => ({ ...s, management: e.target.value }))}
                           disabled={userModal.mode === "view" || userModalSubmitting || userModalDetailsLoading}
-                          placeholder="Ex.: Rede Sul"
+                          placeholder="Ex.: Gerência Sul"
                         />
                       </label>
                     )}

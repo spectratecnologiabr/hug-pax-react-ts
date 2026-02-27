@@ -10,7 +10,7 @@ export interface IUsersSummaryAdmin {
 
 export interface IUsersSummaryAdminQuery {
   search?: string
-  role?: "admin" | "educator" | "consultant" | "coordinator"
+  role?: "admin" | "educator" | "consultant" | "coordinator" | "specialist_consultant"
   management?: string
 }
 

@@ -8,9 +8,22 @@ export type TContractConsultant = {
   management?: string | null;
 };
 
+export type TContractSchool = {
+  id: number;
+  name: string;
+  city?: string | null;
+  state?: string | null;
+  gee?: string | null;
+};
+
 export type TContractItem = {
   id: number;
   name: string;
+  address?: string | null;
+  zipCode?: string | null;
+  zip_code?: string | null;
+  phone?: string | null;
+  cnpj?: string | null;
   coordinatorId: number;
   studentsCount: number;
   teachersCount: number;
@@ -18,6 +31,7 @@ export type TContractItem = {
   coordinatorName: string;
   coordinatorManagement?: string | null;
   consultants: TContractConsultant[];
+  schools?: TContractSchool[];
   consultantIds: number[];
   createdAt?: string;
   updatedAt?: string;

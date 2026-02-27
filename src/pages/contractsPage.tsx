@@ -14,7 +14,7 @@ import { getOverviewData } from "../controllers/dash/overview.controller";
 import "../style/adminDash.css";
 import "../style/contractsPage.css";
 
-type TRole = "consultant" | "coordinator" | "admin";
+type TRole = "consultant" | "coordinator" | "specialist_consultant" | "admin";
 
 type TCoordinator = {
   id: number;
@@ -39,6 +39,10 @@ type TFormMode = "create" | "edit";
 type TContractForm = {
   id?: number;
   name: string;
+  address: string;
+  zipCode: string;
+  phone: string;
+  cnpj: string;
   coordinatorId: number | "";
   consultantIds: number[];
   studentsCount: number;
@@ -49,12 +53,51 @@ type TContractForm = {
 function emptyForm(): TContractForm {
   return {
     name: "",
+    address: "",
+    zipCode: "",
+    phone: "",
+    cnpj: "",
     coordinatorId: "",
     consultantIds: [],
     studentsCount: 0,
     teachersCount: 0,
     booksCount: 0,
   };
+}
+
+function isCoordinatorLike(role: string | null | undefined) {
+  return role === "coordinator" || role === "specialist_consultant";
+}
+
+function onlyDigits(value: string) {
+  return String(value || "").replace(/\D/g, "");
+}
+
+function formatZipCode(value: string) {
+  const digits = onlyDigits(value).slice(0, 8);
+  if (digits.length <= 5) return digits;
+  return `${digits.slice(0, 5)}-${digits.slice(5)}`;
+}
+
+function formatCnpj(value: string) {
+  const digits = onlyDigits(value).slice(0, 14);
+  if (digits.length <= 2) return digits;
+  if (digits.length <= 5) return `${digits.slice(0, 2)}.${digits.slice(2)}`;
+  if (digits.length <= 8) return `${digits.slice(0, 2)}.${digits.slice(2, 5)}.${digits.slice(5)}`;
+  if (digits.length <= 12) {
+    return `${digits.slice(0, 2)}.${digits.slice(2, 5)}.${digits.slice(5, 8)}/${digits.slice(8)}`;
+  }
+  return `${digits.slice(0, 2)}.${digits.slice(2, 5)}.${digits.slice(5, 8)}/${digits.slice(8, 12)}-${digits.slice(12)}`;
+}
+
+function formatPhone(value: string) {
+  const digits = onlyDigits(value).slice(0, 11);
+  if (digits.length <= 2) return digits;
+  const ddd = digits.slice(0, 2);
+  const rest = digits.slice(2);
+  if (rest.length <= 4) return `(${ddd}) ${rest}`;
+  if (rest.length <= 8) return `(${ddd}) ${rest.slice(0, 4)}-${rest.slice(4)}`;
+  return `(${ddd}) ${rest.slice(0, 5)}-${rest.slice(5)}`;
 }
 
 function ContractsPage() {
@@ -98,12 +141,18 @@ function ContractsPage() {
 
   const filteredConsultants = useMemo(() => {
     if (!selectedCoordinatorManagement) {
-      return role === "coordinator" ? consultants : [];
+      return isCoordinatorLike(role) ? consultants : [];
     }
     return consultants.filter(
       (item) => String(item.management || "").trim() === selectedCoordinatorManagement
     );
   }, [consultants, role, selectedCoordinatorManagement]);
+
+  const selectedContract = useMemo(() => {
+    const contractId = Number(form.id);
+    if (!Number.isFinite(contractId) || contractId <= 0) return null;
+    return contracts.find((item) => Number(item.id) === contractId) ?? null;
+  }, [contracts, form.id]);
 
   async function loadData() {
     setLoading(true);
@@ -125,10 +174,20 @@ function ContractsPage() {
       setConsultants(Array.isArray(consultantsData) ? consultantsData : []);
 
       if (userRole === "admin") {
-        const coordinatorsResponse = await listUsersAdmin({ role: "coordinator", page: 1, pageSize: 500 });
-        const items = Array.isArray(coordinatorsResponse?.items) ? coordinatorsResponse.items : [];
+        const [coordinatorsResponse, specialistResponse] = await Promise.all([
+          listUsersAdmin({ role: "coordinator", page: 1, pageSize: 500 }),
+          listUsersAdmin({ role: "specialist_consultant", page: 1, pageSize: 500 }),
+        ]);
+        const coordinatorItems = Array.isArray(coordinatorsResponse?.items) ? coordinatorsResponse.items : [];
+        const specialistItems = Array.isArray(specialistResponse?.items) ? specialistResponse.items : [];
+        const items = [...coordinatorItems, ...specialistItems];
+        const uniqueById = new Map<number, any>();
+        items.forEach((item: any) => {
+          const id = Number(item?.id);
+          if (Number.isFinite(id) && id > 0) uniqueById.set(id, item);
+        });
         setCoordinators(
-          items
+          Array.from(uniqueById.values())
             .map((item: any) => ({
               id: Number(item?.id),
               firstName: String(item?.firstName || ""),
@@ -137,7 +196,7 @@ function ContractsPage() {
             }))
             .filter((item: TCoordinator) => item.id > 0)
         );
-      } else if (userRole === "coordinator" && userId) {
+      } else if (isCoordinatorLike(userRole) && userId) {
         const me = await findUser(userId);
         setCoordinators([
           {
@@ -168,7 +227,11 @@ function ContractsPage() {
     setModalMode("create");
     setForm({
       name: "",
-      coordinatorId: role === "coordinator" ? Number(sessionUserId) || "" : "",
+      address: "",
+      zipCode: "",
+      phone: "",
+      cnpj: "",
+      coordinatorId: isCoordinatorLike(role) ? Number(sessionUserId) || "" : "",
       consultantIds: [],
       studentsCount: 0,
       teachersCount: 0,
@@ -182,6 +245,10 @@ function ContractsPage() {
     setForm({
       id: contract.id,
       name: String(contract.name || ""),
+      address: String(contract.address || ""),
+      zipCode: String(contract.zipCode || contract.zip_code || ""),
+      phone: String(contract.phone || ""),
+      cnpj: String(contract.cnpj || ""),
       coordinatorId: contract.coordinatorId,
       consultantIds: contract.consultantIds,
       studentsCount: Number(contract.studentsCount) || 0,
@@ -233,6 +300,10 @@ function ContractsPage() {
       if (modalMode === "create") {
         const payload: any = {
           name: form.name.trim(),
+          address: String(form.address || "").trim() || null,
+          zipCode: String(form.zipCode || "").trim() || null,
+          phone: String(form.phone || "").trim() || null,
+          cnpj: String(form.cnpj || "").trim() || null,
           consultantIds: form.consultantIds,
           studentsCount: form.studentsCount,
           teachersCount: form.teachersCount,
@@ -245,6 +316,10 @@ function ContractsPage() {
         const payload: any = {
           id: form.id,
           name: form.name.trim(),
+          address: String(form.address || "").trim() || null,
+          zipCode: String(form.zipCode || "").trim() || null,
+          phone: String(form.phone || "").trim() || null,
+          cnpj: String(form.cnpj || "").trim() || null,
           consultantIds: form.consultantIds,
           studentsCount: form.studentsCount,
           teachersCount: form.teachersCount,
@@ -363,11 +438,50 @@ function ContractsPage() {
                     placeholder="Ex.: Contrato Rede Norte 2026"
                   />
                 </label>
+                <label className="contracts-field contracts-field-full">
+                  <span>Endereço</span>
+                  <input
+                    type="text"
+                    value={form.address}
+                    onChange={(e) => setForm((prev) => ({ ...prev, address: e.target.value }))}
+                    placeholder="Ex.: Rua Exemplo, 123 - Centro"
+                  />
+                </label>
+                <label className="contracts-field">
+                  <span>CEP</span>
+                  <input
+                    type="text"
+                    value={form.zipCode}
+                    inputMode="numeric"
+                    onChange={(e) => setForm((prev) => ({ ...prev, zipCode: formatZipCode(e.target.value) }))}
+                    placeholder="Ex.: 12345-678"
+                  />
+                </label>
+                <label className="contracts-field">
+                  <span>Telefone</span>
+                  <input
+                    type="text"
+                    value={form.phone}
+                    inputMode="numeric"
+                    onChange={(e) => setForm((prev) => ({ ...prev, phone: formatPhone(e.target.value) }))}
+                    placeholder="Ex.: (11) 99999-9999"
+                  />
+                </label>
+                <label className="contracts-field">
+                  <span>CNPJ</span>
+                  <input
+                    type="text"
+                    value={form.cnpj}
+                    inputMode="numeric"
+                    onChange={(e) => setForm((prev) => ({ ...prev, cnpj: formatCnpj(e.target.value) }))}
+                    placeholder="Ex.: 00.000.000/0001-00"
+                  />
+                </label>
                 <label className="contracts-field">
                   <span>Coordenador*</span>
                   <select
                     value={form.coordinatorId}
-                    disabled={role === "coordinator"}
+                    disabled={isCoordinatorLike(role)}
                     onChange={(e) => setForm((prev) => ({ ...prev, coordinatorId: Number(e.target.value) || "" }))}
                   >
                     <option value="">Selecione um coordenador</option>
@@ -430,6 +544,40 @@ function ContractsPage() {
                   ))}
                 </div>
               </div>
+
+              {modalMode === "edit" ? (
+                <div className="contracts-schools-card">
+                  <div className="contracts-schools-head">
+                    <b>Escolas vinculadas ao contrato</b>
+                  </div>
+                  <div className="contracts-schools-table-wrap">
+                    <table className="contracts-schools-table">
+                      <thead>
+                        <tr>
+                          <th>Nome</th>
+                          <th>Cidade - UF</th>
+                          <th>GEE</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {(selectedContract?.schools || []).length ? (
+                          (selectedContract?.schools || []).map((school) => (
+                            <tr key={school.id}>
+                              <td>{school.name || "-"}</td>
+                              <td>{[school.city, school.state].filter(Boolean).join(" - ") || "-"}</td>
+                              <td>{String(school.gee || "").trim() || "-"}</td>
+                            </tr>
+                          ))
+                        ) : (
+                          <tr>
+                            <td colSpan={3}>Nenhuma escola vinculada a este contrato.</td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              ) : null}
             </div>
 
             <div className="contracts-modal-footer">

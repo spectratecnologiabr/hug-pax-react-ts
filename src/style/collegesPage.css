@@ -261,7 +261,8 @@
 .colleges-modal-card {
   width: min(980px, calc(100vw - 40px));
   max-height: calc(100vh - 40px);
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
   background: #ffffff;
@@ -321,7 +322,7 @@
 }
 
 .colleges-modal-body {
-  overflow: auto;
+  overflow: visible;
   padding: 16px 18px;
   display: flex;
   flex-direction: column;
@@ -342,6 +343,10 @@
   min-width: 0;
 }
 
+.colleges-form-grid .colleges-field-span-3 {
+  grid-column: span 3;
+}
+
 .colleges-form-grid span,
 .colleges-multiselect > span {
   font-size: 12px;
@@ -353,7 +358,8 @@
 .colleges-form-grid input:not([type="checkbox"]):not([type="radio"]),
 .colleges-form-grid select,
 .colleges-multiselect-trigger,
-.colleges-manager-form input {
+.colleges-manager-form input,
+.colleges-manager-form select {
   border: 1px solid #e6ebf2;
   border-radius: 10px;
   height: 40px;
@@ -370,7 +376,8 @@
 .colleges-form-grid input:not([type="checkbox"]):not([type="radio"]):focus,
 .colleges-form-grid select:focus,
 .colleges-multiselect-trigger:focus,
-.colleges-manager-form input:focus {
+.colleges-manager-form input:focus,
+.colleges-manager-form select:focus {
   border-color: #2b8ccf;
   box-shadow: 0 0 0 3px rgba(43, 140, 207, 0.16);
 }
@@ -532,6 +539,13 @@
   overflow: hidden;
 }
 
+.colleges-managers-table-wrap {
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: auto;
+  max-height: 300px;
+}
+
 .colleges-managers-head {
   padding: 14px 16px;
   border-bottom: 1px solid #eef2f7;
@@ -545,7 +559,9 @@
 
 .colleges-managers-table {
   width: 100%;
+  min-width: 680px;
   border-collapse: collapse;
+  table-layout: fixed;
 }
 
 .colleges-managers-table th,
@@ -556,6 +572,8 @@
   font-size: 13px;
   font-family: "SF UI Display", "Segoe UI", sans-serif;
   color: #29303d;
+  word-break: break-word;
+  vertical-align: top;
 }
 
 .colleges-managers-table th {
@@ -579,8 +597,17 @@
 .colleges-manager-form {
   padding: 14px;
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: 10px;
+  align-items: end;
+}
+
+.colleges-team-form {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.colleges-special-needs-form {
+  grid-template-columns: minmax(280px, 2fr) minmax(170px, 1fr) auto;
 }
 
 .colleges-manager-form button,
@@ -592,6 +619,15 @@
   height: 40px;
   padding: 10px 14px;
   cursor: pointer;
+}
+
+.colleges-manager-form button {
+  width: 100%;
+}
+
+.colleges-special-needs-form button {
+  width: auto;
+  min-width: 150px;
 }
 
 .colleges-manager-form button,
@@ -623,6 +659,14 @@
   display: flex;
   justify-content: flex-end;
   gap: 10px;
+  flex-wrap: wrap;
+}
+
+.colleges-modal-footer .colleges-primary-button,
+.colleges-modal-footer .colleges-ghost-button {
+  width: auto;
+  min-width: 120px;
+  flex: 0 0 auto;
 }
 
 .colleges-import-modal-card {
@@ -727,8 +771,22 @@
     grid-template-columns: repeat(2, minmax(180px, 1fr));
   }
 
-  .colleges-manager-form {
+  .colleges-form-grid .colleges-field-span-3 {
+    grid-column: 1 / -1;
+  }
+
+  .colleges-manager-form,
+  .colleges-team-form {
     grid-template-columns: 1fr 1fr;
+  }
+
+  .colleges-special-needs-form {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .colleges-special-needs-form button {
+    width: 100%;
+    grid-column: 1 / -1;
   }
 }
 
@@ -736,6 +794,10 @@
   .colleges-form-grid,
   .colleges-manager-form {
     grid-template-columns: 1fr;
+  }
+
+  .colleges-form-grid .colleges-field-span-3 {
+    grid-column: auto;
   }
 
   .colleges-contract-modal-body .colleges-form-grid label:first-child {

@@ -3,6 +3,10 @@ import { getCookies } from "../misc/cookies.controller";
 
 export interface ICreateContractPayload {
   name: string;
+  address?: string | null;
+  zipCode?: string | null;
+  phone?: string | null;
+  cnpj?: string | null;
   coordinatorId?: number;
   consultantIds: number[];
   studentsCount: number;

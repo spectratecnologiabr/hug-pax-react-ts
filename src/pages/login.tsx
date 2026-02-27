@@ -60,7 +60,7 @@ function Login() {
                         let redirectUrl = "/dashboard";
                         if (userWithoutPic.role === "consultant") {
                             redirectUrl = "/consultant";
-                        } else if (userWithoutPic.role === "coordinator") {
+                        } else if (userWithoutPic.role === "coordinator" || userWithoutPic.role === "specialist_consultant") {
                             redirectUrl = "/coordinator";
                         } else if (userWithoutPic.role === "admin") {
                             redirectUrl = "/admin";

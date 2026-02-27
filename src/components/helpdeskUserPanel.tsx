@@ -33,6 +33,7 @@ function roleLabel(role?: string) {
   const normalized = String(role || "").trim().toLowerCase();
   if (normalized === "admin") return "Administrador";
   if (normalized === "coordinator") return "Coordenador";
+  if (normalized === "specialist_consultant") return "Consultor especialista";
   if (normalized === "consultant") return "Consultor";
   if (normalized === "educator") return "Educador";
   return "Administrador";

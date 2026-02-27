@@ -39,6 +39,7 @@ type TCollege = {
   state: string;
   city: string;
   management: string;
+  gee?: string;
   salesManager: string;
   sales_manager?: string;
   contractId?: number;
@@ -50,6 +51,10 @@ type TCollege = {
   contract_series?: unknown;
   internalManagement: unknown;
   internal_management?: unknown;
+  hasSpecialNeeds?: boolean;
+  has_special_needs?: boolean;
+  specialNeeds?: unknown;
+  special_needs?: unknown;
   educatorsLength: number;
   collegeCode?: number;
   college_code?: number;
@@ -162,9 +167,13 @@ function normalizeCollegeRecord(college: any): TCollege {
   const addressNumber = Number(college?.addressNumber ?? college?.address_number) || 0;
   const initDate = normalizeDateForDateInput(college?.initDate ?? college?.init_date);
   const salesManager = String(college?.salesManager ?? college?.sales_manager ?? "");
+  const gee = String(college?.gee ?? "");
   const collegeSeries = college?.collegeSeries ?? college?.college_series;
   const contractSeries = college?.contractSeries ?? college?.contract_series;
   const internalManagement = college?.internalManagement ?? college?.internal_management;
+  const hasSpecialNeedsRaw = college?.hasSpecialNeeds ?? college?.has_special_needs;
+  const hasSpecialNeeds = typeof hasSpecialNeedsRaw === "boolean" ? hasSpecialNeedsRaw : Number(hasSpecialNeedsRaw) === 1;
+  const specialNeeds = college?.specialNeeds ?? college?.special_needs;
   const isActiveRaw = college?.isActive ?? college?.is_active;
   const isActive = typeof isActiveRaw === "boolean" ? isActiveRaw : Number(isActiveRaw) === 1;
 
@@ -178,6 +187,7 @@ function normalizeCollegeRecord(college: any): TCollege {
     init_date: initDate,
     salesManager,
     sales_manager: salesManager,
+    gee,
     contractId,
     contract_id: contractId,
     collegeSeries,
@@ -186,12 +196,16 @@ function normalizeCollegeRecord(college: any): TCollege {
     contract_series: contractSeries,
     internalManagement,
     internal_management: internalManagement,
+    hasSpecialNeeds,
+    has_special_needs: hasSpecialNeeds,
+    specialNeeds,
+    special_needs: specialNeeds,
     isActive,
     is_active: isActive,
   };
 }
 
-type TRole = "consultant" | "coordinator" | "admin";
+type TRole = "consultant" | "coordinator" | "specialist_consultant" | "admin";
 
 type TInternalManager = {
   name: string;
@@ -199,6 +213,26 @@ type TInternalManager = {
   email: string;
   phone: string;
 };
+
+type TSpecialNeed = {
+  description: string;
+  individuals: number;
+};
+
+const COMMON_SPECIAL_NEEDS_OPTIONS = [
+  "TDAH",
+  "TEA (Transtorno do Espectro Autista)",
+  "Dislexia",
+  "Discalculia",
+  "Deficiência intelectual",
+  "Deficiência física",
+  "Paralisia cerebral",
+  "Baixa visão",
+  "Cegueira",
+  "Surdez",
+  "Deficiência auditiva parcial",
+  "Deficiência múltipla",
+];
 
 type TFormMode = "create" | "view" | "edit";
 
@@ -216,11 +250,14 @@ type TCollegeForm = {
   state: string;
   city: string;
   management: string;
+  gee: string;
   salesManager: string;
   contractId: number | "";
   collegeSeries: string[];
   contractSeries: string[];
   internalManagement: TInternalManager[];
+  hasSpecialNeeds: boolean;
+  specialNeeds: TSpecialNeed[];
   isActive: boolean;
 };
 
@@ -255,6 +292,29 @@ function normalizeManagers(value: unknown): TInternalManager[] {
   return [];
 }
 
+function normalizeSpecialNeeds(value: unknown): TSpecialNeed[] {
+  if (!value) return [];
+  const raw = Array.isArray(value)
+    ? value
+    : typeof value === "string"
+    ? (() => {
+        try {
+          const parsed = JSON.parse(value);
+          return Array.isArray(parsed) ? parsed : [];
+        } catch {
+          return [];
+        }
+      })()
+    : [];
+
+  return raw
+    .map((item: any) => ({
+      description: String(item?.description ?? item?.deficiency ?? "").trim(),
+      individuals: Math.max(0, Number(item?.individuals ?? item?.count ?? item?.quantity ?? 0) || 0),
+    }))
+    .filter((item) => item.description.length > 0 && item.individuals > 0);
+}
+
 function emptyForm(): TCollegeForm {
   return {
     collegeCode: "",
@@ -266,11 +326,14 @@ function emptyForm(): TCollegeForm {
     state: "",
     city: "",
     management: "",
+    gee: "",
     salesManager: "",
     contractId: "",
     collegeSeries: [],
     contractSeries: [],
     internalManagement: [],
+    hasSpecialNeeds: false,
+    specialNeeds: [],
     isActive: true,
   };
 }
@@ -297,6 +360,7 @@ function CollegesPage() {
   const [formSubmitting, setFormSubmitting] = useState(false);
   const [collegeForm, setCollegeForm] = useState<TCollegeForm>(emptyForm());
   const [managerDraft, setManagerDraft] = useState<TInternalManager>({ name: "", role: "", email: "", phone: "" });
+  const [specialNeedDraft, setSpecialNeedDraft] = useState<{ description: string; individuals: number | "" }>({ description: "", individuals: "" });
 
   const [contracts, setContracts] = useState<TContractItem[]>([]);
   const [segments, setSegments] = useState<Array<{ value: string; label: string }>>([]);
@@ -367,6 +431,7 @@ function CollegesPage() {
                 || String(item.state ?? "").toLowerCase().includes(q)
                 || String(item.partner ?? "").toLowerCase().includes(q)
                 || String(item.management ?? "").toLowerCase().includes(q)
+                || String(item.gee ?? "").toLowerCase().includes(q)
                 || String(item.salesManager ?? "").toLowerCase().includes(q)
                 || String(item.collegeCode ?? "").toLowerCase().includes(q)
               );
@@ -551,11 +616,14 @@ function mapCollegeToForm(college: any): TCollegeForm {
       state: String(college?.state || ""),
       city: String(college?.city || ""),
       management: String(college?.management || ""),
+      gee: String(college?.gee || ""),
       salesManager: String(college?.salesManager ?? college?.sales_manager ?? ""),
       contractId: normalizedContractId || "",
       collegeSeries: normalizeArray(college?.collegeSeries ?? college?.college_series),
       contractSeries: normalizeArray(college?.contractSeries ?? college?.contract_series),
       internalManagement: normalizeManagers(college?.internalManagement ?? college?.internal_management),
+      hasSpecialNeeds: Boolean(college?.hasSpecialNeeds ?? college?.has_special_needs ?? false),
+      specialNeeds: normalizeSpecialNeeds(college?.specialNeeds ?? college?.special_needs),
       isActive: Boolean(college?.isActive ?? college?.is_active ?? true),
     };
   }
@@ -567,6 +635,7 @@ function mapCollegeToForm(college: any): TCollegeForm {
     setSegmentsOpen(false);
     setSeriesOpen(false);
     setManagerDraft({ name: "", role: "", email: "", phone: "" });
+    setSpecialNeedDraft({ description: "", individuals: "" });
     setFormLoading(true);
 
     try {
@@ -591,6 +660,7 @@ function mapCollegeToForm(college: any): TCollegeForm {
     setModalOpen(false);
     setCollegeForm(emptyForm());
     setManagerDraft({ name: "", role: "", email: "", phone: "" });
+    setSpecialNeedDraft({ description: "", individuals: "" });
   }
 
   function toggleSegment(value: string) {
@@ -641,6 +711,27 @@ function mapCollegeToForm(college: any): TCollegeForm {
     }));
   }
 
+  function addSpecialNeed() {
+    if (isViewMode || !collegeForm.hasSpecialNeeds) return;
+    const description = specialNeedDraft.description.trim();
+    const individuals = Number(specialNeedDraft.individuals) || 0;
+    if (!description || individuals <= 0) return;
+
+    setCollegeForm((prev) => ({
+      ...prev,
+      specialNeeds: [...prev.specialNeeds, { description, individuals }],
+    }));
+    setSpecialNeedDraft({ description: "", individuals: "" });
+  }
+
+  function removeSpecialNeed(index: number) {
+    if (isViewMode) return;
+    setCollegeForm((prev) => ({
+      ...prev,
+      specialNeeds: prev.specialNeeds.filter((_, i) => i !== index),
+    }));
+  }
+
   async function submitCollege() {
     if (isViewMode) return;
     if (!Number(collegeForm.contractId)) {
@@ -660,11 +751,14 @@ function mapCollegeToForm(college: any): TCollegeForm {
         state: collegeForm.state,
         city: collegeForm.city,
         management: collegeForm.management,
+        gee: collegeForm.gee,
         salesManager: collegeForm.salesManager,
         contractId: Number(collegeForm.contractId) || 0,
         collegeSeries: collegeForm.collegeSeries,
         contractSeries: collegeForm.contractSeries,
         internalManagement: collegeForm.internalManagement,
+        hasSpecialNeeds: collegeForm.hasSpecialNeeds,
+        specialNeeds: collegeForm.hasSpecialNeeds ? collegeForm.specialNeeds : [],
         isActive: collegeForm.isActive,
       };
 
@@ -770,9 +864,9 @@ function mapCollegeToForm(college: any): TCollegeForm {
 
   function handleDownloadCollegeTemplateCsv() {
     const csvTemplate = [
-      "codigo_escola;data_inicio;nome;parceiro;endereco;numero;estado;cidade;gerencia;comercial;contrato;segmentos;series_contratadas;status",
-      "1001;2026-01-15;Escola Exemplo;Grupo Exemplo;Rua Alfa;123;SP;Sao Paulo;Rede 1;Joao Comercial;Contrato Rede 1;Ensino Fundamental I;1º Ano,2º Ano;active",
-      "1002;15/02/2026;Escola Modelo;Grupo Modelo;Rua Beta;45;RJ;Rio de Janeiro;Rede 2;Maria Comercial;Contrato Rede 2;Ensino Médio;1ª Série;inactive"
+      "codigo_escola;data_inicio;nome;parceiro;endereco;numero;estado;cidade;gerencia;gee;comercial;contrato;segmentos;series_contratadas;alunos_com_deficiencia;deficiencias;status",
+      "1001;2026-01-15;Escola Exemplo;Grupo Exemplo;Rua Alfa;123;SP;Sao Paulo;Rede 1;GEE Recife Norte;Joao Comercial;Contrato Rede 1;Ensino Fundamental I;1º Ano,2º Ano;sim;[{\"description\":\"Deficiência auditiva\",\"individuals\":2}];active",
+      "1002;15/02/2026;Escola Modelo;Grupo Modelo;Rua Beta;45;RJ;Rio de Janeiro;Rede 2;GEE Rio Centro;Maria Comercial;Contrato Rede 2;Ensino Médio;1ª Série;nao;;inactive"
     ]
       .join(String.fromCharCode(10))
       .replace(/\\n/g, "\n");
@@ -999,6 +1093,10 @@ function mapCollegeToForm(college: any): TCollegeForm {
                     <span>Rede*</span>
                     <input value={collegeForm.management} disabled={isViewMode} onChange={(e) => setCollegeForm((prev) => ({ ...prev, management: e.target.value }))} />
                   </label>
+                  <label>
+                    <span>GEE</span>
+                    <input value={collegeForm.gee} disabled={isViewMode} onChange={(e) => setCollegeForm((prev) => ({ ...prev, gee: e.target.value }))} />
+                  </label>
 
                   <div className="colleges-multiselect">
                     <span>Segmentos*</span>
@@ -1037,6 +1135,24 @@ function mapCollegeToForm(college: any): TCollegeForm {
                   <label>
                     <span>Comercial responsável*</span>
                     <input value={collegeForm.salesManager} disabled={isViewMode} onChange={(e) => setCollegeForm((prev) => ({ ...prev, salesManager: e.target.value }))} />
+                  </label>
+
+                  <label className="colleges-field-span-3">
+                    <span>Algum aluno tem neurodivergência, deficiência física ou sensorial?*</span>
+                    <select
+                      value={collegeForm.hasSpecialNeeds ? "yes" : "no"}
+                      disabled={isViewMode}
+                      onChange={(e) =>
+                        setCollegeForm((prev) => ({
+                          ...prev,
+                          hasSpecialNeeds: e.target.value === "yes",
+                          specialNeeds: e.target.value === "yes" ? prev.specialNeeds : [],
+                        }))
+                      }
+                    >
+                      <option value="no">Não</option>
+                      <option value="yes">Sim</option>
+                    </select>
                   </label>
 
                   <div className="colleges-contract-field">
@@ -1088,49 +1204,118 @@ function mapCollegeToForm(college: any): TCollegeForm {
                       <option value="inactive">Inativa</option>
                     </select>
                   </label>
+
                 </div>
+
+                {collegeForm.hasSpecialNeeds ? (
+                  <div className="colleges-managers-card">
+                    <div className="colleges-managers-head">
+                      <b>Deficiências e Quantidade de Indivíduos</b>
+                    </div>
+                    <div className="colleges-managers-table-wrap">
+                      <table className="colleges-managers-table">
+                        <thead>
+                          <tr>
+                            <th>Descrição da deficiência</th>
+                            <th>Quantidade de indivíduos</th>
+                            {!isViewMode ? <th>Ações</th> : null}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {collegeForm.specialNeeds.length ? (
+                            collegeForm.specialNeeds.map((item, index) => (
+                              <tr key={`${item.description}-${index}`}>
+                                <td>{item.description}</td>
+                                <td>{item.individuals}</td>
+                                {!isViewMode ? (
+                                  <td>
+                                    <button type="button" className="colleges-remove-manager" onClick={() => removeSpecialNeed(index)}>
+                                      Remover
+                                    </button>
+                                  </td>
+                                ) : null}
+                              </tr>
+                            ))
+                          ) : (
+                            <tr>
+                              <td colSpan={isViewMode ? 2 : 3}>Nenhum item adicionado.</td>
+                            </tr>
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+
+                    {!isViewMode ? (
+                      <div className="colleges-manager-form colleges-special-needs-form">
+                        <select
+                          value={specialNeedDraft.description}
+                          onChange={(e) => setSpecialNeedDraft((prev) => ({ ...prev, description: e.target.value }))}
+                        >
+                          <option value="">Selecione a deficiência/neurodivergência</option>
+                          {COMMON_SPECIAL_NEEDS_OPTIONS.map((option) => (
+                            <option key={option} value={option}>
+                              {option}
+                            </option>
+                          ))}
+                        </select>
+                        <input
+                          type="number"
+                          min={1}
+                          placeholder="Quantidade"
+                          value={specialNeedDraft.individuals}
+                          onChange={(e) =>
+                            setSpecialNeedDraft((prev) => ({ ...prev, individuals: Number(e.target.value) || "" }))
+                          }
+                        />
+                        <button type="button" onClick={addSpecialNeed}>Adicionar item</button>
+                      </div>
+                    ) : null}
+                  </div>
+                ) : null}
 
                 <div className="colleges-managers-card">
                   <div className="colleges-managers-head">
                     <b>Equipe de Gestão</b>
                   </div>
-                  <table className="colleges-managers-table">
-                    <thead>
-                      <tr>
-                        <th>Nome</th>
-                        <th>Cargo</th>
-                        <th>Email</th>
-                        <th>Telefone</th>
-                        {!isViewMode ? <th>Ações</th> : null}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {collegeForm.internalManagement.length ? (
-                        collegeForm.internalManagement.map((member, index) => (
-                          <tr key={`${member.name}-${index}`}>
-                            <td>{member.name}</td>
-                            <td>{member.role}</td>
-                            <td>{member.email}</td>
-                            <td>{member.phone}</td>
-                            {!isViewMode ? (
-                              <td>
-                                <button type="button" className="colleges-remove-manager" onClick={() => removeManager(index)}>
-                                  Remover
-                                </button>
-                              </td>
-                            ) : null}
-                          </tr>
-                        ))
-                      ) : (
+                  <div className="colleges-managers-table-wrap">
+                    <table className="colleges-managers-table">
+                      <thead>
                         <tr>
-                          <td colSpan={isViewMode ? 4 : 5}>Nenhum membro adicionado.</td>
+                          <th>Nome</th>
+                          <th>Cargo</th>
+                          <th>Email</th>
+                          <th>Telefone</th>
+                          {!isViewMode ? <th>Ações</th> : null}
                         </tr>
-                      )}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody>
+                        {collegeForm.internalManagement.length ? (
+                          collegeForm.internalManagement.map((member, index) => (
+                            <tr key={`${member.name}-${index}`}>
+                              <td>{member.name}</td>
+                              <td>{member.role}</td>
+                              <td>{member.email}</td>
+                              <td>{member.phone}</td>
+                              {!isViewMode ? (
+                                <td>
+                                  <button type="button" className="colleges-remove-manager" onClick={() => removeManager(index)}>
+                                    Remover
+                                  </button>
+                                </td>
+                              ) : null}
+                            </tr>
+                          ))
+                        ) : (
+                          <tr>
+                            <td colSpan={isViewMode ? 4 : 5}>Nenhum membro adicionado.</td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
 
                   {!isViewMode ? (
-                    <div className="colleges-manager-form">
+                    <div className="colleges-manager-form colleges-team-form">
                       <input placeholder="Nome" value={managerDraft.name} onChange={(e) => setManagerDraft((prev) => ({ ...prev, name: e.target.value }))} />
                       <input placeholder="Cargo" value={managerDraft.role} onChange={(e) => setManagerDraft((prev) => ({ ...prev, role: e.target.value }))} />
                       <input placeholder="Email" value={managerDraft.email} onChange={(e) => setManagerDraft((prev) => ({ ...prev, email: e.target.value }))} />
@@ -1395,6 +1580,7 @@ function normalizeCollegeImportHeader(rawHeader: string): string {
   if (normalized === "estado" || normalized === "state") return "state";
   if (normalized === "cidade" || normalized === "city") return "city";
   if (normalized === "gerencia" || normalized === "regional" || normalized === "management" || normalized === "rede") return "management";
+  if (normalized === "gee" || normalized === "gerenciaregionaleducacao") return "gee";
   if (normalized === "comercial" || normalized === "salesmanager") return "salesManager";
   if (normalized === "contractid" || normalized === "contratoid") return "contractId";
   if (normalized === "contractname" || normalized === "contrato" || normalized === "nomecontrato") return "contractName";
@@ -1404,6 +1590,8 @@ function normalizeCollegeImportHeader(rawHeader: string): string {
   if (normalized === "consultor") return "consultor";
   if (normalized === "segmentos" || normalized === "collegeseries") return "collegeSeries";
   if (normalized === "seriescontratadas" || normalized === "contractseries") return "contractSeries";
+  if (normalized === "alunoscomdeficiencia" || normalized === "hasspecialneeds") return "hasSpecialNeeds";
+  if (normalized === "deficiencias" || normalized === "specialneeds" || normalized === "necessidadesespeciais") return "specialNeeds";
   if (normalized === "gestaointerna" || normalized === "internalmanagement") return "internalManagement";
   if (normalized === "status" || normalized === "isactive") return "status";
 

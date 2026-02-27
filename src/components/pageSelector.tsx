@@ -4,7 +4,7 @@ import { checkSession } from "../controllers/user/checkSession.controller";
 
 import "../style/pageSelector.css";
 
-type TRole = 'consultant' | 'coordinator' | 'admin'
+type TRole = 'consultant' | 'coordinator' | 'specialist_consultant' | 'admin'
 
 function PageSelector(props: {title?: boolean}) {
     const user = getCookies("userData");
@@ -75,6 +75,7 @@ function PageSelector(props: {title?: boolean}) {
                      window.location.href = "/consultant";
                      break;
                 case "coordinator":
+                case "specialist_consultant":
                      window.location.href = "/coordinator";
                      break;
                 default:
@@ -106,7 +107,7 @@ function PageSelector(props: {title?: boolean}) {
                 </div>
 
                 <div className="popup-option" onClick={() => handleRedirect("admin")}>
-                    🛠️ Painel {userRole === "consultant" ? "Consultor" : userRole === "coordinator" ? "Coordenador" : userRole === "admin" ? "Administrador" : ""}
+                    🛠️ Painel {userRole === "consultant" ? "Consultor" : userRole === "coordinator" ? "Coordenador" : userRole === "specialist_consultant" ? "Consultor especialista" : userRole === "admin" ? "Administrador" : ""}
                     <span>Área administrativa</span>
                 </div>
             </div>

@@ -12,11 +12,14 @@ export interface ICollegeUpdateProps {
     state?: string,
     city?: string,
     management?: string,
+    gee?: string,
     salesManager?: string,
     contractId?: number,
     collegeSeries?: string,
     contractSeries?: string,
     internalManagement?: any[],
+    hasSpecialNeeds?: boolean,
+    specialNeeds?: Array<{ description: string; individuals: number }>,
     isActive?: boolean
 }
 

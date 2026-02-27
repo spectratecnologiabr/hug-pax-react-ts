@@ -1,7 +1,7 @@
 import axios from "axios"
 import { getCookies } from "../misc/cookies.controller"
 
-export type AdminUserRole = "admin" | "educator" | "consultant" | "coordinator"
+export type AdminUserRole = "admin" | "educator" | "consultant" | "coordinator" | "specialist_consultant"
 export type AdminUserStatus = "active" | "inactive" | "blocked"
 
 export interface IListUsersAdminQuery {

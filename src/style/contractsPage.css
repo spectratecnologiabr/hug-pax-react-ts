@@ -298,6 +298,56 @@
   font-size: 13px;
 }
 
+.contracts-schools-card {
+  border: 1px solid #eef2f7;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.contracts-schools-head {
+  padding: 12px 14px;
+  border-bottom: 1px solid #eef2f7;
+  background: #fff;
+}
+
+.contracts-schools-head b {
+  font-size: 14px;
+  font-family: "SF UI Display Semibold", "SF UI Display", "Segoe UI", sans-serif;
+  color: #29303d;
+}
+
+.contracts-schools-table-wrap {
+  overflow-x: auto;
+  overflow-y: auto;
+  max-height: 260px;
+  background: #fff;
+}
+
+.contracts-schools-table {
+  width: 100%;
+  min-width: 520px;
+  border-collapse: collapse;
+}
+
+.contracts-schools-table th,
+.contracts-schools-table td {
+  text-align: left;
+  padding: 10px 14px;
+  border-bottom: 1px solid #eef2f7;
+  font-size: 13px;
+  font-family: "SF UI Display", "Segoe UI", sans-serif;
+}
+
+.contracts-schools-table th {
+  background: #f8fafc;
+  color: #6b7280;
+  font-size: 12px;
+  font-family: "SF UI Display Medium", "SF UI Display", "Segoe UI", sans-serif;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
 .contracts-ghost-button {
   border: 1px solid #e6ebf2;
   background: #fff;

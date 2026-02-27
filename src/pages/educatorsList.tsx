@@ -22,7 +22,7 @@ type TOverviewData = {
   unreadNotifications: number;
 };
 
-type TRole = "consultant" | "coordinator" | "admin";
+type TRole = "consultant" | "coordinator" | "specialist_consultant" | "admin";
 type TFormMode = "create" | "view" | "edit";
 
 type TCollege = {

@@ -28,7 +28,7 @@ function TermsAcceptancePage() {
       const user = getCookies("userData");
       const role = user?.role;
       setAccepted(true);
-      if (role === "consultant" || role === "coordinator") {
+      if (role === "consultant" || role === "coordinator" || role === "specialist_consultant") {
         window.location.href = "/consultant";
         return;
       }
