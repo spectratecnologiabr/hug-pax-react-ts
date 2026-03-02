@@ -14,6 +14,7 @@ import { createUserAdmin, type ICreateUserAdminData } from "../controllers/user/
 import { updateUserAdmin, type IUpdateUserAdminData } from "../controllers/user/updateUserAdmin.controller";
 import { importUsersAdmin, type IImportUsersAdminResponse } from "../controllers/user/importUsersAdmin.controller";
 import { listColleges } from "../controllers/college/listColleges.controller";
+import { listContracts } from "../controllers/contract/listContracts.controller";
 import { getUserAdmin } from "../controllers/user/getUserAdmin.controller";
 import iconTotal from "../img/adminUsers/shield.svg";
 import iconActive from "../img/adminUsers/shield-check.svg";
@@ -153,6 +154,12 @@ function sortCollegesByName<T extends { name?: string }>(items: T[]): T[] {
   );
 }
 
+function sortContractsByName<T extends { name?: string }>(items: T[]): T[] {
+  return [...items].sort((a, b) =>
+    String(a?.name ?? "").localeCompare(String(b?.name ?? ""), "pt-BR", { sensitivity: "base" })
+  );
+}
+
 const EMPTY_MANAGEMENT_FILTER = "__EMPTY__";
 
 function mapAdminUserToRow(user: IAdminUserListItem): User {
@@ -212,9 +219,11 @@ function AdminUsersPage() {
   const [userModalError, setUserModalError] = useState<string | null>(null);
   const [userModalDetailsLoading, setUserModalDetailsLoading] = useState(false);
   const userModalRequestIdRef = useRef(0);
-  const [colleges, setColleges] = useState<Array<{ id: number; name: string }>>([]);
+  const [colleges, setColleges] = useState<Array<{ id: number; name: string; contractId?: number | null }>>([]);
+  const [contracts, setContracts] = useState<Array<{ id: number; name: string }>>([]);
   const [managementOptionsFromRegistry, setManagementOptionsFromRegistry] = useState<string[]>([]);
   const [collegesLoading, setCollegesLoading] = useState(false);
+  const [contractsLoading, setContractsLoading] = useState(false);
   const [userForm, setUserForm] = useState({
     firstName: "",
     lastName: "",
@@ -229,6 +238,7 @@ function AdminUsersPage() {
     gender: "male",
     phone: "",
     language: "pt-BR",
+    contractId: "" as "" | number,
     collegeId: "" as "" | number,
     management: "",
   });
@@ -245,13 +255,29 @@ function AdminUsersPage() {
     try {
       const collegesList = await listColleges();
       if (Array.isArray(collegesList)) {
-        setColleges(sortCollegesByName(collegesList));
+        setColleges(
+          sortCollegesByName(
+            collegesList.map((item: any) => ({
+              id: Number(item?.id),
+              name: String(item?.name ?? ""),
+              contractId: Number(item?.contractId ?? item?.contract_id) || null,
+            }))
+          )
+        );
         return;
       }
 
       const payload = collegesList?.data ?? collegesList;
       if (Array.isArray(payload)) {
-        setColleges(sortCollegesByName(payload));
+        setColleges(
+          sortCollegesByName(
+            payload.map((item: any) => ({
+              id: Number(item?.id),
+              name: String(item?.name ?? ""),
+              contractId: Number(item?.contractId ?? item?.contract_id) || null,
+            }))
+          )
+        );
         return;
       }
 
@@ -263,6 +289,31 @@ function AdminUsersPage() {
       setCollegesLoading(false);
     }
   }, [collegesLoading]);
+
+  const loadContracts = useCallback(async () => {
+    if (contractsLoading) return;
+    setContractsLoading(true);
+    try {
+      const contractsList = await listContracts();
+      if (Array.isArray(contractsList)) {
+        setContracts(
+          sortContractsByName(
+            contractsList.map((item: any) => ({
+              id: Number(item?.id),
+              name: String(item?.name ?? ""),
+            }))
+          )
+        );
+        return;
+      }
+      setContracts([]);
+    } catch (e) {
+      console.error("Erro ao carregar contratos", e);
+      setContracts([]);
+    } finally {
+      setContractsLoading(false);
+    }
+  }, [contractsLoading]);
 
   useEffect(() => {
     let alive = true;
@@ -480,6 +531,7 @@ function AdminUsersPage() {
     setUserModalDetailsLoading(false);
     setUserModal({ open: true, mode, user: user ?? null });
     loadColleges();
+    loadContracts();
 
     if (mode === "create") {
       setUserForm({
@@ -496,6 +548,7 @@ function AdminUsersPage() {
         gender: "male",
         phone: "",
         language: "pt-BR",
+        contractId: "",
         collegeId: "",
         management: "",
       });
@@ -517,6 +570,7 @@ function AdminUsersPage() {
       gender: user?.gender ?? "male",
       phone: user?.phone ?? "",
       language: user?.language ?? "pt-BR",
+      contractId: "",
       collegeId: typeof user?.collegeId === "number" ? user.collegeId : "",
       management: user?.management ?? "",
     });
@@ -555,6 +609,7 @@ function AdminUsersPage() {
           gender: String(adminUser?.gender ?? prev.gender ?? "male"),
           phone: String(adminUser?.phone ?? prev.phone ?? ""),
           language: String(adminUser?.language ?? prev.language ?? "pt-BR"),
+          contractId: prev.contractId,
           collegeId: typeof adminUser?.collegeId === "number" ? adminUser.collegeId : prev.collegeId,
           management: String(adminUser?.management ?? prev.management ?? ""),
         }));
@@ -817,6 +872,53 @@ function AdminUsersPage() {
     setActionsMenuPos({ top: rect.bottom + 8, left: rect.right });
     setOpenActionsUserId(user.id);
   }
+
+  const collegesById = useMemo(() => {
+    const map = new Map<number, { id: number; name: string; contractId?: number | null }>();
+    colleges.forEach((item) => map.set(item.id, item));
+    return map;
+  }, [colleges]);
+
+  const filteredColleges = useMemo(() => {
+    const selectedContractId = Number(userForm.contractId);
+    if (!Number.isFinite(selectedContractId) || selectedContractId <= 0) return colleges;
+    return colleges.filter((item) => Number(item.contractId) === selectedContractId);
+  }, [colleges, userForm.contractId]);
+
+  useEffect(() => {
+    if (userForm.role !== "educator") return;
+
+    const collegeId = Number(userForm.collegeId);
+    if (Number.isFinite(collegeId) && collegeId > 0) {
+      const college = collegesById.get(collegeId);
+      const nextContractId = Number(college?.contractId);
+      if (Number.isFinite(nextContractId) && nextContractId > 0 && Number(userForm.contractId) !== nextContractId) {
+        setUserForm((prev) => ({ ...prev, contractId: nextContractId }));
+      }
+      return;
+    }
+
+    const selectedContractId = Number(userForm.contractId);
+    if (Number.isFinite(selectedContractId) && selectedContractId > 0) return;
+    if (userForm.contractId !== "") {
+      setUserForm((prev) => ({ ...prev, contractId: "" }));
+    }
+  }, [collegesById, userForm.collegeId, userForm.contractId, userForm.role]);
+
+  useEffect(() => {
+    if (userForm.role !== "educator") return;
+
+    const selectedContractId = Number(userForm.contractId);
+    if (!Number.isFinite(selectedContractId) || selectedContractId <= 0) return;
+
+    const selectedCollegeId = Number(userForm.collegeId);
+    if (!Number.isFinite(selectedCollegeId) || selectedCollegeId <= 0) return;
+
+    const selectedCollege = collegesById.get(selectedCollegeId);
+    if (!selectedCollege || Number(selectedCollege.contractId) !== selectedContractId) {
+      setUserForm((prev) => ({ ...prev, collegeId: "" }));
+    }
+  }, [collegesById, userForm.contractId, userForm.collegeId, userForm.role]);
 
   return (
     <div className="admin-dashboard-container">
@@ -1457,6 +1559,7 @@ function AdminUsersPage() {
                           setUserForm(s => ({
                             ...s,
                             role,
+                            contractId: role === "educator" ? s.contractId : "",
                             collegeId: role === "educator" ? s.collegeId : "",
                           }));
                         }}
@@ -1472,6 +1575,30 @@ function AdminUsersPage() {
 
                     {userForm.role === "educator" && (
                       <label className="sap-user-field">
+                        <span>Contrato</span>
+                        <select
+                          value={userForm.contractId === "" ? "" : String(userForm.contractId)}
+                          onChange={e =>
+                            setUserForm(s => ({
+                              ...s,
+                              contractId: e.target.value ? Number(e.target.value) : "",
+                              collegeId: "",
+                            }))
+                          }
+                          disabled={userModal.mode === "view" || userModalSubmitting || userModalDetailsLoading || contractsLoading}
+                        >
+                          <option value="">{contractsLoading ? "Carregando..." : "Selecionar"}</option>
+                          {contracts.map(c => (
+                            <option key={c.id} value={String(c.id)}>
+                              {c.name}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                    )}
+
+                    {userForm.role === "educator" && (
+                      <label className="sap-user-field">
                         <span>Escola</span>
                         <select
                           value={userForm.collegeId === "" ? "" : String(userForm.collegeId)}
@@ -1484,7 +1611,7 @@ function AdminUsersPage() {
                           disabled={userModal.mode === "view" || userModalSubmitting || userModalDetailsLoading || collegesLoading}
                         >
                           <option value="">{collegesLoading ? "Carregando..." : "Selecionar"}</option>
-                          {colleges.map(c => (
+                          {filteredColleges.map(c => (
                             <option key={c.id} value={String(c.id)}>
                               {c.name}
                             </option>

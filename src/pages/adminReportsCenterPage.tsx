@@ -3,6 +3,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import AdminMenubar from "../components/admin/menubar";
 import { listLast30Visits } from "../controllers/admin/listLast30Visits.controller";
 import { listColleges } from "../controllers/college/listColleges.controller";
+import { listContracts } from "../controllers/contract/listContracts.controller";
 import { listEducators } from "../controllers/user/listEducators.controller";
 
 import "../style/adminReportsCenterPage.css";
@@ -27,6 +28,13 @@ type TVisit = {
 type TCollege = {
   id: number;
   name: string;
+  contractId?: number;
+  contract_id?: number;
+};
+
+type TContract = {
+  id: number;
+  name: string;
 };
 
 type TEducator = {
@@ -45,6 +53,8 @@ type TReportRow = {
   sentAt: string;
   schoolId: number | null;
   schoolName: string;
+  contractId: number | null;
+  contractName: string;
   title: string;
   author: string;
   href: string;
@@ -63,7 +73,7 @@ function formatDateTime(value?: string) {
   return date.toLocaleString("pt-BR");
 }
 
-function getRowDate(row: TReportRow) {
+function getRowDate(row: { sentAt: string; [key: string]: unknown }) {
   const date = toDate(row.sentAt);
   return date ? date.getTime() : 0;
 }
@@ -91,8 +101,20 @@ function normalizeVisits(payload: any): TVisit[] {
 function normalizeColleges(payload: any): TCollege[] {
   if (!Array.isArray(payload)) return [];
   return payload
-    .map((item: any) => ({ id: Number(item?.id), name: String(item?.name ?? "") }))
+    .map((item: any) => ({
+      id: Number(item?.id),
+      name: String(item?.name ?? ""),
+      contractId: Number(item?.contractId ?? item?.contract_id),
+      contract_id: Number(item?.contract_id ?? item?.contractId),
+    }))
     .filter((item: TCollege) => Number.isFinite(item.id) && item.id > 0);
+}
+
+function normalizeContracts(payload: any): TContract[] {
+  if (!Array.isArray(payload)) return [];
+  return payload
+    .map((item: any) => ({ id: Number(item?.id), name: String(item?.name ?? "") }))
+    .filter((item: TContract) => Number.isFinite(item.id) && item.id > 0);
 }
 
 function normalizeEducators(payload: any): TEducator[] {
@@ -112,10 +134,11 @@ function AdminReportsCenterPage() {
 
   const [visits, setVisits] = useState<TVisit[]>([]);
   const [colleges, setColleges] = useState<TCollege[]>([]);
+  const [contracts, setContracts] = useState<TContract[]>([]);
   const [educators, setEducators] = useState<TEducator[]>([]);
 
   const [schoolSearch, setSchoolSearch] = useState("");
-  const [selectedSchoolId, setSelectedSchoolId] = useState("all");
+  const [selectedContractId, setSelectedContractId] = useState("all");
   const [selectedType, setSelectedType] = useState<"all" | TReportType>("all");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
@@ -128,9 +151,10 @@ function AdminReportsCenterPage() {
       setError(null);
 
       try {
-        const [visitsData, collegesData, educatorsData] = await Promise.all([
+        const [visitsData, collegesData, contractsData, educatorsData] = await Promise.all([
           listLast30Visits(),
           listColleges(),
+          listContracts(),
           listEducators(),
         ]);
 
@@ -138,6 +162,7 @@ function AdminReportsCenterPage() {
 
         setVisits(normalizeVisits(visitsData));
         setColleges(normalizeColleges(collegesData));
+        setContracts(normalizeContracts(contractsData));
         setEducators(normalizeEducators(educatorsData));
       } catch (e) {
         if (cancelled) return;
@@ -162,6 +187,23 @@ function AdminReportsCenterPage() {
     return map;
   }, [colleges]);
 
+  const schoolContractById = useMemo(() => {
+    const map = new Map<number, number | null>();
+    colleges.forEach((college) => {
+      const contractId = Number(college.contractId ?? college.contract_id);
+      map.set(Number(college.id), Number.isFinite(contractId) && contractId > 0 ? contractId : null);
+    });
+    return map;
+  }, [colleges]);
+
+  const contractsById = useMemo(() => {
+    const map = new Map<number, string>();
+    contracts.forEach((contract) => {
+      map.set(Number(contract.id), String(contract.name || "").trim());
+    });
+    return map;
+  }, [contracts]);
+
   const rows = useMemo(() => {
     const reportRows: TReportRow[] = [];
 
@@ -172,6 +214,8 @@ function AdminReportsCenterPage() {
         visit.college_name || visit.collegeName || "Unidade não identificada"
       );
       const schoolName = schoolNameFromVisit || (hasSchoolId ? (schoolsById.get(schoolId) || "Unidade não identificada") : "Unidade não identificada");
+      const contractId = hasSchoolId ? schoolContractById.get(schoolId) ?? null : null;
+      const contractName = contractId ? (contractsById.get(contractId) || `Contrato #${contractId}`) : "Sem contrato";
 
       reportRows.push({
         id: `visit-${visit.id}`,
@@ -187,6 +231,8 @@ function AdminReportsCenterPage() {
         ),
         schoolId: hasSchoolId ? schoolId : null,
         schoolName,
+        contractId,
+        contractName,
         title: `Relatório de visita #${visit.id}`,
         author: (visit.creatorId || visit.creator_id) ? `Consultor #${visit.creatorId || visit.creator_id}` : "Consultor",
         href: `/admin/visits/${visit.id}/report-preview`,
@@ -223,12 +269,16 @@ function AdminReportsCenterPage() {
     });
 
     schoolLatestDate.forEach((sentAt, schoolId) => {
+      const contractId = schoolContractById.get(schoolId) ?? null;
+      const contractName = contractId ? (contractsById.get(contractId) || `Contrato #${contractId}`) : "Sem contrato";
       reportRows.push({
         id: `school-${schoolId}`,
         reportType: "school",
         sentAt,
         schoolId,
         schoolName: schoolsById.get(schoolId) || `Escola #${schoolId}`,
+        contractId,
+        contractName,
         title: "Ficha Escolar (Relatório Final)",
         author: "Consolidado automático",
         href: `/admin/colleges/${schoolId}/final-report`,
@@ -238,6 +288,8 @@ function AdminReportsCenterPage() {
     educators.forEach((educator) => {
       const schoolId = Number(educator.collegeId);
       const hasSchoolId = Number.isFinite(schoolId) && schoolId > 0;
+      const contractId = hasSchoolId ? schoolContractById.get(schoolId) ?? null : null;
+      const contractName = contractId ? (contractsById.get(contractId) || `Contrato #${contractId}`) : "Sem contrato";
       const fullName = `${String(educator.firstName || "").trim()} ${String(educator.lastName || "").trim()}`.trim();
 
       reportRows.push({
@@ -246,6 +298,8 @@ function AdminReportsCenterPage() {
         sentAt: String(educator.createdAt || ""),
         schoolId: hasSchoolId ? schoolId : null,
         schoolName: hasSchoolId ? (schoolsById.get(schoolId) || `Escola #${schoolId}`) : "Sem escola",
+        contractId,
+        contractName,
         title: `Relatório de educador: ${fullName || `#${educator.id}`}`,
         author: fullName || `Educador #${educator.id}`,
         href: `/admin/educators/${educator.id}/report`,
@@ -253,10 +307,10 @@ function AdminReportsCenterPage() {
     });
 
     return reportRows.sort((a, b) => getRowDate(b) - getRowDate(a));
-  }, [visits, educators, schoolsById]);
+  }, [visits, educators, schoolsById, schoolContractById, contractsById]);
 
   const filteredRows = useMemo(() => {
-    const schoolFilter = selectedSchoolId === "all" ? null : Number(selectedSchoolId);
+    const contractFilter = selectedContractId === "all" ? null : Number(selectedContractId);
     const schoolSearchNormalized = schoolSearch.trim().toLowerCase();
     const startDateTime = startDate ? new Date(`${startDate}T00:00:00`) : null;
     const endDateTime = endDate ? new Date(`${endDate}T23:59:59.999`) : null;
@@ -265,7 +319,7 @@ function AdminReportsCenterPage() {
 
     return rows.filter((row) => {
       if (selectedType !== "all" && row.reportType !== selectedType) return false;
-      if (schoolFilter && row.schoolId !== schoolFilter) return false;
+      if (contractFilter && row.contractId !== contractFilter) return false;
       if (hasStartDate || hasEndDate) {
         const rowDate = toDate(row.sentAt);
         if (!rowDate) return false;
@@ -281,7 +335,7 @@ function AdminReportsCenterPage() {
 
       return true;
     });
-  }, [rows, selectedType, selectedSchoolId, schoolSearch, startDate, endDate]);
+  }, [rows, selectedType, selectedContractId, schoolSearch, startDate, endDate]);
 
   return (
     <div className="admin-dashboard-container reports-center-page">
@@ -312,11 +366,11 @@ function AdminReportsCenterPage() {
           </label>
 
           <label>
-            <span>Unidade</span>
-            <select value={selectedSchoolId} onChange={(event) => setSelectedSchoolId(event.target.value)}>
-              <option value="all">Todas</option>
-              {colleges.map((college) => (
-                <option key={college.id} value={college.id}>{college.name}</option>
+            <span>Contrato</span>
+            <select value={selectedContractId} onChange={(event) => setSelectedContractId(event.target.value)}>
+              <option value="all">Todos</option>
+              {contracts.map((contract) => (
+                <option key={contract.id} value={contract.id}>{contract.name}</option>
               ))}
             </select>
           </label>
