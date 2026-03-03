@@ -244,7 +244,6 @@ type TCollegeForm = {
   collegeCode: number | "";
   initDate: string;
   name: string;
-  partner: string;
   address: string;
   addressNumber: number | "";
   state: string;
@@ -320,7 +319,6 @@ function emptyForm(): TCollegeForm {
     collegeCode: "",
     initDate: "",
     name: "",
-    partner: "",
     address: "",
     addressNumber: "",
     state: "",
@@ -610,7 +608,6 @@ function mapCollegeToForm(college: any): TCollegeForm {
       collegeCode: Number(college?.collegeCode ?? college?.college_code) || "",
       initDate: normalizeDateForDateInput(college?.initDate ?? college?.init_date),
       name: String(college?.name || ""),
-      partner: String(college?.partner || ""),
       address: String(college?.address || ""),
       addressNumber: Number(college?.addressNumber ?? college?.address_number) || "",
       state: String(college?.state || ""),
@@ -745,7 +742,6 @@ function mapCollegeToForm(college: any): TCollegeForm {
         collegeCode: Number(collegeForm.collegeCode) || 0,
         initDate: collegeForm.initDate,
         name: collegeForm.name,
-        partner: collegeForm.partner,
         address: collegeForm.address,
         addressNumber: Number(collegeForm.addressNumber) || 0,
         state: collegeForm.state,
@@ -1068,10 +1064,6 @@ function mapCollegeToForm(college: any): TCollegeForm {
                   <label>
                     <span>Nome*</span>
                     <input value={collegeForm.name} disabled={isViewMode} onChange={(e) => setCollegeForm((prev) => ({ ...prev, name: e.target.value }))} />
-                  </label>
-                  <label>
-                    <span>Parceiro Contratante*</span>
-                    <input value={collegeForm.partner} disabled={isViewMode} onChange={(e) => setCollegeForm((prev) => ({ ...prev, partner: e.target.value }))} />
                   </label>
                   <label>
                     <span>Endereço*</span>

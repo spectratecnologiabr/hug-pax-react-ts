@@ -5,7 +5,7 @@ export interface ICollegeProps {
     collegeCode: number,
     initDate: string,
     name: string,
-    partner: string,
+    partner?: string,
     address: string,
     addressNumber: number,
     state: string,
