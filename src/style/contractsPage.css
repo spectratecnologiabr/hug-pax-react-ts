@@ -66,6 +66,28 @@
 .contracts-card-header {
   padding: 14px 16px;
   border-bottom: 1px solid #e6ebf2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.contracts-search-input {
+  width: min(440px, 100%);
+  height: 38px;
+  border: 1px solid #e6ebf2;
+  border-radius: 10px;
+  padding: 8px 12px;
+  font-size: 13px;
+  font-family: "SF UI Display", "Segoe UI", sans-serif;
+  color: #1e1e1e;
+  outline: none;
+  transition: border-color .2s ease, box-shadow .2s ease;
+}
+
+.contracts-search-input:focus {
+  border-color: #2b8ccf;
+  box-shadow: 0 0 0 3px rgba(43, 140, 207, 0.16);
 }
 
 .contracts-table-wrap {
@@ -389,6 +411,11 @@
   .admin-dashboard-wrapper.contracts-page .contracts-header {
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  .contracts-card-header {
+    flex-direction: column;
+    align-items: stretch;
   }
 
   .contracts-table {

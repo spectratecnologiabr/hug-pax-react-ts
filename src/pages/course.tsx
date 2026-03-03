@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import '../lib/pdf';
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import * as pdfjsLib from "pdfjs-dist";
 import { GlobalWorkerOptions } from "pdfjs-dist";
 import { CircularProgressbar, buildStyles } from 'react-circular-progressbar';
@@ -123,8 +123,10 @@ type TSearchResult = {
 
 function Course() {
     const initializedRef = React.useRef(false)
+    const forceFirstPageOnNextNavRef = React.useRef(false)
     const [pendingSeek, setPendingSeek] = React.useState<number | null>(null)
     const { courseSlug, lessonId } = useParams();
+    const navigate = useNavigate();
     const profilePic = localStorage.getItem("profilePic") || alunoIcon;
     const [courseData, setCourseData] = useState<TCourseData | null>(null);
     const [courseModules, setCourseModules] = useState([] as Array<TCourseModule>)
@@ -183,6 +185,22 @@ function Course() {
     const [pdfAccessibleText, setPdfAccessibleText] = React.useState("");
     const [isPdfOcrRunning, setIsPdfOcrRunning] = React.useState(false);
     const [pdfTextSource, setPdfTextSource] = React.useState<"pdfjs" | "pdfjs-cleaned" | "ocr" | "none">("none");
+
+    const nextLesson = React.useMemo(() => {
+        const currentLessonId = Number(lessonId);
+        if (!currentLessonId) return null;
+
+        const orderedLessons = courseModules
+            .flatMap((module) => module.lessons ?? [])
+            .filter((lesson) => lesson.type !== "attachment" && lesson.type !== "anexo");
+
+        const currentIndex = orderedLessons.findIndex((lesson) => Number(lesson.id) === currentLessonId);
+        if (currentIndex < 0 || currentIndex >= orderedLessons.length - 1) {
+            return null;
+        }
+
+        return orderedLessons[currentIndex + 1];
+    }, [courseModules, lessonId]);
 
     function coerceBoolean(value: any): boolean | undefined {
         if (value === true || value === "true" || value === 1 || value === "1") return true;
@@ -506,6 +524,8 @@ function Course() {
             const response = await getLession(Number(lessonId));
             initializedRef.current = false;
             setPendingSeek(null);
+            setPageNumber(1);
+            setNumPages(0);
 
             if (videoRef.current) {
                 videoRef.current.currentTime = 0;
@@ -616,23 +636,23 @@ function Course() {
         if (lessionData.type !== "pdf") return
         if (!numPages) return
 
+        if (forceFirstPageOnNextNavRef.current) {
+            forceFirstPageOnNextNavRef.current = false
+            return
+        }
+
         // Try last first, then scan history for a match.
         // Use 'position' when coming from playbackMemory.last, but use 'endAt' when coming from playbackMemory.history.
         let pageFromPlayback: number | undefined
-        let source: "last" | "history" | undefined
-
         if (playbackMemory.last && Number(playbackMemory.last.lessonId) === Number(lessionData.id)) {
             pageFromPlayback = playbackMemory.last.position
-            source = "last"
         } else if (Array.isArray(playbackMemory.history)) {
             const hist = playbackMemory.history.find((h: any) => Number(h.lessonId) === Number(lessionData.id))
             if (hist && typeof hist.endAt !== "undefined") {
                 pageFromPlayback = hist.endAt
-                source = "history"
             } else if (hist && typeof hist.position !== "undefined") {
                 // fallback to position if endAt is not available
                 pageFromPlayback = hist.position
-                source = "history"
             }
         }
 
@@ -693,6 +713,13 @@ function Course() {
         setLessionRate(star);
     }
 
+    function goToNextLesson() {
+        if (!nextLesson) return;
+        forceFirstPageOnNextNavRef.current = true;
+        navigate(`/course/${courseSlug}/lesson/${nextLesson.id}`);
+        window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
     const formatDate = (date: string) => {
         const d = new Date(date);
 
@@ -735,9 +762,15 @@ function Course() {
             }).promise;
             if (!active) return;
 
-            setNumPages(pdf.numPages);
+            const totalPages = Math.max(1, Number(pdf.numPages) || 1);
+            setNumPages(totalPages);
 
-            const page = await pdf.getPage(pageNumber);
+            const safePage = Math.min(Math.max(pageNumber, 1), totalPages);
+            if (safePage !== pageNumber) {
+                setPageNumber(safePage);
+            }
+
+            const page = await pdf.getPage(safePage);
             if (!active) return;
 
             const textContent = await page.getTextContent();
@@ -1031,6 +1064,14 @@ function Course() {
                             <React.Fragment>
                                 <div className="lession-title">
                                     <b>{lessionData.title}</b>
+                                    <button
+                                        type="button"
+                                        className="next-lesson-btn"
+                                        onClick={goToNextLesson}
+                                        disabled={!nextLesson}
+                                    >
+                                        {nextLesson ? "Próxima aula" : "Última aula"}
+                                    </button>
                                 </div>
                                 
                                 {

@@ -110,6 +110,7 @@ function ContractsPage() {
   const [loading, setLoading] = useState(true);
 
   const [contracts, setContracts] = useState<TContractItem[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
   const [consultants, setConsultants] = useState<TConsultant[]>([]);
   const [coordinators, setCoordinators] = useState<TCoordinator[]>([]);
 
@@ -153,6 +154,33 @@ function ContractsPage() {
     if (!Number.isFinite(contractId) || contractId <= 0) return null;
     return contracts.find((item) => Number(item.id) === contractId) ?? null;
   }, [contracts, form.id]);
+
+  const normalizedSearchTerm = useMemo(() => String(searchTerm || "").trim().toLowerCase(), [searchTerm]);
+
+  const filteredContracts = useMemo(() => {
+    if (!normalizedSearchTerm) return contracts;
+
+    return contracts.filter((item) => {
+      const consultantsLabel = item.consultants
+        .map((c) => `${String(c.firstName || "").trim()} ${String(c.lastName || "").trim()}`.trim())
+        .join(" ");
+      const coordinatorLabel =
+        String(item.coordinatorName || "").trim() ||
+        String(coordinatorLabelById.get(item.coordinatorId) || "").trim();
+
+      const searchable = [
+        String(item.id || ""),
+        String(item.name || ""),
+        coordinatorLabel,
+        String(item.coordinatorManagement || ""),
+        consultantsLabel,
+      ]
+        .join(" ")
+        .toLowerCase();
+
+      return searchable.includes(normalizedSearchTerm);
+    });
+  }, [contracts, coordinatorLabelById, normalizedSearchTerm]);
 
   async function loadData() {
     setLoading(true);
@@ -369,11 +397,20 @@ function ContractsPage() {
           <div className="contracts-card">
             <div className="contracts-card-header">
               <b>Lista de Contratos</b>
+              <input
+                type="search"
+                className="contracts-search-input"
+                placeholder="Buscar por nome, ID, coordenador, gerência ou consultor..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
             </div>
             {loading ? (
               <div className="contracts-empty">Carregando contratos...</div>
             ) : !contracts.length ? (
               <div className="contracts-empty">Nenhum contrato encontrado.</div>
+            ) : !filteredContracts.length ? (
+              <div className="contracts-empty">Nenhum contrato encontrado para a busca informada.</div>
             ) : (
               <div className="contracts-table-wrap">
                 <table className="contracts-table">
@@ -391,7 +428,7 @@ function ContractsPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {contracts.map((item) => (
+                    {filteredContracts.map((item) => (
                       <tr key={item.id}>
                         <td>#{item.id}</td>
                         <td>{item.name}</td>

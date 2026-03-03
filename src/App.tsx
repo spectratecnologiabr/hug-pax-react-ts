@@ -3,7 +3,7 @@ import React from 'react';
 import MyRoutes from './routes';
 
 function hasMinimumScreen() {
-  const minWidth = 769;
+  const minWidth = 600;
   const minHeight = 600;
 
   return window.innerWidth >= minWidth && window.innerHeight >= minHeight;
