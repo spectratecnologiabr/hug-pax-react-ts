@@ -2,6 +2,7 @@ import React, { useCallback, useState, useEffect } from "react";
 import { listCourses } from "../controllers/course/admin/listCourses.controller";
 import { deleteCourse } from "../controllers/course/admin/deleteCourse.controller";
 import { listTeachingModalities } from "../controllers/education/listTeachingModalities.controller";
+import { listTeachingGrades } from "../controllers/education/listTeachingGrades.controller";
 
 import Menubar from "../components/admin/menubar";
 
@@ -35,6 +36,7 @@ function Courses() {
     const [statusFilter, setStatusFilter] = useState('');
     const [modalityFilter, setModalityFilter] = useState('');
     const [modalities, setModalities] = useState<TModality[]>([]);
+    const [gradeIdsByModality, setGradeIdsByModality] = useState<Record<string, string[]>>({});
     const [deletingCourseId, setDeletingCourseId] = useState<number | null>(null);
     const [feedback, setFeedback] = useState<{ type: "success" | "error"; message: string } | null>(null);
 
@@ -52,6 +54,24 @@ function Courses() {
           try {
             const data = await listTeachingModalities();
             setModalities(data);
+
+            const entries = await Promise.all(
+              (Array.isArray(data) ? data : []).map(async (modality: any) => {
+                try {
+                  const gradesResp = await listTeachingGrades(Number(modality.id));
+                  const gradesPayload = Array.isArray(gradesResp?.data)
+                    ? gradesResp.data
+                    : Array.isArray(gradesResp)
+                      ? gradesResp
+                      : [];
+                  return [String(modality.id), gradesPayload.map((grade: any) => String(grade?.id))] as const;
+                } catch {
+                  return [String(modality.id), []] as const;
+                }
+              })
+            );
+
+            setGradeIdsByModality(Object.fromEntries(entries));
           } catch (error) {
             console.error("Error fetching teaching modalities:", error);
           }
@@ -155,7 +175,7 @@ function Courses() {
                               : true;
 
                             const matchesModality = modalityFilter
-                              ? (course.series || []).includes(modalityFilter)
+                              ? (course.series || []).some((seriesId) => (gradeIdsByModality[modalityFilter] || []).includes(String(seriesId)))
                               : true;
 
                             return matchesSearch && matchesStatus && matchesModality;

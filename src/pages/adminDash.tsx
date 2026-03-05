@@ -52,6 +52,22 @@ const DEFAULT_STUDENTS_STATUS_DATA = [
   { name: "Inativos", value: 0 },
 ];
 
+function toCumulativeEvolution(items: Array<{ month: string; active: number; inactive: number }>) {
+  let activeAcc = 0;
+  let inactiveAcc = 0;
+
+  return items.map((item) => {
+    activeAcc += safeNumber(item.active, 0);
+    inactiveAcc += safeNumber(item.inactive, 0);
+
+    return {
+      month: item.month,
+      active: activeAcc,
+      inactive: inactiveAcc,
+    };
+  });
+}
+
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (!active || !payload || !payload.length) return null;
 
@@ -204,7 +220,7 @@ function AdminDash() {
     const [studentsTotal, setStudentsTotal] = useState(2847);
     const [educatorsTotal, setEducatorsTotal] = useState(156);
     const [activeCoursesTotal, setActiveCoursesTotal] = useState(42);
-    const [studentsEvolution, setStudentsEvolution] = useState(DEFAULT_STUDENTS_EVOLUTION);
+    const [studentsEvolution, setStudentsEvolution] = useState(toCumulativeEvolution(DEFAULT_STUDENTS_EVOLUTION));
     const [studentsStatusData, setStudentsStatusData] = useState(DEFAULT_STUDENTS_STATUS_DATA);
     // === ViewSchedulingForm state ===
     const [viewSchedulingFormOpen, setViewSchedulingFormOpen] = useState(false);
@@ -283,13 +299,13 @@ function AdminDash() {
           setActiveCoursesTotal(safeNumber(data?.activeCourses, activeCoursesTotal))
 
           if (Array.isArray(data?.studentsEvolution)) {
-            setStudentsEvolution(
-              data.studentsEvolution.map((item: any) => ({
+            const normalizedEvolution = data.studentsEvolution.map((item: any) => ({
                 month: monthLabelFromYYYYMM(String(item.month ?? "")),
                 active: safeNumber(item.active, 0),
                 inactive: safeNumber(item.inactive, 0) + safeNumber(item.blocked, 0),
               }))
-            )
+
+            setStudentsEvolution(toCumulativeEvolution(normalizedEvolution))
           }
 
           if (data?.studentsStatus) {

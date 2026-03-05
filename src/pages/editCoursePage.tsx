@@ -1,10 +1,11 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useMemo, useState, useEffect, useRef } from "react";
 import imageCompression from "browser-image-compression";
 import { useParams } from "react-router-dom";
 import { createModule, IModuleData } from "../controllers/course/admin/createModule.controller";
 import { deleteModule } from "../controllers/course/admin/deleteModule.controller";
 import { createLesson, ILessonData } from "../controllers/course/admin/createLesson.controller";
 import { listTeachingModalitiesAdmin } from "../controllers/education/listTeachingModalitiesAdmin.controller";
+import { listTeachingGradesAdmin } from "../controllers/education/listTeachingGradesAdmin.controller";
 import Menubar from "../components/admin/menubar";
 import "../style/adminDash.css";
 import { uploadLessonFileController } from "../controllers/course/admin/uploadFile.controller";
@@ -56,6 +57,25 @@ type TranscriptionReviewState = {
     lessonTitle: string;
     text: string;
 };
+
+function normalizeStringArray(value: unknown): string[] {
+    if (Array.isArray(value)) {
+        return value.map((item) => String(item ?? "").trim()).filter(Boolean);
+    }
+    if (typeof value === "string") {
+        const raw = value.trim();
+        if (!raw) return [];
+        try {
+            const parsed = JSON.parse(raw);
+            if (Array.isArray(parsed)) {
+                return parsed.map((item) => String(item ?? "").trim()).filter(Boolean);
+            }
+        } catch {
+            return raw.split(",").map((item) => item.trim()).filter(Boolean);
+        }
+    }
+    return [];
+}
 
 function EditCoursePage() {
     const { courseId } = useParams<{ courseId: string }>();
@@ -120,8 +140,14 @@ function EditCoursePage() {
     const [confirmDeleteSubmitting, setConfirmDeleteSubmitting] = useState(false);
     const [confirmDeleteError, setConfirmDeleteError] = useState<string | null>(null);
     const [segments, setSegments] = useState<{ value: string; label: string }[]>([]);
-    const seriesRef = useRef<HTMLDivElement | null>(null);
-    const [isSeriesOpen, setIsSeriesOpen] = useState(false);
+    const [selectedSegments, setSelectedSegments] = useState<string[]>([]);
+    const [gradesBySegment, setGradesBySegment] = useState<Record<string, Array<{ value: string; label: string }>>>({});
+    const segmentsRef = useRef<HTMLDivElement | null>(null);
+    const gradesRef = useRef<HTMLDivElement | null>(null);
+    const [isSegmentsOpen, setIsSegmentsOpen] = useState(false);
+    const [isGradesOpen, setIsGradesOpen] = useState(false);
+    const [segmentsTouched, setSegmentsTouched] = useState(false);
+    const [seriesHydrated, setSeriesHydrated] = useState(false);
     
     function handleModalMessage(data: { isError: boolean; message: string }) {
         const messageElement = document.getElementById("warning-message") as HTMLSpanElement;
@@ -138,8 +164,12 @@ function EditCoursePage() {
     }
     useEffect(() => {
         function handleClickOutside(event: MouseEvent) {
-            if (seriesRef.current && !seriesRef.current.contains(event.target as Node)) {
-                setIsSeriesOpen(false);
+            const target = event.target as Node;
+            if (segmentsRef.current && !segmentsRef.current.contains(target)) {
+                setIsSegmentsOpen(false);
+            }
+            if (gradesRef.current && !gradesRef.current.contains(target)) {
+                setIsGradesOpen(false);
             }
         }
 
@@ -158,12 +188,33 @@ function EditCoursePage() {
 
           const activeModalities = (modalities || []).filter((m) => m.isActive !== false);
           const segmentOptions = activeModalities.map((m) => ({ value: String(m.id), label: m.name }));
+          const gradesEntries = await Promise.all(
+            activeModalities.map(async (modality) => {
+              try {
+                const gradesResp = await listTeachingGradesAdmin(modality.id);
+                const gradesPayload = Array.isArray(gradesResp?.data)
+                  ? gradesResp.data
+                  : Array.isArray(gradesResp)
+                    ? gradesResp
+                    : [];
+                const options = gradesPayload.map((grade: any) => ({
+                  value: String(grade?.id),
+                  label: String(grade?.name ?? `Série ${grade?.id}`),
+                }));
+                return [String(modality.id), options] as const;
+              } catch {
+                return [String(modality.id), []] as const;
+              }
+            })
+          );
 
           if (!alive) return;
           setSegments(segmentOptions);
+          setGradesBySegment(Object.fromEntries(gradesEntries));
         } catch {
           if (!alive) return;
           setSegments([]);
+          setGradesBySegment({});
         }
       })();
 
@@ -171,6 +222,63 @@ function EditCoursePage() {
         alive = false;
       };
     }, []);
+
+    const availableGrades = useMemo(() => {
+        if (!selectedSegments.length) return [] as Array<{ value: string; label: string }>;
+        const seen = new Set<string>();
+        const result: Array<{ value: string; label: string }> = [];
+
+        selectedSegments.forEach((segmentId) => {
+            (gradesBySegment[String(segmentId)] || []).forEach((grade) => {
+                if (seen.has(grade.value)) return;
+                seen.add(grade.value);
+                result.push(grade);
+            });
+        });
+        return result;
+    }, [gradesBySegment, selectedSegments]);
+
+    useEffect(() => {
+        if (!seriesHydrated) return;
+        if (!newCourseData.series.length || !Object.keys(gradesBySegment).length) return;
+        const inferredSegments = Object.entries(gradesBySegment)
+            .filter(([, grades]) => grades.some((grade) => newCourseData.series.includes(grade.value)))
+            .map(([segmentId]) => segmentId);
+        setSelectedSegments(inferredSegments);
+    }, [gradesBySegment, newCourseData.series, seriesHydrated]);
+
+    useEffect(() => {
+        if (!seriesHydrated) return;
+        if (!selectedSegments.length) {
+            if (segmentsTouched && newCourseData.series.length > 0) {
+                setNewCoursedata((prev) => ({ ...prev, series: [] }));
+            }
+            return;
+        }
+
+        const allowed = new Set(availableGrades.map((item) => item.value));
+        const filteredSeries = newCourseData.series.filter((item) => allowed.has(item));
+        if (filteredSeries.length !== newCourseData.series.length) {
+            setNewCoursedata((prev) => ({ ...prev, series: filteredSeries }));
+        }
+    }, [availableGrades, newCourseData.series, selectedSegments.length, segmentsTouched, seriesHydrated]);
+
+    function toggleSegmentSelection(segmentId: string) {
+        setSegmentsTouched(true);
+        setSelectedSegments((prev) =>
+            prev.includes(segmentId) ? prev.filter((id) => id !== segmentId) : [...prev, segmentId]
+        );
+    }
+
+    function toggleGradeSelection(gradeId: string) {
+        setNewCoursedata((prev) => {
+            const exists = prev.series.includes(gradeId);
+            return {
+                ...prev,
+                series: exists ? prev.series.filter((id) => id !== gradeId) : [...prev.series, gradeId],
+            };
+        });
+    }
 
     async function refreshTagData() {
         const [categories, tags] = await Promise.all([
@@ -225,14 +333,17 @@ function EditCoursePage() {
           const data = await getFullCourseData(Number(courseId));
 
           // trilha agora vem no root da response
+          const recoveredSeries = normalizeStringArray(data.series);
           setNewCoursedata({
             slug: data.slug,
             title: data.title,
             subTitle: data.subTitle,
             cover: "", // cover não vem mais na response
             workload: data.workload,
-            series: Array.isArray(data.series) ? data.series : [],
+            series: recoveredSeries,
           });
+          setSegmentsTouched(false);
+          setSeriesHydrated(true);
 
           setCreatedCourseId(Number(courseId));
 
@@ -759,6 +870,14 @@ function EditCoursePage() {
 
     async function handleSaveCourse() {
         if (!courseId) return;
+        if (!selectedSegments.length) {
+            handleModalMessage({ isError: true, message: "Selecione ao menos um segmento escolar." });
+            return;
+        }
+        if (!newCourseData.series.length) {
+            handleModalMessage({ isError: true, message: "Selecione ao menos uma série." });
+            return;
+        }
 
         try {
             const payload: any = {
@@ -882,42 +1001,58 @@ function EditCoursePage() {
                                     />
                                 </div>
                                 <div className="input-wrapper">
-                                    <label htmlFor="courseSeries">Segmentos:*</label>
-                                    <div className="custom-multiselect" ref={seriesRef}>
+                                    <label htmlFor="courseSegments">Segmento Escolar:*</label>
+                                    <div className="custom-multiselect" ref={segmentsRef}>
                                         <button
                                             type="button"
                                             className="multiselect-trigger"
-                                            onClick={() => setIsSeriesOpen(prev => !prev)}
+                                            onClick={() => setIsSegmentsOpen(prev => !prev)}
                                         >
-                                            {(() => {
-                                                const seriesArray = Array.isArray(newCourseData?.series)
-                                                    ? newCourseData.series
-                                                    : [];
-                                                return seriesArray.length
-                                                    ? `${seriesArray.length} segmento(s) selecionado(s)`
-                                                    : "Selecionar segmentos";
-                                            })()}
+                                            {selectedSegments.length
+                                                ? `${selectedSegments.length} segmento(s) selecionado(s)`
+                                                : "Selecionar segmentos"}
                                         </button>
-                                        {isSeriesOpen && (
+                                        {isSegmentsOpen && (
                                             <div className="multiselect-popup">
                                                 {segments.map(segment => (
                                                     <label key={segment.value} className="multiselect-option">
                                                         <input
                                                             type="checkbox"
-                                                            checked={newCourseData.series.includes(segment.value)}
-                                                            onChange={() => {
-                                                                setNewCoursedata(prev => {
-                                                                    const exists = prev.series.includes(segment.value);
-                                                                    return {
-                                                                        ...prev,
-                                                                        series: exists
-                                                                            ? prev.series.filter(s => s !== segment.value)
-                                                                            : [...prev.series, segment.value],
-                                                                    };
-                                                                });
-                                                            }}
+                                                            checked={selectedSegments.includes(segment.value)}
+                                                            onChange={() => toggleSegmentSelection(segment.value)}
                                                         />
                                                         <span>{segment.label}</span>
+                                                    </label>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                                <div className="input-wrapper">
+                                    <label htmlFor="courseSeries">Séries:*</label>
+                                    <div className="custom-multiselect" ref={gradesRef}>
+                                        <button
+                                            type="button"
+                                            className="multiselect-trigger"
+                                            onClick={() => setIsGradesOpen(prev => !prev)}
+                                            disabled={!selectedSegments.length}
+                                        >
+                                            {!selectedSegments.length
+                                                ? "Selecione segmento(s)"
+                                                : newCourseData.series.length
+                                                    ? `${newCourseData.series.length} série(s) selecionada(s)`
+                                                    : "Selecionar séries"}
+                                        </button>
+                                        {isGradesOpen && selectedSegments.length > 0 && (
+                                            <div className="multiselect-popup">
+                                                {availableGrades.map(grade => (
+                                                    <label key={grade.value} className="multiselect-option">
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={newCourseData.series.includes(grade.value)}
+                                                            onChange={() => toggleGradeSelection(grade.value)}
+                                                        />
+                                                        <span>{grade.label}</span>
                                                     </label>
                                                 ))}
                                             </div>

@@ -876,6 +876,12 @@
     box-shadow: 0 0 0 2px rgba(54, 150, 211, 0.2);
 }
 
+.custom-multiselect .multiselect-trigger:disabled {
+    cursor: not-allowed;
+    background: #f3f4f6;
+    color: #6b7280;
+}
+
 .custom-multiselect .multiselect-popup {
     position: absolute;
     top: calc(100% + 6px);

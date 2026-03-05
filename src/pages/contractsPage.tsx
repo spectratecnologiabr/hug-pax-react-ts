@@ -6,6 +6,8 @@ import { checkSession } from "../controllers/user/checkSession.controller";
 import { listContracts, type TContractItem } from "../controllers/contract/listContracts.controller";
 import { createContract } from "../controllers/contract/createContract.controller";
 import { updateContract } from "../controllers/contract/updateContract.controller";
+import { listColleges } from "../controllers/college/listColleges.controller";
+import { updateCollege } from "../controllers/college/updateCollege.controller";
 import { listConsultants } from "../controllers/user/listConsultants.controller";
 import { listUsersAdmin } from "../controllers/user/listUsersAdmin.controller";
 import { findUser } from "../controllers/user/findUser.controller";
@@ -35,6 +37,14 @@ type TOverviewData = {
 };
 
 type TFormMode = "create" | "edit";
+type TSchoolSearchItem = {
+  id: number;
+  name: string;
+  city?: string;
+  state?: string;
+  gee?: string;
+  contractId?: number | null;
+};
 
 type TContractForm = {
   id?: number;
@@ -120,6 +130,11 @@ function ContractsPage() {
   const [form, setForm] = useState<TContractForm>(emptyForm());
 
   const [toast, setToast] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [schoolSearchTerm, setSchoolSearchTerm] = useState("");
+  const [schoolSearchLoading, setSchoolSearchLoading] = useState(false);
+  const [schoolSearchResults, setSchoolSearchResults] = useState<TSchoolSearchItem[]>([]);
+  const [bindingSchoolId, setBindingSchoolId] = useState<number | null>(null);
+  const [bindSchoolsModalOpen, setBindSchoolsModalOpen] = useState(false);
 
   useEffect(() => {
     if (!toast) return;
@@ -156,6 +171,7 @@ function ContractsPage() {
   }, [contracts, form.id]);
 
   const normalizedSearchTerm = useMemo(() => String(searchTerm || "").trim().toLowerCase(), [searchTerm]);
+  const normalizedSchoolSearchTerm = useMemo(() => String(schoolSearchTerm || "").trim(), [schoolSearchTerm]);
 
   const filteredContracts = useMemo(() => {
     if (!normalizedSearchTerm) return contracts;
@@ -181,6 +197,15 @@ function ContractsPage() {
       return searchable.includes(normalizedSearchTerm);
     });
   }, [contracts, coordinatorLabelById, normalizedSearchTerm]);
+
+  const selectedContractSchoolIds = useMemo(() => {
+    const ids = new Set<number>();
+    (selectedContract?.schools || []).forEach((school) => {
+      const id = Number(school?.id);
+      if (Number.isFinite(id) && id > 0) ids.add(id);
+    });
+    return ids;
+  }, [selectedContract]);
 
   async function loadData() {
     setLoading(true);
@@ -284,12 +309,19 @@ function ContractsPage() {
       booksCount: Number(contract.booksCount) || 0,
     });
     setModalOpen(true);
+    setSchoolSearchTerm("");
+    setSchoolSearchResults([]);
+    setBindSchoolsModalOpen(false);
   }
 
   function closeModal() {
     if (submitting) return;
     setModalOpen(false);
     setForm(emptyForm());
+    setSchoolSearchTerm("");
+    setSchoolSearchResults([]);
+    setBindingSchoolId(null);
+    setBindSchoolsModalOpen(false);
   }
 
   function toggleConsultant(consultantId: number) {
@@ -312,6 +344,81 @@ function ContractsPage() {
       consultantIds: prev.consultantIds.filter((id) => allowedIds.has(id)),
     }));
   }, [filteredConsultants, modalOpen]);
+
+  useEffect(() => {
+    if (!modalOpen || !bindSchoolsModalOpen || modalMode !== "edit" || !form.id) return;
+    const term = normalizedSchoolSearchTerm;
+    if (term.length < 2) {
+      setSchoolSearchResults([]);
+      setSchoolSearchLoading(false);
+      return;
+    }
+
+    let alive = true;
+    const timer = window.setTimeout(async () => {
+      setSchoolSearchLoading(true);
+      try {
+        const response: any = await listColleges({ search: term, page: 1, pageSize: 20 });
+        const payloadItems = Array.isArray(response?.items)
+          ? response.items
+          : Array.isArray(response?.data?.items)
+            ? response.data.items
+            : Array.isArray(response)
+              ? response
+              : [];
+
+        if (!alive) return;
+        const normalized = payloadItems
+          .map((item: any) => ({
+            id: Number(item?.id),
+            name: String(item?.name || ""),
+            city: item?.city ? String(item.city) : undefined,
+            state: item?.state ? String(item.state) : undefined,
+            gee: item?.gee ? String(item.gee) : undefined,
+            contractId: Number(item?.contractId ?? item?.contract_id) || null,
+          }))
+          .filter((item: TSchoolSearchItem) => item.id > 0 && item.name.trim().length > 0)
+          .filter((item: TSchoolSearchItem) => !(Number(item.contractId) > 0));
+
+        setSchoolSearchResults(normalized);
+      } catch (error) {
+        if (!alive) return;
+        console.error("Erro ao buscar escolas para vínculo de contrato:", error);
+        setSchoolSearchResults([]);
+      } finally {
+        if (alive) setSchoolSearchLoading(false);
+      }
+    }, 300);
+
+    return () => {
+      alive = false;
+      window.clearTimeout(timer);
+    };
+  }, [bindSchoolsModalOpen, form.id, modalMode, modalOpen, normalizedSchoolSearchTerm]);
+
+  async function bindSchoolToContract(school: TSchoolSearchItem) {
+    const contractId = Number(form.id);
+    if (!Number.isFinite(contractId) || contractId <= 0) return;
+
+    setBindingSchoolId(school.id);
+    try {
+      await updateCollege({ id: String(school.id), contractId });
+      setToast({ type: "success", text: `Escola "${school.name}" vinculada ao contrato.` });
+      setSchoolSearchResults((prev) =>
+        prev.map((item) => (item.id === school.id ? { ...item, contractId } : item))
+      );
+      await loadData();
+    } catch (error) {
+      console.error("Erro ao vincular escola ao contrato:", error);
+      const message =
+        (error as any)?.response?.data?.message ||
+        (error as any)?.message ||
+        "Não foi possível vincular a escola ao contrato.";
+      setToast({ type: "error", text: String(message) });
+    } finally {
+      setBindingSchoolId(null);
+    }
+  }
 
   async function submit() {
     if (!form.consultantIds.length) {
@@ -583,37 +690,46 @@ function ContractsPage() {
               </div>
 
               {modalMode === "edit" ? (
-                <div className="contracts-schools-card">
-                  <div className="contracts-schools-head">
-                    <b>Escolas vinculadas ao contrato</b>
-                  </div>
-                  <div className="contracts-schools-table-wrap">
-                    <table className="contracts-schools-table">
-                      <thead>
-                        <tr>
-                          <th>Nome</th>
-                          <th>Cidade - UF</th>
-                          <th>GEE</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {(selectedContract?.schools || []).length ? (
-                          (selectedContract?.schools || []).map((school) => (
-                            <tr key={school.id}>
-                              <td>{school.name || "-"}</td>
-                              <td>{[school.city, school.state].filter(Boolean).join(" - ") || "-"}</td>
-                              <td>{String(school.gee || "").trim() || "-"}</td>
-                            </tr>
-                          ))
-                        ) : (
+                <>
+                  <div className="contracts-schools-card">
+                    <div className="contracts-schools-head">
+                      <b>Escolas vinculadas ao contrato</b>
+                      <button
+                        type="button"
+                        className="contracts-primary-button"
+                        onClick={() => setBindSchoolsModalOpen(true)}
+                      >
+                        Vincular escola
+                      </button>
+                    </div>
+                    <div className="contracts-schools-table-wrap">
+                      <table className="contracts-schools-table">
+                        <thead>
                           <tr>
-                            <td colSpan={3}>Nenhuma escola vinculada a este contrato.</td>
+                            <th>Nome</th>
+                            <th>Cidade - UF</th>
+                            <th>GEE</th>
                           </tr>
-                        )}
-                      </tbody>
-                    </table>
+                        </thead>
+                        <tbody>
+                          {(selectedContract?.schools || []).length ? (
+                            (selectedContract?.schools || []).map((school) => (
+                              <tr key={school.id}>
+                                <td>{school.name || "-"}</td>
+                                <td>{[school.city, school.state].filter(Boolean).join(" - ") || "-"}</td>
+                                <td>{String(school.gee || "").trim() || "-"}</td>
+                              </tr>
+                            ))
+                          ) : (
+                            <tr>
+                              <td colSpan={3}>Nenhuma escola vinculada a este contrato.</td>
+                            </tr>
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
                   </div>
-                </div>
+                </>
               ) : null}
             </div>
 
@@ -621,6 +737,64 @@ function ContractsPage() {
               <button type="button" className="contracts-ghost-button" onClick={closeModal}>Fechar</button>
               <button type="button" className="contracts-primary-button" disabled={submitting} onClick={() => void submit()}>
                 {submitting ? "Salvando..." : modalMode === "create" ? "Criar contrato" : "Salvar alterações"}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {bindSchoolsModalOpen && modalOpen && modalMode === "edit" ? (
+        <div className="contracts-inline-modal-overlay" onClick={() => setBindSchoolsModalOpen(false)}>
+          <div className="contracts-inline-modal-card" onClick={(e) => e.stopPropagation()}>
+            <div className="contracts-modal-header">
+              <div>
+                <b>Vincular escola ao contrato</b>
+                <span>Busque a escola e faça a vinculação sem sair da edição.</span>
+              </div>
+              <button type="button" className="contracts-close-button" onClick={() => setBindSchoolsModalOpen(false)}>×</button>
+            </div>
+            <div className="contracts-modal-body">
+              <div className="contracts-schools-bind-body">
+                <input
+                  type="search"
+                  className="contracts-search-input"
+                  placeholder="Buscar escola por nome..."
+                  value={schoolSearchTerm}
+                  onChange={(e) => setSchoolSearchTerm(e.target.value)}
+                />
+                {normalizedSchoolSearchTerm.length < 2 ? (
+                  <div className="contracts-schools-bind-empty">Digite ao menos 2 caracteres para buscar.</div>
+                ) : schoolSearchLoading ? (
+                  <div className="contracts-schools-bind-empty">Buscando escolas...</div>
+                ) : !schoolSearchResults.length ? (
+                  <div className="contracts-schools-bind-empty">Nenhuma escola encontrada.</div>
+                ) : (
+                  <div className="contracts-schools-bind-results">
+                    {schoolSearchResults.map((school) => {
+                      return (
+                        <div key={school.id} className="contracts-schools-bind-item">
+                          <div>
+                            <b>{school.name}</b>
+                            <span>{[school.city, school.state].filter(Boolean).join(" - ") || "Cidade/UF não informado"}</span>
+                          </div>
+                          <button
+                            type="button"
+                            className="contracts-primary-button"
+                            disabled={bindingSchoolId === school.id || selectedContractSchoolIds.has(school.id)}
+                            onClick={() => void bindSchoolToContract(school)}
+                          >
+                            {bindingSchoolId === school.id ? "Vinculando..." : "Vincular"}
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </div>
+            <div className="contracts-modal-footer">
+              <button type="button" className="contracts-ghost-button" onClick={() => setBindSchoolsModalOpen(false)}>
+                Fechar
               </button>
             </div>
           </div>

@@ -1,6 +1,7 @@
 import React from 'react';
 
 import MyRoutes from './routes';
+import GlobalRuntimeGuard from './components/globalRuntimeGuard';
 
 function hasMinimumScreen() {
   const minWidth = 600;
@@ -9,31 +10,33 @@ function hasMinimumScreen() {
   return window.innerWidth >= minWidth && window.innerHeight >= minHeight;
 }
 
-if (!hasMinimumScreen()) {
-  document.body.innerHTML = `
-    <div style="
-      height:100vh;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      background:#0f0f0f;
-      color:white;
-      font-family:system-ui;
-      text-align:center;
-      padding:40px;
-    ">
-      <div>
-        <h1>Dispositivo não suportado</h1>
-        <p>O Pax funciona apenas em tablets, notebooks e desktops.</p>
-      </div>
-    </div>
-  `;
-  throw new Error("Dispositivo móvel bloqueado");
-}
-
 function App() {
+  if (!hasMinimumScreen()) {
+    return (
+      <div style={{
+        height: "100vh",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        background: "#0f0f0f",
+        color: "white",
+        fontFamily: "system-ui",
+        textAlign: "center",
+        padding: 40
+      }}>
+        <div>
+          <h1>Dispositivo não suportado</h1>
+          <p>O Pax funciona apenas em tablets, notebooks e desktops.</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <MyRoutes />
+    <>
+      <MyRoutes />
+      <GlobalRuntimeGuard />
+    </>
   );
 }
 

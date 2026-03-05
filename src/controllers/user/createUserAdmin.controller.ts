@@ -18,6 +18,8 @@ export interface ICreateUserAdminData {
   phone?: string
   language?: string
   collegeId?: number | null
+  collegeSegment?: string[] | null
+  collegeSeries?: string[] | null
   management?: string | null
 }
 

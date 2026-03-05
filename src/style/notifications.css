@@ -93,3 +93,35 @@
     font-size: 14px;
     color: #A5A5AC;
 }
+
+@media (max-width: 769px) {
+    .notifications-container {
+        padding: 16px;
+        gap: 16px;
+    }
+
+    .notifications-container .notifications-wrapper {
+        margin-top: 90px;
+        margin-left: 0;
+        gap: 16px;
+    }
+
+    .notifications-container .notifications-wrapper .page-title-wrapper b {
+        font-size: 30px;
+    }
+
+    .notifications-container .notifications-wrapper .notifications-listing .notification-element {
+        flex-direction: column;
+        gap: 10px;
+        padding: 16px;
+    }
+
+    .notifications-container .notifications-wrapper .notifications-listing .notification-element div.right {
+        align-items: flex-start;
+    }
+
+    .notifications-container .notifications-wrapper .notifications-listing .notification-element .message {
+        word-break: break-word;
+        overflow-wrap: anywhere;
+    }
+}

@@ -96,3 +96,45 @@
 .main-profile-container .profile-wrapper .main-data-wrapper button:hover {
     background-color: #2e86be;
 }
+
+@media (max-width: 1200px) {
+    .main-profile-container .profile-wrapper .main-data-wrapper.personal .fields-wrapper {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 769px) {
+    .main-profile-container {
+        padding: 16px;
+        gap: 16px;
+    }
+
+    .main-profile-container .profile-wrapper {
+        margin-top: 90px;
+        margin-left: 0;
+        gap: 16px;
+    }
+
+    .main-profile-container .profile-wrapper .page-title-wrapper b {
+        font-size: 30px;
+    }
+
+    .main-profile-container .profile-wrapper .main-data-wrapper.personal .fields-wrapper {
+        grid-template-columns: 1fr;
+    }
+
+    .main-profile-container .profile-wrapper .main-data-wrapper.password .fields-wrapper .data-wrapper {
+        width: 100%;
+        min-width: 0;
+    }
+
+    .main-profile-container .profile-wrapper .main-data-wrapper .fields-wrapper .data-wrapper input:not([type="file"]),
+    .main-profile-container .profile-wrapper .main-data-wrapper .fields-wrapper .data-wrapper select {
+        width: 100%;
+    }
+
+    .main-profile-container .profile-wrapper .main-data-wrapper button {
+        width: 100%;
+        align-self: stretch;
+    }
+}

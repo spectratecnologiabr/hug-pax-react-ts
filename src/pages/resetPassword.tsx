@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import axios from "axios";
 import resetPassword from "../controllers/user/resetPassword.controller";
 
 import Footer from "../components/footer";
@@ -14,8 +15,6 @@ function ResetPassword() {
     const searchParams = new URLSearchParams(window.location.search);
     const token = searchParams.get('token') as string;
 
-    console.log(token);
-
     async function sendNewPassword(e: React.FormEvent) {
         e.preventDefault();
         const password = (document.getElementById("passwordEl") as HTMLInputElement).value;
@@ -30,19 +29,31 @@ function ResetPassword() {
                 setModalErrorOpen(false);
             }, 5000)
         } else {
-            await resetPassword(token, password)
-                    .then(response => {
-                        if(response.message) {
-                            setMessage(`Sua senha foi alterada com sucesso!`);
-                            setIsError(false);
-                            setModalErrorOpen(true);
+            try {
+                const response = await resetPassword(token, password);
+                if(response.message) {
+                    setMessage(`Sua senha foi alterada com sucesso!`);
+                    setIsError(false);
+                    setModalErrorOpen(true);
 
-                            setTimeout(() => {
-                                setModalErrorOpen(false);
-                                window.location.pathname = "/login"
-                            }, 5000)
-                        }
-                    })
+                    setTimeout(() => {
+                        setModalErrorOpen(false);
+                        window.location.pathname = "/login"
+                    }, 5000)
+                }
+            } catch (error) {
+                const apiMessage = axios.isAxiosError(error)
+                    ? String(error.response?.data?.message || "")
+                    : "";
+
+                setMessage(apiMessage || "Não foi possível alterar sua senha agora. Tente novamente.");
+                setIsError(true);
+                setModalErrorOpen(true);
+
+                setTimeout(() => {
+                    setModalErrorOpen(false);
+                }, 5000)
+            }
         }
     }
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useMemo, useState, useEffect, useRef } from "react";
 import imageCompression from "browser-image-compression";
 import { getOverviewData } from "../controllers/dash/overview.controller";
 import { createCourse, ICourseData } from "../controllers/course/admin/createCourse.controller";
@@ -6,6 +6,7 @@ import { createModule, IModuleData } from "../controllers/course/admin/createMod
 import { deleteModule } from "../controllers/course/admin/deleteModule.controller";
 import { createLesson, ILessonData } from "../controllers/course/admin/createLesson.controller";
 import { listTeachingModalitiesAdmin } from "../controllers/education/listTeachingModalitiesAdmin.controller";
+import { listTeachingGradesAdmin } from "../controllers/education/listTeachingGradesAdmin.controller";
 
 import Menubar from "../components/admin/menubar";
 
@@ -54,7 +55,8 @@ type TranscriptionReviewState = {
 
 function NewCoursePage() {
     const [ newCourseData, setNewCoursedata ] = useState<ICourseData>({slug: "", title: "", subTitle: "", cover: "", workload: 0, series: []})
-    const [isSeriesOpen, setIsSeriesOpen] = useState(false);
+    const [isSegmentsOpen, setIsSegmentsOpen] = useState(false);
+    const [isGradesOpen, setIsGradesOpen] = useState(false);
     const [createdCourseId, setCreatedCourseId] = useState<number | null>(null);
     const [showModuleForm, setShowModuleForm] = useState(false);
     const [showLessonFormForModuleIndex, setShowLessonFormForModuleIndex] = useState<number | null>(null);
@@ -116,7 +118,11 @@ function NewCoursePage() {
     const [confirmDeleteSubmitting, setConfirmDeleteSubmitting] = useState(false);
     const [confirmDeleteError, setConfirmDeleteError] = useState<string | null>(null);
     const [segments, setSegments] = useState<{ value: string; label: string }[]>([]);
-    const seriesRef = useRef<HTMLDivElement | null>(null);
+    const [selectedSegments, setSelectedSegments] = useState<string[]>([]);
+    const [gradesBySegment, setGradesBySegment] = useState<Record<string, Array<{ value: string; label: string }>>>({});
+    const segmentsRef = useRef<HTMLDivElement | null>(null);
+    const gradesRef = useRef<HTMLDivElement | null>(null);
+    const [segmentsTouched, setSegmentsTouched] = useState(false);
 
     function handleModalMessage(data: { isError: boolean; message: string }) {
         const messageElement = document.getElementById("warning-message") as HTMLSpanElement;
@@ -133,6 +139,20 @@ function NewCoursePage() {
     }
 
     useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            const target = event.target as Node;
+            if (segmentsRef.current && !segmentsRef.current.contains(target)) {
+                setIsSegmentsOpen(false);
+            }
+            if (gradesRef.current && !gradesRef.current.contains(target)) {
+                setIsGradesOpen(false);
+            }
+        };
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
+
+    useEffect(() => {
         let alive = true;
         (async () => {
             try {
@@ -144,11 +164,33 @@ function NewCoursePage() {
                 const activeModalities = (modalities || []).filter((m) => m.isActive !== false);
                 const segmentOptions = activeModalities.map((m) => ({ value: String(m.id), label: m.name }));
 
+                const gradesEntries = await Promise.all(
+                    activeModalities.map(async (modality) => {
+                        try {
+                            const gradesResp = await listTeachingGradesAdmin(modality.id);
+                            const gradesPayload = Array.isArray(gradesResp?.data)
+                                ? gradesResp.data
+                                : Array.isArray(gradesResp)
+                                    ? gradesResp
+                                    : [];
+                            const options = gradesPayload.map((grade: any) => ({
+                                value: String(grade?.id),
+                                label: String(grade?.name ?? `Série ${grade?.id}`),
+                            }));
+                            return [String(modality.id), options] as const;
+                        } catch {
+                            return [String(modality.id), []] as const;
+                        }
+                    })
+                );
+
                 if (!alive) return;
                 setSegments(segmentOptions);
+                setGradesBySegment(Object.fromEntries(gradesEntries));
             } catch {
                 if (!alive) return;
                 setSegments([]);
+                setGradesBySegment({});
             }
         })();
 
@@ -156,6 +198,56 @@ function NewCoursePage() {
             alive = false;
         };
     }, []);
+
+    const availableGrades = useMemo(() => {
+        if (!selectedSegments.length) return [] as Array<{ value: string; label: string }>;
+        const seen = new Set<string>();
+        const result: Array<{ value: string; label: string }> = [];
+
+        selectedSegments.forEach((segmentId) => {
+            (gradesBySegment[String(segmentId)] || []).forEach((grade) => {
+                if (seen.has(grade.value)) return;
+                seen.add(grade.value);
+                result.push(grade);
+            });
+        });
+        return result;
+    }, [gradesBySegment, selectedSegments]);
+
+    useEffect(() => {
+        if (!selectedSegments.length) {
+            if (segmentsTouched && newCourseData.series.length > 0) {
+                setNewCoursedata((prev) => ({ ...prev, series: [] }));
+            }
+            return;
+        }
+
+        const allowed = new Set(availableGrades.map((item) => item.value));
+        const filteredSeries = newCourseData.series.filter((item) => allowed.has(item));
+        if (filteredSeries.length !== newCourseData.series.length) {
+            setNewCoursedata((prev) => ({ ...prev, series: filteredSeries }));
+        }
+    }, [availableGrades, newCourseData.series, selectedSegments.length, segmentsTouched]);
+
+    function toggleSegmentSelection(segmentId: string) {
+        setSegmentsTouched(true);
+        setSelectedSegments((prev) => {
+            const next = prev.includes(segmentId)
+                ? prev.filter((id) => id !== segmentId)
+                : [...prev, segmentId];
+            return next;
+        });
+    }
+
+    function toggleGradeSelection(gradeId: string) {
+        setNewCoursedata((prev) => {
+            const exists = prev.series.includes(gradeId);
+            return {
+                ...prev,
+                series: exists ? prev.series.filter((id) => id !== gradeId) : [...prev.series, gradeId],
+            };
+        });
+    }
 
     async function refreshTagData() {
         const [categories, tags] = await Promise.all([
@@ -559,6 +651,15 @@ function NewCoursePage() {
 
     // Função para criar curso
     async function handleCreateCourse() {
+        if (!selectedSegments.length) {
+            handleModalMessage({ isError: true, message: "Selecione ao menos um segmento escolar." });
+            return;
+        }
+        if (!newCourseData.series.length) {
+            handleModalMessage({ isError: true, message: "Selecione ao menos uma série." });
+            return;
+        }
+
         try {
             const payload = {
                 ...newCourseData,
@@ -810,51 +911,60 @@ function NewCoursePage() {
                                     />
                                 </div>
                                 <div className="input-wrapper">
-                                    <label htmlFor="courseSeries">Segmentos:*</label>
-                                    <div className="custom-multiselect" ref={seriesRef}>
+                                    <label htmlFor="courseSegments">Segmento Escolar:*</label>
+                                    <div className="custom-multiselect" ref={segmentsRef}>
                                         <button
                                             type="button"
                                             className="multiselect-trigger"
-                                            onClick={() => setIsSeriesOpen(prev => !prev)}
+                                            onClick={() => setIsSegmentsOpen(prev => !prev)}
                                         >
-                                            {(() => {
-                                                const seriesArray = Array.isArray(newCourseData?.series)
-                                                    ? newCourseData.series
-                                                    : [];
-
-                                                return seriesArray.length
-                                                    ? `${seriesArray.length} segmento(s) selecionado(s)`
-                                                    : "Selecionar segmentos";
-                                            })()}
+                                            {selectedSegments.length
+                                                ? `${selectedSegments.length} segmento(s) selecionado(s)`
+                                                : "Selecionar segmentos"}
                                         </button>
 
-                                        {isSeriesOpen && (
+                                        {isSegmentsOpen && (
                                             <div className="multiselect-popup">
                                                 {segments.map(segment => (
                                                     <label key={segment.value} className="multiselect-option">
                                                         <input
                                                             type="checkbox"
-                                                            checked={
-                                                                Array.isArray(newCourseData?.series)
-                                                                    ? newCourseData.series.includes(segment.value)
-                                                                    : false
-                                                            }
-                                                            onChange={() => {
-                                                                const current: string[] = Array.isArray(newCourseData?.series)
-                                                                    ? newCourseData.series
-                                                                    : [];
-
-                                                                const updated: string[] = current.includes(segment.value)
-                                                                    ? current.filter(v => v !== segment.value)
-                                                                    : [...current, segment.value];
-
-                                                                setNewCoursedata(prev => ({
-                                                                    ...prev!,
-                                                                    series: updated,
-                                                                }));
-                                                            }}
+                                                            checked={selectedSegments.includes(segment.value)}
+                                                            onChange={() => toggleSegmentSelection(segment.value)}
                                                         />
                                                         <span>{segment.label}</span>
+                                                    </label>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                                <div className="input-wrapper">
+                                    <label htmlFor="courseSeries">Séries:*</label>
+                                    <div className="custom-multiselect" ref={gradesRef}>
+                                        <button
+                                            type="button"
+                                            className="multiselect-trigger"
+                                            onClick={() => setIsGradesOpen(prev => !prev)}
+                                            disabled={!selectedSegments.length}
+                                        >
+                                            {!selectedSegments.length
+                                                ? "Selecione segmento(s)"
+                                                : newCourseData.series.length
+                                                    ? `${newCourseData.series.length} série(s) selecionada(s)`
+                                                    : "Selecionar séries"}
+                                        </button>
+
+                                        {isGradesOpen && selectedSegments.length > 0 && (
+                                            <div className="multiselect-popup">
+                                                {availableGrades.map(grade => (
+                                                    <label key={grade.value} className="multiselect-option">
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={newCourseData.series.includes(grade.value)}
+                                                            onChange={() => toggleGradeSelection(grade.value)}
+                                                        />
+                                                        <span>{grade.label}</span>
                                                     </label>
                                                 ))}
                                             </div>

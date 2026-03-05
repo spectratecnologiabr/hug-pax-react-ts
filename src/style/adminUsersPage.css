@@ -630,6 +630,19 @@
   gap: 10px;
 }
 
+.admin-users-page .sap-password-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+@media (max-width: 640px) {
+  .admin-users-page .sap-password-form-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 .admin-users-page .sap-secondary,
 .admin-users-page .sap-danger {
   border: none;
@@ -685,7 +698,7 @@
   border-radius: 14px;
   border: 1px solid #eef2f7;
   box-shadow: 0 24px 70px rgba(16, 24, 40, 0.25);
-  overflow: hidden;
+  overflow: visible;
 }
 
 .admin-users-page .sap-import-modal-card {
@@ -748,6 +761,7 @@
 
 .admin-users-page .sap-user-modal-body {
   padding: 16px 18px;
+  overflow: visible;
 }
 
 .admin-users-page .sap-user-form-grid {
@@ -795,6 +809,144 @@
   background: #f9fafb;
   color: #667085;
   cursor: not-allowed;
+}
+
+.admin-users-page .sap-user-multiselect {
+  position: relative;
+}
+
+.admin-users-page .sap-user-multiselect-trigger {
+  width: 100%;
+  border: 1px solid #e6ebf2;
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 13px;
+  color: #1e1e1e;
+  background: #ffffff;
+  text-align: left;
+  cursor: pointer;
+}
+
+.admin-users-page .sap-user-multiselect-trigger:focus {
+  outline: none;
+  border-color: #2b8ccf;
+  box-shadow: 0 0 0 3px rgba(43, 140, 207, 0.16);
+}
+
+.admin-users-page .sap-user-multiselect-trigger:disabled {
+  background: #f9fafb;
+  color: #667085;
+  cursor: not-allowed;
+}
+
+.admin-users-page .sap-user-multiselect-popup {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: auto;
+  width: max(100%, 260px);
+  max-width: calc(100vw - 48px);
+  max-height: 230px;
+  overflow-y: auto;
+  border: 1px solid #e6ebf2;
+  border-radius: 10px;
+  background: #ffffff;
+  box-shadow: 0 12px 24px rgba(16, 24, 40, 0.12);
+  padding: 6px;
+  z-index: 120;
+}
+
+.admin-users-page .sap-user-multiselect-popup label {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  text-align: left;
+}
+
+.admin-users-page .sap-user-multiselect-popup label:hover {
+  background: #f7fafc;
+}
+
+.admin-users-page .sap-user-form-grid .sap-user-multiselect .sap-user-multiselect-popup label {
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.admin-users-page .sap-user-multiselect-popup label span {
+  display: inline;
+  flex: 0 1 auto;
+  margin: 0;
+  font-size: 13px;
+  color: #2f3745;
+  font-weight: 500;
+  line-height: 1.35;
+  white-space: normal;
+  word-break: normal;
+  overflow-wrap: break-word;
+}
+
+.admin-users-page .sap-user-multiselect-popup input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  flex: 0 0 16px;
+  accent-color: #228bc3;
+}
+
+.admin-users-page .sap-user-single-select-popup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px;
+}
+
+.admin-users-page .sap-user-select-search {
+  width: 100%;
+  border: 1px solid #e6ebf2;
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 13px;
+  color: #1e1e1e;
+}
+
+.admin-users-page .sap-user-select-search:focus {
+  outline: none;
+  border-color: #2b8ccf;
+  box-shadow: 0 0 0 3px rgba(43, 140, 207, 0.16);
+}
+
+.admin-users-page .sap-user-single-select-option {
+  width: 100%;
+  border: none;
+  background: #ffffff;
+  color: #2f3745;
+  text-align: left;
+  padding: 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.admin-users-page .sap-user-single-select-option:hover {
+  background: #f7fafc;
+}
+
+.admin-users-page .sap-user-single-select-option.is-selected {
+  background: #eef6fc;
+  color: #11557e;
+  font-weight: 600;
+}
+
+.admin-users-page .sap-user-select-empty {
+  padding: 8px;
+  font-size: 13px;
+  color: #667085;
 }
 
 .admin-users-page .sap-user-modal-error {

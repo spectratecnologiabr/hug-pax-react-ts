@@ -23,10 +23,11 @@ type TDetailsModal = {
   log: TLogItem | null;
 };
 
-function normalizeLevel(level?: string): "info" | "warning" | "error" | "debug" {
+function normalizeLevel(level?: string): "info" | "warning" | "error" | "critical" | "debug" {
   const value = String(level ?? "").toLowerCase();
   if (value === "warn" || value === "warning") return "warning";
   if (value === "fatal" || value === "error") return "error";
+  if (value === "critical") return "critical";
   if (value === "debug") return "debug";
   return "info";
 }
@@ -34,6 +35,7 @@ function normalizeLevel(level?: string): "info" | "warning" | "error" | "debug" 
 function levelLabel(level?: string) {
   const normalized = normalizeLevel(level);
   if (normalized === "warning") return "Aviso";
+  if (normalized === "critical") return "Crítico";
   if (normalized === "error") return "Erro";
   if (normalized === "debug") return "Debug";
   return "Info";
@@ -132,10 +134,11 @@ function extractIp(log: TLogItem) {
 function AdminLogsPage() {
   const [logs, setLogs] = useState<TLogItem[]>([]);
   const [moduleOptions, setModuleOptions] = useState<string[]>([]);
-  const [levelOptions, setLevelOptions] = useState<Array<"info" | "warning" | "error" | "debug">>([
+  const [levelOptions, setLevelOptions] = useState<Array<"info" | "warning" | "error" | "critical" | "debug">>([
     "info",
     "warning",
     "error",
+    "critical",
     "debug",
   ]);
   const [loading, setLoading] = useState(true);
@@ -145,7 +148,7 @@ function AdminLogsPage() {
   const [dateTo, setDateTo] = useState("");
   const [limitFilter, setLimitFilter] = useState(50);
   const [moduleFilter, setModuleFilter] = useState("all");
-  const [levelFilter, setLevelFilter] = useState<"all" | "info" | "warning" | "error" | "debug">("all");
+  const [levelFilter, setLevelFilter] = useState<"all" | "info" | "warning" | "error" | "critical" | "debug">("all");
   const [detailsModal, setDetailsModal] = useState<TDetailsModal>({ open: false, log: null });
   const [detailsLoading, setDetailsLoading] = useState(false);
 
@@ -169,15 +172,25 @@ function AdminLogsPage() {
         }
 
         if (Array.isArray(levelsRaw)) {
-          const baseLevels: Array<"info" | "warning" | "error" | "debug"> = ["info", "warning", "error", "debug"];
-          setLevelOptions(baseLevels);
+          const allowed = new Set(["info", "warning", "error", "critical", "debug"]);
+          const mappedLevels = levelsRaw
+            .map((item: any) => String(item?.level ?? item?.value ?? item ?? "").trim().toLowerCase())
+            .filter((item: string): item is "info" | "warning" | "error" | "critical" | "debug" =>
+              allowed.has(item)
+            );
+
+          const nextLevels: Array<"info" | "warning" | "error" | "critical" | "debug"> = mappedLevels.length
+            ? mappedLevels
+            : ["info", "warning", "error", "critical", "debug"];
+
+          setLevelOptions(nextLevels);
         } else {
-          setLevelOptions(["info", "warning", "error", "debug"]);
+          setLevelOptions(["info", "warning", "error", "critical", "debug"]);
         }
       } catch (e) {
         if (!cancelled) {
           setModuleOptions([]);
-          setLevelOptions(["info", "warning", "error", "debug"]);
+          setLevelOptions(["info", "warning", "error", "critical", "debug"]);
         }
       }
     }
@@ -310,6 +323,7 @@ function AdminLogsPage() {
             {levelOptions.includes("info") && <option value="info">Info</option>}
             {levelOptions.includes("warning") && <option value="warning">Aviso</option>}
             {levelOptions.includes("error") && <option value="error">Erro</option>}
+            {levelOptions.includes("critical") && <option value="critical">Crítico</option>}
             {levelOptions.includes("debug") && <option value="debug">Debug</option>}
           </select>
         </div>

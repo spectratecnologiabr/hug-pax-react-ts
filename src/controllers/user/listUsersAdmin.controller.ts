@@ -37,6 +37,8 @@ export interface IAdminUserListItem {
   phone?: string
   language?: string
   collegeId?: number | null
+  collegeSegment?: string[] | null
+  collegeSeries?: string[] | null
   collegeName?: string
   createdAt?: string | null
   lastAccessAt?: string | null

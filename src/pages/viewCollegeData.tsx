@@ -238,7 +238,7 @@ function ViewCollegeData() {
                                     <input type="text" id="management" name="management" value={collegeData.management || ""} disabled/>
                                 </div>
                                 <div className="input-wrapper">
-                                    <label htmlFor="collegeSeries">Seguimento:*</label>
+                                    <label htmlFor="collegeSeries">Segmento Escolar:*</label>
                                     <div className="custom-multiselect" ref={seriesRef}>
                                         <button
                                             type="button"

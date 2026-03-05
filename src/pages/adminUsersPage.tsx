@@ -12,10 +12,12 @@ import { setUserVacationModeAdmin } from "../controllers/user/setUserVacationMod
 import { deleteUserAdmin } from "../controllers/user/deleteUserAdmin.controller";
 import { createUserAdmin, type ICreateUserAdminData } from "../controllers/user/createUserAdmin.controller";
 import { updateUserAdmin, type IUpdateUserAdminData } from "../controllers/user/updateUserAdmin.controller";
-import { importUsersAdmin, type IImportUsersAdminResponse } from "../controllers/user/importUsersAdmin.controller";
+import { importUsersAdmin, type IImportUsersAdminResponse, type ImportUsersMode } from "../controllers/user/importUsersAdmin.controller";
 import { listColleges } from "../controllers/college/listColleges.controller";
 import { listContracts } from "../controllers/contract/listContracts.controller";
 import { getUserAdmin } from "../controllers/user/getUserAdmin.controller";
+import { listTeachingModalitiesAdmin } from "../controllers/education/listTeachingModalitiesAdmin.controller";
+import { listTeachingGradesAdmin } from "../controllers/education/listTeachingGradesAdmin.controller";
 import iconTotal from "../img/adminUsers/shield.svg";
 import iconActive from "../img/adminUsers/shield-check.svg";
 import iconInactive from "../img/adminUsers/shield-minus.svg";
@@ -58,6 +60,8 @@ type User = {
   phone?: string;
   language?: string;
   collegeId?: number | null;
+  collegeSegment?: string[] | null;
+  collegeSeries?: string[] | null;
   collegeName?: string;
   createdAt?: string | null;
   lastAccessAt?: string | null;
@@ -82,6 +86,11 @@ type UserModalMode = "create" | "view" | "edit";
 type UserModalState = {
   open: boolean;
   mode: UserModalMode;
+  user: User | null;
+};
+
+type PasswordModalState = {
+  open: boolean;
   user: User | null;
 };
 
@@ -148,6 +157,33 @@ function normalizeManagement(value: unknown) {
   return String(value ?? "").trim();
 }
 
+function normalizeStringArray(value: unknown): string[] {
+  if (Array.isArray(value)) {
+    return value.map((item) => String(item ?? "").trim()).filter(Boolean);
+  }
+  if (typeof value === "string") {
+    const raw = value.trim();
+    if (!raw) return [];
+    try {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) {
+        return parsed.map((item) => String(item ?? "").trim()).filter(Boolean);
+      }
+    } catch {
+      return raw.split(",").map((item) => item.trim()).filter(Boolean);
+    }
+  }
+  return [];
+}
+
+function normalizeSearchableText(value: unknown) {
+  return String(value ?? "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
+}
+
 function sortCollegesByName<T extends { name?: string }>(items: T[]): T[] {
   return [...items].sort((a, b) =>
     String(a?.name ?? "").localeCompare(String(b?.name ?? ""), "pt-BR", { sensitivity: "base" })
@@ -185,6 +221,8 @@ function mapAdminUserToRow(user: IAdminUserListItem): User {
     phone: user.phone,
     language: user.language,
     collegeId: user.collegeId,
+    collegeSegment: normalizeStringArray(user.collegeSegment),
+    collegeSeries: normalizeStringArray(user.collegeSeries),
     collegeName: user.collegeName,
     createdAt: user.createdAt ?? null,
     lastAccessAt: user.lastAccessAt ?? null,
@@ -197,6 +235,9 @@ function mapAdminUserToRow(user: IAdminUserListItem): User {
 function AdminUsersPage() {
   const isMountedRef = useRef(true);
   const importFileRef = useRef<HTMLInputElement | null>(null);
+  const collegeSelectRef = useRef<HTMLDivElement | null>(null);
+  const segmentMultiselectRef = useRef<HTMLDivElement | null>(null);
+  const seriesMultiselectRef = useRef<HTMLDivElement | null>(null);
   const [summary, setSummary] = useState<Summary | null>(null);
   const [rows, setRows] = useState<User[]>([]);
   const [pagination, setPagination] = useState<PaginationState>({ page: 1, pageSize: 20, total: 0 });
@@ -214,16 +255,23 @@ function AdminUsersPage() {
   const [confirm, setConfirm] = useState<ConfirmState>({ open: false, action: null, user: null });
   const [confirmSubmitting, setConfirmSubmitting] = useState(false);
   const [confirmError, setConfirmError] = useState<string | null>(null);
+  const [passwordModal, setPasswordModal] = useState<PasswordModalState>({ open: false, user: null });
+  const [passwordModalSubmitting, setPasswordModalSubmitting] = useState(false);
+  const [passwordModalError, setPasswordModalError] = useState<string | null>(null);
+  const [passwordForm, setPasswordForm] = useState({ password: "", confirmPassword: "" });
   const [userModal, setUserModal] = useState<UserModalState>({ open: false, mode: "create", user: null });
   const [userModalSubmitting, setUserModalSubmitting] = useState(false);
   const [userModalError, setUserModalError] = useState<string | null>(null);
   const [userModalDetailsLoading, setUserModalDetailsLoading] = useState(false);
   const userModalRequestIdRef = useRef(0);
-  const [colleges, setColleges] = useState<Array<{ id: number; name: string; contractId?: number | null }>>([]);
+  const [colleges, setColleges] = useState<Array<{ id: number; name: string; contractId?: number | null; collegeSeries: string[] }>>([]);
   const [contracts, setContracts] = useState<Array<{ id: number; name: string }>>([]);
+  const [teachingModalities, setTeachingModalities] = useState<Array<{ id: number; name: string; isActive?: boolean }>>([]);
+  const [gradesBySegment, setGradesBySegment] = useState<Record<string, Array<{ value: string; label: string }>>>({});
   const [managementOptionsFromRegistry, setManagementOptionsFromRegistry] = useState<string[]>([]);
   const [collegesLoading, setCollegesLoading] = useState(false);
   const [contractsLoading, setContractsLoading] = useState(false);
+  const [teachingModalitiesLoading, setTeachingModalitiesLoading] = useState(false);
   const [userForm, setUserForm] = useState({
     firstName: "",
     lastName: "",
@@ -240,14 +288,21 @@ function AdminUsersPage() {
     language: "pt-BR",
     contractId: "" as "" | number,
     collegeId: "" as "" | number,
+    collegeSegment: [] as string[],
+    collegeSeries: [] as string[],
     management: "",
   });
   const [importModalOpen, setImportModalOpen] = useState(false);
   const [importUsersBuffer, setImportUsersBuffer] = useState<Array<Record<string, unknown>>>([]);
   const [importFileName, setImportFileName] = useState("");
+  const [importMode, setImportMode] = useState<ImportUsersMode>("upsert");
   const [importSubmitting, setImportSubmitting] = useState(false);
   const [importResult, setImportResult] = useState<IImportUsersAdminResponse | null>(null);
   const [importError, setImportError] = useState<string | null>(null);
+  const [collegeSelectOpen, setCollegeSelectOpen] = useState(false);
+  const [collegeSearch, setCollegeSearch] = useState("");
+  const [segmentMultiselectOpen, setSegmentMultiselectOpen] = useState(false);
+  const [seriesMultiselectOpen, setSeriesMultiselectOpen] = useState(false);
 
   const loadColleges = useCallback(async () => {
     if (collegesLoading) return;
@@ -261,6 +316,7 @@ function AdminUsersPage() {
               id: Number(item?.id),
               name: String(item?.name ?? ""),
               contractId: Number(item?.contractId ?? item?.contract_id) || null,
+              collegeSeries: normalizeStringArray(item?.collegeSeries ?? item?.college_series),
             }))
           )
         );
@@ -275,6 +331,7 @@ function AdminUsersPage() {
               id: Number(item?.id),
               name: String(item?.name ?? ""),
               contractId: Number(item?.contractId ?? item?.contract_id) || null,
+              collegeSeries: normalizeStringArray(item?.collegeSeries ?? item?.college_series),
             }))
           )
         );
@@ -314,6 +371,55 @@ function AdminUsersPage() {
       setContractsLoading(false);
     }
   }, [contractsLoading]);
+
+  const loadTeachingModalities = useCallback(async () => {
+    if (teachingModalitiesLoading) return;
+    setTeachingModalitiesLoading(true);
+    try {
+      const response = await listTeachingModalitiesAdmin();
+      const payload = Array.isArray(response?.data)
+        ? response.data
+        : Array.isArray(response)
+          ? response
+          : [];
+
+      const mappedModalities: Array<{ id: number; name: string; isActive?: boolean }> = payload.map((item: any) => ({
+        id: Number(item?.id),
+        name: String(item?.name ?? ""),
+        isActive: item?.isActive ?? item?.is_active,
+      }));
+      setTeachingModalities(mappedModalities);
+
+      const activeModalities = mappedModalities.filter((item) => item.isActive !== false && Number.isFinite(item.id) && item.id > 0);
+      const gradesEntries = await Promise.all(
+        activeModalities.map(async (modality) => {
+          try {
+            const gradesResp = await listTeachingGradesAdmin(modality.id);
+            const gradesPayload = Array.isArray(gradesResp?.data)
+              ? gradesResp.data
+              : Array.isArray(gradesResp)
+                ? gradesResp
+                : [];
+            const options = gradesPayload.map((grade: any) => ({
+              value: String(grade?.id),
+              label: String(grade?.name ?? `Série ${grade?.id}`),
+            }));
+            return [String(modality.id), options] as const;
+          } catch {
+            return [String(modality.id), []] as const;
+          }
+        })
+      );
+
+      setGradesBySegment(Object.fromEntries(gradesEntries));
+    } catch (error) {
+      console.error("Erro ao carregar segmentos escolares", error);
+      setTeachingModalities([]);
+      setGradesBySegment({});
+    } finally {
+      setTeachingModalitiesLoading(false);
+    }
+  }, [teachingModalitiesLoading]);
 
   useEffect(() => {
     let alive = true;
@@ -519,6 +625,8 @@ function AdminUsersPage() {
         setUserModal({ open: false, mode: "create", user: null });
         setUserModalError(null);
         setUserModalDetailsLoading(false);
+        setCollegeSelectOpen(false);
+        setCollegeSearch("");
       }
     };
     document.addEventListener("keydown", onKeyDown);
@@ -529,9 +637,14 @@ function AdminUsersPage() {
     setUserModalError(null);
     setUserModalSubmitting(false);
     setUserModalDetailsLoading(false);
+    setCollegeSelectOpen(false);
+    setCollegeSearch("");
+    setSegmentMultiselectOpen(false);
+    setSeriesMultiselectOpen(false);
     setUserModal({ open: true, mode, user: user ?? null });
     loadColleges();
     loadContracts();
+    loadTeachingModalities();
 
     if (mode === "create") {
       setUserForm({
@@ -550,6 +663,8 @@ function AdminUsersPage() {
         language: "pt-BR",
         contractId: "",
         collegeId: "",
+        collegeSegment: [],
+        collegeSeries: [],
         management: "",
       });
       return;
@@ -572,6 +687,8 @@ function AdminUsersPage() {
       language: user?.language ?? "pt-BR",
       contractId: "",
       collegeId: typeof user?.collegeId === "number" ? user.collegeId : "",
+      collegeSegment: normalizeStringArray(user?.collegeSegment),
+      collegeSeries: normalizeStringArray(user?.collegeSeries),
       management: user?.management ?? "",
     });
 
@@ -611,6 +728,8 @@ function AdminUsersPage() {
           language: String(adminUser?.language ?? prev.language ?? "pt-BR"),
           contractId: prev.contractId,
           collegeId: typeof adminUser?.collegeId === "number" ? adminUser.collegeId : prev.collegeId,
+          collegeSegment: normalizeStringArray(adminUser?.collegeSegment ?? adminUser?.college_segment ?? prev.collegeSegment),
+          collegeSeries: normalizeStringArray(adminUser?.collegeSeries ?? adminUser?.college_series ?? prev.collegeSeries),
           management: String(adminUser?.management ?? prev.management ?? ""),
         }));
       })
@@ -631,13 +750,38 @@ function AdminUsersPage() {
     setUserModalError(null);
     setUserModalSubmitting(false);
     setUserModalDetailsLoading(false);
+    setCollegeSelectOpen(false);
+    setCollegeSearch("");
+    setSegmentMultiselectOpen(false);
+    setSeriesMultiselectOpen(false);
     userModalRequestIdRef.current += 1;
+  }
+
+  function toggleCollegeSegment(value: string) {
+    setUserForm((prev) => {
+      const current = Array.isArray(prev.collegeSegment) ? prev.collegeSegment : [];
+      const next = current.includes(value)
+        ? current.filter((item) => item !== value)
+        : [...current, value];
+      return { ...prev, collegeSegment: next };
+    });
+  }
+
+  function toggleCollegeSeries(value: string) {
+    setUserForm((prev) => {
+      const current = Array.isArray(prev.collegeSeries) ? prev.collegeSeries : [];
+      const next = current.includes(value)
+        ? current.filter((item) => item !== value)
+        : [...current, value];
+      return { ...prev, collegeSeries: next };
+    });
   }
 
   function openImportModal() {
     setImportModalOpen(true);
     setImportUsersBuffer([]);
     setImportFileName("");
+    setImportMode("upsert");
     setImportSubmitting(false);
     setImportResult(null);
     setImportError(null);
@@ -692,7 +836,7 @@ function AdminUsersPage() {
     setImportError(null);
 
     try {
-      const result = await importUsersAdmin({ users: importUsersBuffer });
+      const result = await importUsersAdmin({ users: importUsersBuffer, mode: importMode });
       setImportResult(result);
       await loadUsers();
     } catch (error: any) {
@@ -705,9 +849,9 @@ function AdminUsersPage() {
 
   function handleDownloadTemplateCsv() {
     const csvTemplate = [
-      "nome;sobrenome;email;perfil;status;senha;escola;rede",
-      "Joao;Silva;joao.silva@exemplo.com;educator;active;;Escola Exemplo;",
-      "Maria;Souza;maria.souza@exemplo.com;consultant;active;;;Rede Sul"
+      "id;nome;email;perfil;status;senha;escola;escolaId;contractId;contratoId;rede;segmento;series;tipoDocumento;numeroDocumento;dataNascimento;genero;telefone;idioma;isActive;isBlocked",
+      ";Joao Silva;joao.silva@exemplo.com;educator;active;;Escola Exemplo;;12;12;Rede Norte;1,2;5,6;cpf;12345678901;1989-10-12;male;11999999999;pt-BR;true;false",
+      "42;Maria Souza;maria.souza@exemplo.com;consultant;inactive;;;;15;15;Rede Sul;;;;;;;female;21988888888;pt-BR;false;false"
     ].join("\n");
 
     const blob = new Blob([csvTemplate], { type: "text/csv;charset=utf-8;" });
@@ -731,6 +875,53 @@ function AdminUsersPage() {
     setConfirmError(null);
     setConfirmSubmitting(false);
     setConfirm({ open: false, action: null, user: null });
+  }
+
+  function openPasswordModal(user: User) {
+    setPasswordModal({ open: true, user });
+    setPasswordModalSubmitting(false);
+    setPasswordModalError(null);
+    setPasswordForm({ password: "", confirmPassword: "" });
+  }
+
+  function closePasswordModal() {
+    if (passwordModalSubmitting) return;
+    setPasswordModal({ open: false, user: null });
+    setPasswordModalSubmitting(false);
+    setPasswordModalError(null);
+    setPasswordForm({ password: "", confirmPassword: "" });
+  }
+
+  async function handleSubmitPasswordModal() {
+    const targetUser = passwordModal.user;
+    if (!targetUser) return;
+
+    const nextPassword = String(passwordForm.password ?? "").trim();
+    const confirmPassword = String(passwordForm.confirmPassword ?? "").trim();
+
+    if (nextPassword.length < 8) {
+      setPasswordModalError("A senha deve ter pelo menos 8 caracteres.");
+      return;
+    }
+
+    if (nextPassword !== confirmPassword) {
+      setPasswordModalError("A confirmação de senha não confere.");
+      return;
+    }
+
+    setPasswordModalSubmitting(true);
+    setPasswordModalError(null);
+
+    try {
+      await updateUserAdmin(targetUser.id, { password: nextPassword });
+      closePasswordModal();
+      await loadUsers();
+    } catch (error: any) {
+      const message = String(error?.response?.data?.message ?? "").trim();
+      setPasswordModalError(message || "Não foi possível alterar a senha. Tente novamente.");
+    } finally {
+      setPasswordModalSubmitting(false);
+    }
   }
 
   const confirmTitle =
@@ -791,6 +982,12 @@ function AdminUsersPage() {
     const phone = userForm.phone?.trim() || undefined;
     const language = userForm.language?.trim() || undefined;
     const collegeId = role === "educator" ? (userForm.collegeId === "" ? null : userForm.collegeId) : null;
+    const collegeSegment = role === "educator"
+      ? (Array.isArray(userForm.collegeSegment) && userForm.collegeSegment.length ? userForm.collegeSegment : null)
+      : null;
+    const collegeSeries = role === "educator"
+      ? (Array.isArray(userForm.collegeSeries) && userForm.collegeSeries.length ? userForm.collegeSeries : null)
+      : null;
     const management = userForm.management?.trim() || null;
 
     if (!firstName || !lastName || !email || !role) {
@@ -800,6 +997,11 @@ function AdminUsersPage() {
 
     if ((role === "consultant" || role === "coordinator" || role === "specialist_consultant") && !management) {
       setUserModalError("Rede é obrigatória para consultor, coordenador e consultor especialista.");
+      return;
+    }
+
+    if (role === "educator" && collegeId && availableCollegeSegments.length > 0 && (!collegeSegment || collegeSegment.length === 0)) {
+      setUserModalError("Selecione ao menos um segmento escolar do educador.");
       return;
     }
 
@@ -828,6 +1030,8 @@ function AdminUsersPage() {
           phone,
           language,
           collegeId,
+          collegeSegment,
+          collegeSeries,
           management,
         };
         await createUserAdmin(payload);
@@ -846,6 +1050,8 @@ function AdminUsersPage() {
           phone,
           language,
           collegeId,
+          collegeSegment,
+          collegeSeries,
           management,
         };
         await updateUserAdmin(userModal.user.id, payload);
@@ -874,7 +1080,7 @@ function AdminUsersPage() {
   }
 
   const collegesById = useMemo(() => {
-    const map = new Map<number, { id: number; name: string; contractId?: number | null }>();
+    const map = new Map<number, { id: number; name: string; contractId?: number | null; collegeSeries: string[] }>();
     colleges.forEach((item) => map.set(item.id, item));
     return map;
   }, [colleges]);
@@ -884,6 +1090,55 @@ function AdminUsersPage() {
     if (!Number.isFinite(selectedContractId) || selectedContractId <= 0) return colleges;
     return colleges.filter((item) => Number(item.contractId) === selectedContractId);
   }, [colleges, userForm.contractId]);
+
+  const collegeSearchResults = useMemo(() => {
+    const term = normalizeSearchableText(collegeSearch);
+    if (!term) return filteredColleges;
+    return filteredColleges.filter((item) => normalizeSearchableText(item.name).includes(term));
+  }, [collegeSearch, filteredColleges]);
+
+  const availableCollegeSegments = useMemo(() => {
+    const collegeId = Number(userForm.collegeId);
+    if (!Number.isFinite(collegeId) || collegeId <= 0) return [] as Array<{ value: string; label: string }>;
+
+    const college = collegesById.get(collegeId);
+    const segmentIds = Array.isArray(college?.collegeSeries) ? college!.collegeSeries : [];
+    if (!segmentIds.length) return [];
+
+    const modalitiesMap = new Map<string, { id: number; name: string; isActive?: boolean }>();
+    teachingModalities.forEach((item) => {
+      if (Number.isFinite(Number(item.id)) && Number(item.id) > 0) {
+        modalitiesMap.set(String(item.id), item);
+      }
+    });
+
+    return segmentIds.map((segmentId) => {
+      const modality = modalitiesMap.get(String(segmentId));
+      return {
+        value: String(segmentId),
+        label: modality?.name || `Segmento ${segmentId}`,
+      };
+    });
+  }, [collegesById, teachingModalities, userForm.collegeId]);
+
+  const availableCollegeSeries = useMemo(() => {
+    const selectedSegments = Array.isArray(userForm.collegeSegment) ? userForm.collegeSegment : [];
+    if (!selectedSegments.length) return [] as Array<{ value: string; label: string }>;
+
+    const seen = new Set<string>();
+    const series: Array<{ value: string; label: string }> = [];
+
+    selectedSegments.forEach((segmentId) => {
+      const options = gradesBySegment[String(segmentId)] || [];
+      options.forEach((option) => {
+        if (seen.has(option.value)) return;
+        seen.add(option.value);
+        series.push(option);
+      });
+    });
+
+    return series;
+  }, [gradesBySegment, userForm.collegeSegment]);
 
   useEffect(() => {
     if (userForm.role !== "educator") return;
@@ -919,6 +1174,72 @@ function AdminUsersPage() {
       setUserForm((prev) => ({ ...prev, collegeId: "" }));
     }
   }, [collegesById, userForm.contractId, userForm.collegeId, userForm.role]);
+
+  useEffect(() => {
+    if (userForm.role !== "educator") {
+      const hasSegments = Array.isArray(userForm.collegeSegment) && userForm.collegeSegment.length > 0;
+      const hasSeries = Array.isArray(userForm.collegeSeries) && userForm.collegeSeries.length > 0;
+      if (hasSegments || hasSeries) {
+        setUserForm((prev) => ({ ...prev, collegeSegment: [], collegeSeries: [] }));
+      }
+      return;
+    }
+
+    const current = Array.isArray(userForm.collegeSegment) ? userForm.collegeSegment : [];
+    if (!current.length) return;
+    const allowed = new Set(availableCollegeSegments.map((item) => item.value));
+    const filtered = current.filter((item) => allowed.has(item));
+    if (filtered.length !== current.length) {
+      setUserForm((prev) => ({ ...prev, collegeSegment: filtered }));
+    }
+  }, [availableCollegeSegments, userForm.collegeSegment, userForm.collegeSeries, userForm.role]);
+
+  useEffect(() => {
+    if (userForm.role !== "educator") return;
+    const current = Array.isArray(userForm.collegeSeries) ? userForm.collegeSeries : [];
+    if (!current.length) return;
+    const allowed = new Set(availableCollegeSeries.map((item) => item.value));
+    const filtered = current.filter((item) => allowed.has(item));
+    if (filtered.length !== current.length) {
+      setUserForm((prev) => ({ ...prev, collegeSeries: filtered }));
+    }
+  }, [availableCollegeSeries, userForm.collegeSeries, userForm.role]);
+
+  useEffect(() => {
+    if (!segmentMultiselectOpen) return;
+    const handleMouseDown = (event: MouseEvent) => {
+      if (!segmentMultiselectRef.current) return;
+      if (!segmentMultiselectRef.current.contains(event.target as Node)) {
+        setSegmentMultiselectOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleMouseDown);
+    return () => document.removeEventListener("mousedown", handleMouseDown);
+  }, [segmentMultiselectOpen]);
+
+  useEffect(() => {
+    if (!collegeSelectOpen) return;
+    const handleMouseDown = (event: MouseEvent) => {
+      if (!collegeSelectRef.current) return;
+      if (!collegeSelectRef.current.contains(event.target as Node)) {
+        setCollegeSelectOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleMouseDown);
+    return () => document.removeEventListener("mousedown", handleMouseDown);
+  }, [collegeSelectOpen]);
+
+  useEffect(() => {
+    if (!seriesMultiselectOpen) return;
+    const handleMouseDown = (event: MouseEvent) => {
+      if (!seriesMultiselectRef.current) return;
+      if (!seriesMultiselectRef.current.contains(event.target as Node)) {
+        setSeriesMultiselectOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleMouseDown);
+    return () => document.removeEventListener("mousedown", handleMouseDown);
+  }, [seriesMultiselectOpen]);
 
   return (
     <div className="admin-dashboard-container">
@@ -1190,6 +1511,16 @@ function AdminUsersPage() {
                   >
                     Editar
                   </button>
+                  <button
+                    className="sap-actions-item"
+                    role="menuitem"
+                    onClick={() => {
+                      setOpenActionsUserId(null);
+                      openPasswordModal(user);
+                    }}
+                  >
+                    Alterar senha
+                  </button>
                   <div className="sap-actions-sep" role="separator" />
                   <button
                     className="sap-actions-item"
@@ -1300,6 +1631,70 @@ function AdminUsersPage() {
             </div>
           )}
 
+          {passwordModal.open && passwordModal.user && (
+            <div
+              className="sap-modal-overlay"
+              role="dialog"
+              aria-modal="true"
+              onMouseDown={e => {
+                if (e.target === e.currentTarget) closePasswordModal();
+              }}
+            >
+              <div className="sap-modal-card">
+                <div className="sap-modal-header">
+                  <b>Alterar senha</b>
+                  <button className="sap-modal-close" onClick={closePasswordModal} aria-label="Fechar" disabled={passwordModalSubmitting}>
+                    ×
+                  </button>
+                </div>
+                <div className="sap-modal-body">
+                  <div className="sap-modal-user">
+                    <div className="sap-avatar" aria-hidden="true">
+                      {getInitials(passwordModal.user.name)}
+                    </div>
+                    <div className="sap-modal-user-meta">
+                      <b>{passwordModal.user.name}</b>
+                      <span>{passwordModal.user.email}</span>
+                    </div>
+                  </div>
+
+                  <div className="sap-password-form-grid">
+                    <label className="sap-user-field">
+                      <span>Nova senha</span>
+                      <input
+                        type="password"
+                        value={passwordForm.password}
+                        onChange={e => setPasswordForm(prev => ({ ...prev, password: e.target.value }))}
+                        disabled={passwordModalSubmitting}
+                        placeholder="Digite a nova senha"
+                      />
+                    </label>
+                    <label className="sap-user-field">
+                      <span>Confirmar senha</span>
+                      <input
+                        type="password"
+                        value={passwordForm.confirmPassword}
+                        onChange={e => setPasswordForm(prev => ({ ...prev, confirmPassword: e.target.value }))}
+                        disabled={passwordModalSubmitting}
+                        placeholder="Confirme a nova senha"
+                      />
+                    </label>
+                  </div>
+
+                  {passwordModalError && <div className="sap-modal-error">{passwordModalError}</div>}
+                </div>
+                <div className="sap-modal-actions">
+                  <button className="sap-secondary" onClick={closePasswordModal} disabled={passwordModalSubmitting}>
+                    Cancelar
+                  </button>
+                  <button className="sap-primary" onClick={handleSubmitPasswordModal} disabled={passwordModalSubmitting}>
+                    {passwordModalSubmitting ? "Salvando..." : "Salvar nova senha"}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
           {importModalOpen && (
             <div
               className="sap-user-modal-overlay"
@@ -1323,7 +1718,24 @@ function AdminUsersPage() {
                 </div>
                 <div className="sap-modal-body">
                   <p className="sap-modal-desc" style={{ marginTop: 0 }}>
-                    Envie um arquivo `.csv` ou `.json` com os usuários. Colunas comuns: nome, sobrenome, email, perfil, status, senha, escola, rede.
+                    Envie um arquivo `.csv` ou `.json` com os usuários. Você pode criar, atualizar ou usar modo híbrido (upsert).
+                  </p>
+
+                  <label className="sap-user-field" style={{ maxWidth: 360 }}>
+                    <span>Modo de importação</span>
+                    <select
+                      value={importMode}
+                      onChange={(e) => setImportMode(e.target.value as ImportUsersMode)}
+                      disabled={importSubmitting}
+                    >
+                      <option value="upsert">Criar e atualizar (upsert)</option>
+                      <option value="create">Somente criar novos</option>
+                      <option value="update">Somente atualizar existentes</option>
+                    </select>
+                  </label>
+
+                  <p className="sap-modal-desc" style={{ marginTop: 8 }}>
+                    Colunas suportadas: `id`, `email`, `nome` (aceita nome completo), `sobrenome` (opcional), `perfil`, `status`, `senha`, `escola`/`escolaId`, `contractId`/`contratoId`, `rede`, `segmento`, `series`, `tipoDocumento`, `numeroDocumento`, `dataNascimento`, `genero`, `telefone`, `idioma`, `isActive`, `isBlocked`.
                   </p>
 
                   <input
@@ -1362,6 +1774,7 @@ function AdminUsersPage() {
                       <div className="sap-import-summary">
                         <span>Total: {importResult.summary.total}</span>
                         <span>Criados: {importResult.summary.created}</span>
+                        <span>Atualizados: {importResult.summary.updated}</span>
                         <span>Falhas: {importResult.summary.failed}</span>
                       </div>
 
@@ -1556,11 +1969,15 @@ function AdminUsersPage() {
                         value={userForm.role}
                         onChange={e => {
                           const role = e.target.value as AdminUserRole;
+                          setCollegeSelectOpen(false);
+                          setCollegeSearch("");
                           setUserForm(s => ({
                             ...s,
                             role,
                             contractId: role === "educator" ? s.contractId : "",
                             collegeId: role === "educator" ? s.collegeId : "",
+                            collegeSegment: role === "educator" ? s.collegeSegment : [],
+                            collegeSeries: role === "educator" ? s.collegeSeries : [],
                           }));
                         }}
                         disabled={userModal.mode === "view" || userModalSubmitting || userModalDetailsLoading}
@@ -1578,13 +1995,17 @@ function AdminUsersPage() {
                         <span>Contrato</span>
                         <select
                           value={userForm.contractId === "" ? "" : String(userForm.contractId)}
-                          onChange={e =>
+                          onChange={e => {
+                            setCollegeSelectOpen(false);
+                            setCollegeSearch("");
                             setUserForm(s => ({
                               ...s,
                               contractId: e.target.value ? Number(e.target.value) : "",
                               collegeId: "",
-                            }))
-                          }
+                              collegeSegment: [],
+                              collegeSeries: [],
+                            }));
+                          }}
                           disabled={userModal.mode === "view" || userModalSubmitting || userModalDetailsLoading || contractsLoading}
                         >
                           <option value="">{contractsLoading ? "Carregando..." : "Selecionar"}</option>
@@ -1598,26 +2019,160 @@ function AdminUsersPage() {
                     )}
 
                     {userForm.role === "educator" && (
-                      <label className="sap-user-field">
+                      <div className="sap-user-field sap-user-multiselect" ref={collegeSelectRef}>
                         <span>Escola</span>
-                        <select
-                          value={userForm.collegeId === "" ? "" : String(userForm.collegeId)}
-                          onChange={e =>
-                            setUserForm(s => ({
-                              ...s,
-                              collegeId: e.target.value ? Number(e.target.value) : "",
-                            }))
-                          }
+                        <button
+                          type="button"
+                          className="sap-user-multiselect-trigger"
+                          onClick={() => setCollegeSelectOpen((prev) => !prev)}
                           disabled={userModal.mode === "view" || userModalSubmitting || userModalDetailsLoading || collegesLoading}
                         >
-                          <option value="">{collegesLoading ? "Carregando..." : "Selecionar"}</option>
-                          {filteredColleges.map(c => (
-                            <option key={c.id} value={String(c.id)}>
-                              {c.name}
-                            </option>
-                          ))}
-                        </select>
-                      </label>
+                          {collegesLoading
+                            ? "Carregando..."
+                            : Number(userForm.collegeId) > 0
+                              ? (collegesById.get(Number(userForm.collegeId))?.name || "Escola selecionada")
+                              : "Selecionar escola"}
+                        </button>
+                        {collegeSelectOpen && !collegesLoading ? (
+                          <div className="sap-user-multiselect-popup sap-user-single-select-popup">
+                            <input
+                              className="sap-user-select-search"
+                              value={collegeSearch}
+                              onChange={(e) => setCollegeSearch(e.target.value)}
+                              placeholder="Buscar escola..."
+                            />
+                            <button
+                              type="button"
+                              className={`sap-user-single-select-option ${!Number(userForm.collegeId) ? "is-selected" : ""}`}
+                              onClick={() => {
+                                setUserForm((s) => ({
+                                  ...s,
+                                  collegeId: "",
+                                  collegeSegment: [],
+                                  collegeSeries: [],
+                                }));
+                                setCollegeSelectOpen(false);
+                              }}
+                            >
+                              Selecionar
+                            </button>
+                            {collegeSearchResults.length ? (
+                              collegeSearchResults.map((c) => (
+                                <button
+                                  key={c.id}
+                                  type="button"
+                                  className={`sap-user-single-select-option ${Number(userForm.collegeId) === c.id ? "is-selected" : ""}`}
+                                  onClick={() => {
+                                    setUserForm((s) => ({
+                                      ...s,
+                                      collegeId: c.id,
+                                      collegeSegment: [],
+                                      collegeSeries: [],
+                                    }));
+                                    setCollegeSelectOpen(false);
+                                  }}
+                                >
+                                  {c.name}
+                                </button>
+                              ))
+                            ) : (
+                              <div className="sap-user-select-empty">Nenhuma escola encontrada</div>
+                            )}
+                          </div>
+                        ) : null}
+                      </div>
+                    )}
+
+                    {userForm.role === "educator" && (
+                      <div className="sap-user-field sap-user-multiselect" ref={segmentMultiselectRef}>
+                        <span>Segmento Escolar</span>
+                        <button
+                          type="button"
+                          className="sap-user-multiselect-trigger"
+                          onClick={() => setSegmentMultiselectOpen((prev) => !prev)}
+                          disabled={
+                            userModal.mode === "view" ||
+                            userModalSubmitting ||
+                            userModalDetailsLoading ||
+                            teachingModalitiesLoading ||
+                            !Number(userForm.collegeId)
+                          }
+                        >
+                          {teachingModalitiesLoading
+                            ? "Carregando..."
+                            : Number(userForm.collegeId) > 0
+                              ? (availableCollegeSegments.length
+                                ? (userForm.collegeSegment.length
+                                  ? `${userForm.collegeSegment.length} segmento(s) escolar(es)`
+                                  : "Selecionar segmentos")
+                                : "Escola sem segmentos")
+                              : "Selecione uma escola"}
+                        </button>
+
+                        {segmentMultiselectOpen && Number(userForm.collegeId) > 0 && availableCollegeSegments.length > 0 ? (
+                          <div className="sap-user-multiselect-popup">
+                            {availableCollegeSegments.map((segment) => (
+                              <label key={segment.value}>
+                                <input
+                                  type="checkbox"
+                                  checked={userForm.collegeSegment.includes(segment.value)}
+                                  onChange={() => toggleCollegeSegment(segment.value)}
+                                  disabled={userModal.mode === "view" || userModalSubmitting || userModalDetailsLoading}
+                                />
+                                <span>{segment.label}</span>
+                              </label>
+                            ))}
+                          </div>
+                        ) : null}
+                      </div>
+                    )}
+
+                    {userForm.role === "educator" && (
+                      <div className="sap-user-field sap-user-multiselect" ref={seriesMultiselectRef}>
+                        <span>Séries</span>
+                        <button
+                          type="button"
+                          className="sap-user-multiselect-trigger"
+                          onClick={() => setSeriesMultiselectOpen((prev) => !prev)}
+                          disabled={
+                            userModal.mode === "view" ||
+                            userModalSubmitting ||
+                            userModalDetailsLoading ||
+                            teachingModalitiesLoading ||
+                            !Number(userForm.collegeId) ||
+                            availableCollegeSegments.length === 0 ||
+                            userForm.collegeSegment.length === 0
+                          }
+                        >
+                          {teachingModalitiesLoading
+                            ? "Carregando..."
+                            : Number(userForm.collegeId) <= 0
+                              ? "Selecione uma escola"
+                              : userForm.collegeSegment.length === 0
+                                ? "Selecione segmento(s)"
+                                : availableCollegeSeries.length
+                                  ? (userForm.collegeSeries.length
+                                    ? `${userForm.collegeSeries.length} série(s) selecionada(s)`
+                                    : "Selecionar séries")
+                                  : "Sem séries para os segmentos"}
+                        </button>
+
+                        {seriesMultiselectOpen && availableCollegeSeries.length > 0 ? (
+                          <div className="sap-user-multiselect-popup">
+                            {availableCollegeSeries.map((series) => (
+                              <label key={series.value}>
+                                <input
+                                  type="checkbox"
+                                  checked={userForm.collegeSeries.includes(series.value)}
+                                  onChange={() => toggleCollegeSeries(series.value)}
+                                  disabled={userModal.mode === "view" || userModalSubmitting || userModalDetailsLoading}
+                                />
+                                <span>{series.label}</span>
+                              </label>
+                            ))}
+                          </div>
+                        ) : null}
+                      </div>
                     )}
 
                     {(userForm.role === "coordinator" || userForm.role === "specialist_consultant" || userForm.role === "consultant" || userForm.role === "educator") && (
@@ -1785,13 +2340,21 @@ function normalizeImportHeader(rawHeader: string): string {
     .replace(/[^a-z0-9]/g, "");
 
   if (normalized === "nome") return "firstName";
+  if (normalized === "firstname") return "firstName";
   if (normalized === "sobrenome") return "lastName";
+  if (normalized === "lastname") return "lastName";
+  if (normalized === "id" || normalized === "userid" || normalized === "usuarioid") return "id";
   if (normalized === "email") return "email";
   if (normalized === "perfil") return "role";
+  if (normalized === "role") return "role";
   if (normalized === "status") return "status";
   if (normalized === "senha") return "password";
+  if (normalized === "password") return "password";
   if (normalized === "escola" || normalized === "college") return "escola";
   if (normalized === "escolaid" || normalized === "collegeid") return "collegeId";
+  if (normalized === "contractid" || normalized === "contratoid") return "contractId";
+  if (normalized === "segmento" || normalized === "segmentoescola" || normalized === "collegesegment") return "collegeSegment";
+  if (normalized === "serie" || normalized === "series" || normalized === "serieescola" || normalized === "seriesescola" || normalized === "collegeseries") return "collegeSeries";
   if (normalized === "gerencia" || normalized === "regional" || normalized === "rede") return "management";
   if (normalized === "tipodocumento") return "docType";
   if (normalized === "numerodocumento" || normalized === "docid") return "docId";
@@ -1799,6 +2362,8 @@ function normalizeImportHeader(rawHeader: string): string {
   if (normalized === "genero") return "gender";
   if (normalized === "telefone") return "phone";
   if (normalized === "idioma") return "language";
+  if (normalized === "isactive" || normalized === "ativo" || normalized === "active") return "isActive";
+  if (normalized === "isblocked" || normalized === "bloqueado" || normalized === "blocked") return "isBlocked";
 
   return cleaned;
 }

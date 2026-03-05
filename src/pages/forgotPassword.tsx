@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import axios from "axios";
 import requestPasswordRecovery from "../controllers/user/requestPasswordRecovery.controller";
 
 import Footer from "../components/footer";
@@ -16,18 +17,31 @@ function ForgotPassword() {
         e.preventDefault()
         const email = (document.getElementById("emailEl") as HTMLInputElement).value;
 
-        await requestPasswordRecovery(email)
-                .then(response => {
-                    if(response.message) {
-                        setMessage(`Enviamos um email com instruções para ${email}.`);
-                        setModalErrorOpen(true);
+        try {
+            const response = await requestPasswordRecovery(email);
+            if(response.message) {
+                setMessage(`Enviamos um email com instruções para ${email}.`);
+                setIsError(false);
+                setModalErrorOpen(true);
 
-                        setTimeout(() => {
-                            setModalErrorOpen(false);
-                            window.location.pathname = "/login"
-                        }, 5000)
-                    }
-                })
+                setTimeout(() => {
+                    setModalErrorOpen(false);
+                    window.location.pathname = "/login"
+                }, 5000)
+            }
+        } catch (error) {
+            const apiMessage = axios.isAxiosError(error)
+                ? String(error.response?.data?.message || "")
+                : "";
+
+            setMessage(apiMessage || "Não foi possível enviar o e-mail de recuperação. Tente novamente.");
+            setIsError(true);
+            setModalErrorOpen(true);
+
+            setTimeout(() => {
+                setModalErrorOpen(false);
+            }, 5000)
+        }
     }
 
     return (

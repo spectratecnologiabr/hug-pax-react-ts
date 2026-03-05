@@ -444,11 +444,67 @@
 
 @media (max-width: 769px) {
     .dashboard-container {
+        padding: 16px;
+        gap: 16px;
         justify-content: center;
     }
 
     .dashboard-container .dashboard-wrapper {
         margin-left: unset;
         margin-top: 100px;
+        gap: 16px;
+    }
+
+    .dashboard-container .main-dash-wrapper {
+        gap: 14px;
+        grid-auto-rows: minmax(40px, auto);
+    }
+
+    .dashboard-container .main-dash-wrapper .greatings-card {
+        flex-wrap: wrap;
+    }
+
+    .dashboard-container .main-dash-wrapper .greatings-card .wrapper .main-greating {
+        font-size: 30px;
+    }
+
+    .dashboard-container .main-dash-wrapper .greatings-card .wrapper span:not(#nomeAluno) {
+        font-size: 16px;
+    }
+
+    .dashboard-container .main-dash-wrapper .greatings-card .wrapper #percentage {
+        font-size: 40px;
+    }
+
+    .dashboard-container .main-dash-wrapper .greatings-card .wrapper img {
+        width: 120px;
+    }
+
+    .dashboard-container .main-dash-wrapper .search-wrapper,
+    .dashboard-container .main-dash-wrapper .last-courses,
+    .dashboard-container .main-dash-wrapper .last-courses-controls {
+        grid-column: span 12;
+    }
+
+    .dashboard-container .main-dash-wrapper .profile-wrapper {
+        display: none;
+    }
+
+    .dashboard-container .main-dash-wrapper .last-courses .course-item {
+        padding: 10px 14px;
+    }
+}
+
+@media (max-width: 560px) {
+    .dashboard-container .main-dash-wrapper .finshed-courses,
+    .dashboard-container .main-dash-wrapper .remaing-courses,
+    .dashboard-container .main-dash-wrapper .finshed-hours {
+        grid-column: span 12;
+    }
+
+    .dashboard-container .main-dash-wrapper .finshed-courses b,
+    .dashboard-container .main-dash-wrapper .remaing-courses b,
+    .dashboard-container .main-dash-wrapper .finshed-hours b {
+        font-size: 42px;
     }
 }

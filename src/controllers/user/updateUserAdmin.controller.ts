@@ -17,7 +17,10 @@ export interface IUpdateUserAdminData {
   phone?: string
   language?: string
   collegeId?: number | null
+  collegeSegment?: string[] | null
+  collegeSeries?: string[] | null
   management?: string | null
+  password?: string
 }
 
 export async function updateUserAdmin(userId: number, data: IUpdateUserAdminData) {

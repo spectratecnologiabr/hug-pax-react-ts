@@ -41,6 +41,7 @@
 .educators-page-container .educators-page-wrapper .educators-room-container .header-wrapper .filters-wrapper .search-wrapper {
     display: flex;
     height: 100%;
+    position: relative;
 }
 
 .educators-page-container .educators-page-wrapper .educators-room-container .header-wrapper .filters-wrapper .search-wrapper input, .educators-page-container .educators-page-wrapper .educators-room-container .header-wrapper .filters-wrapper select {
@@ -52,9 +53,17 @@
     cursor: pointer;
 }
 
+.educators-page-container .educators-page-wrapper .educators-room-container .header-wrapper .filters-wrapper .search-wrapper input {
+    width: 230px;
+}
+
+.educators-page-container .educators-page-wrapper .educators-room-container .header-wrapper .filters-wrapper select {
+    min-height: 40px;
+}
+
 .educators-page-container .educators-page-wrapper .educators-room-container .header-wrapper .filters-wrapper .search-wrapper button {
     position: absolute;
-    margin-left: 160px;
+    right: 8px;
     align-self: center;
 }
 
@@ -141,10 +150,12 @@
 @media (max-width: 1450px) {
     .educators-page-container .educators-page-wrapper .educators-room-container .header-wrapper {
         flex-direction: column;
+        gap: 12px;
     }
 
     .educators-page-container .educators-page-wrapper .educators-room-container .header-wrapper .filters-wrapper {
-        height: 45px;
+        height: auto;
+        flex-wrap: wrap;
     }
 
     .educators-page-container .educators-page-wrapper .educators-room-container .grid-wrapper {
@@ -159,9 +170,40 @@
 }
 
 @media (max-width: 769px) {
+    .educators-page-container {
+        padding: 16px;
+        gap: 16px;
+    }
+
     .educators-page-container .educators-page-wrapper {
         margin-top: 90px;
-        margin-left: unset
+        margin-left: unset;
+        gap: 16px;
+    }
+
+    .educators-page-container .educators-page-wrapper .educators-room-container .header-wrapper b {
+        font-size: 30px;
+    }
+
+    .educators-page-container .educators-page-wrapper .educators-room-container .header-wrapper .filters-wrapper {
+        width: 100%;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+    }
+
+    .educators-page-container .educators-page-wrapper .educators-room-container .header-wrapper .filters-wrapper .search-wrapper {
+        width: 100%;
+        min-height: 42px;
+    }
+
+    .educators-page-container .educators-page-wrapper .educators-room-container .header-wrapper .filters-wrapper .search-wrapper input {
+        width: 100%;
+    }
+
+    .educators-page-container .educators-page-wrapper .educators-room-container .header-wrapper .filters-wrapper > select {
+        width: 100%;
+        min-height: 42px;
     }
 
     .educators-page-container .educators-page-wrapper .educators-room-container .grid-wrapper {
@@ -186,6 +228,10 @@
 }
 
 @media (max-width: 520px) {
+    .educators-page-container .educators-page-wrapper .educators-room-container .header-wrapper b {
+        font-size: 24px;
+    }
+
     .educators-page-container .educators-page-wrapper .educators-room-container .grid-wrapper {
         grid-template-columns: 1fr;
     }

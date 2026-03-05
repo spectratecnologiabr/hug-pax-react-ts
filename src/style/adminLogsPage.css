@@ -203,6 +203,11 @@
   color: #c53030;
 }
 
+.admin-logs-page .level-badge.critical {
+  background: #ffe4e6;
+  color: #9f1239;
+}
+
 .admin-logs-page .level-badge.debug {
   background: #f0f2f5;
   color: #57606f;

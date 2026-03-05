@@ -770,3 +770,173 @@
     height: 0.2px;
     background: #8e8e8e3d;
 }
+
+@media (max-width: 1200px) {
+  .course-container {
+    flex-direction: column;
+  }
+
+  .course-container .course-wrapper .lession-document-wrapper {
+    max-width: 100%;
+  }
+
+  .course-container .right-container {
+    margin-left: 110px;
+    min-width: 0;
+  }
+
+  .course-container .right-container .profile-container {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .course-container .right-container .profile-container .search-wrapper,
+  .course-container .right-container .profile-container .profile-wrapper {
+    grid-column: span 1;
+  }
+
+  .course-container .right-container .profile-container .profile-wrapper {
+    justify-content: flex-end;
+  }
+}
+
+@media (max-width: 900px) {
+  .course-container .course-wrapper .course-header {
+    height: auto;
+    padding: 12px;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .course-container .course-wrapper .course-header .left {
+    gap: 14px;
+  }
+
+  .course-container .course-wrapper .course-header .left .course-icon {
+    width: 72px;
+    height: 72px;
+    object-fit: cover;
+  }
+
+  .course-container .course-wrapper .course-header .course-title b {
+    font-size: 26px;
+    line-height: 1.1;
+  }
+
+  .course-container .course-wrapper .course-header .course-title span {
+    font-size: 16px;
+    line-height: 1.3;
+  }
+
+  .course-container .right-container .steps-list .steps-group .step-button {
+    height: auto;
+    min-height: 72px;
+    padding: 10px 12px;
+  }
+
+  .course-container .right-container .steps-list .steps-group .step-button .left {
+    gap: 12px;
+  }
+
+  .course-container .right-container .steps-list .steps-group .step-button .left .group-number {
+    font-size: 36px;
+  }
+
+  .course-container .right-container .steps-list .steps-group .step-button .left .text b {
+    font-size: 18px;
+  }
+
+  .course-container .right-container .steps-list .steps-group .lessions-list .lession-item {
+    width: 100%;
+  }
+
+  .course-container .course-wrapper .comments-wrapper .comment-form {
+    height: auto;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .course-container .course-wrapper .comments-wrapper .comment-form #commentEl,
+  .course-container .course-wrapper .comments-wrapper .comment-form button {
+    width: 100%;
+    min-height: 42px;
+  }
+}
+
+@media (max-width: 769px) {
+  .course-container {
+    padding: 16px;
+    gap: 16px;
+  }
+
+  .course-container .course-wrapper {
+    margin-left: 0;
+    margin-top: 90px;
+    gap: 16px;
+  }
+
+  .course-container .right-container {
+    margin-left: 0;
+    gap: 14px;
+  }
+
+  .course-container .right-container .steps-list {
+    gap: 14px;
+  }
+
+  .course-container .right-container .steps-list .steps-group .lessions-list .lession-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .course-container .right-container .steps-list .steps-group .lessions-list .lession-item a,
+  .course-container .right-container .steps-list .steps-group .lessions-list .lession-item button {
+    width: 100%;
+    text-align: center;
+  }
+
+  .course-container .course-wrapper .lession-media-wrapper {
+    width: 100%;
+  }
+
+  .course-container .course-wrapper .lession-media-wrapper .video-controls.bar {
+    width: calc(100% - 16px);
+    padding: 10px;
+  }
+
+  .course-container .course-wrapper .lession-media-wrapper .video-controls.bar .controls-row {
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .course-container .course-wrapper .lession-media-wrapper .video-controls.bar .left-controls,
+  .course-container .course-wrapper .lession-media-wrapper .video-controls.bar .right-controls {
+    width: 100%;
+    justify-content: space-between;
+    gap: 10px;
+  }
+
+  .course-container .course-wrapper .lession-media-wrapper .video-controls.bar .controls-row .volume-slider {
+    width: 100%;
+  }
+
+  .course-container .course-wrapper .lession-document-wrapper .pdf-page-wrapper {
+    padding: 12px;
+  }
+
+  .course-container .course-wrapper .lession-document-wrapper .pdf-controls {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .course-container .course-wrapper .lession-document-wrapper .pdf-controls .left,
+  .course-container .course-wrapper .lession-document-wrapper .pdf-controls .right {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .course-container .course-wrapper .lession-document-wrapper .pdf-controls span {
+    font-size: 16px;
+  }
+}

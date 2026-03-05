@@ -1,14 +1,18 @@
 import axios from "axios"
 import { getCookies } from "../misc/cookies.controller"
 
+export type ImportUsersMode = "create" | "update" | "upsert"
+
 export interface IImportUsersAdminPayload {
   users: Record<string, unknown>[]
+  mode?: ImportUsersMode
 }
 
 export interface IImportUsersAdminResultItem {
   row: number
   email: string | null
   success: boolean
+  action?: "created" | "updated"
   userId?: number
   message?: string
 }
@@ -17,6 +21,7 @@ export interface IImportUsersAdminResponse {
   summary: {
     total: number
     created: number
+    updated: number
     failed: number
   }
   results: IImportUsersAdminResultItem[]
@@ -34,9 +39,10 @@ function chunkUsers(users: Record<string, unknown>[], chunkSize: number): Record
 
 export async function importUsersAdmin(payload: IImportUsersAdminPayload) {
   const users = Array.isArray(payload?.users) ? payload.users : []
+  const mode: ImportUsersMode = payload?.mode ?? "create"
   if (!users.length) {
     return {
-      summary: { total: 0, created: 0, failed: 0 },
+      summary: { total: 0, created: 0, updated: 0, failed: 0 },
       results: [],
     }
   }
@@ -44,13 +50,14 @@ export async function importUsersAdmin(payload: IImportUsersAdminPayload) {
   const chunks = chunkUsers(users, IMPORT_CHUNK_SIZE)
   const mergedResults: IImportUsersAdminResultItem[] = []
   let totalCreated = 0
+  let totalUpdated = 0
   let totalFailed = 0
 
   for (let chunkIndex = 0; chunkIndex < chunks.length; chunkIndex++) {
     const batch = chunks[chunkIndex]
     const response = await axios.post(
       `${process.env.REACT_APP_API_URL}/user/admin/users/import`,
-      { users: batch },
+      { users: batch, mode },
       { headers: { Authorization: `Bearer ${getCookies("authToken")}` } }
     )
 
@@ -66,6 +73,7 @@ export async function importUsersAdmin(payload: IImportUsersAdminPayload) {
 
     mergedResults.push(...normalizedResults)
     totalCreated += Number(chunkResult?.summary?.created ?? 0)
+    totalUpdated += Number(chunkResult?.summary?.updated ?? 0)
     totalFailed += Number(chunkResult?.summary?.failed ?? 0)
   }
 
@@ -73,6 +81,7 @@ export async function importUsersAdmin(payload: IImportUsersAdminPayload) {
     summary: {
       total: users.length,
       created: totalCreated,
+      updated: totalUpdated,
       failed: totalFailed,
     },
     results: mergedResults,
