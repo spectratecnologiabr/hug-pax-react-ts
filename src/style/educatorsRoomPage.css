@@ -3,11 +3,14 @@
     min-height: 100vh;
     padding: 20px;
     gap: 40px;
-    width: -webkit-fill-available;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
 }
 
 .educators-page-container .educators-page-wrapper {
-    width: -webkit-fill-available;
+    width: 100%;
+    min-width: 0;
     display: flex;
     flex-direction: column;
     gap: 25px;
@@ -35,13 +38,17 @@
 .educators-page-container .educators-page-wrapper .educators-room-container .header-wrapper .filters-wrapper {
     display: flex;
     gap: 20px;
-    align-items: flex-end;
+    align-items: stretch;
+    justify-content: flex-end;
+    flex-wrap: nowrap;
 }
 
 .educators-page-container .educators-page-wrapper .educators-room-container .header-wrapper .filters-wrapper .search-wrapper {
     display: flex;
-    height: 100%;
+    height: 44px;
     position: relative;
+    min-width: 0;
+    flex: 0 0 280px;
 }
 
 .educators-page-container .educators-page-wrapper .educators-room-container .header-wrapper .filters-wrapper .search-wrapper input, .educators-page-container .educators-page-wrapper .educators-room-container .header-wrapper .filters-wrapper select {
@@ -54,11 +61,13 @@
 }
 
 .educators-page-container .educators-page-wrapper .educators-room-container .header-wrapper .filters-wrapper .search-wrapper input {
-    width: 230px;
+    width: 100%;
 }
 
 .educators-page-container .educators-page-wrapper .educators-room-container .header-wrapper .filters-wrapper select {
-    min-height: 40px;
+    height: 44px;
+    min-height: 44px;
+    flex: 0 0 190px;
 }
 
 .educators-page-container .educators-page-wrapper .educators-room-container .header-wrapper .filters-wrapper .search-wrapper button {
@@ -147,17 +156,7 @@
     }
 }
 
-@media (max-width: 1450px) {
-    .educators-page-container .educators-page-wrapper .educators-room-container .header-wrapper {
-        flex-direction: column;
-        gap: 12px;
-    }
-
-    .educators-page-container .educators-page-wrapper .educators-room-container .header-wrapper .filters-wrapper {
-        height: auto;
-        flex-wrap: wrap;
-    }
-
+@media (max-width: 1200px) {
     .educators-page-container .educators-page-wrapper .educators-room-container .grid-wrapper {
         grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
     }
@@ -185,16 +184,25 @@
         font-size: 30px;
     }
 
-    .educators-page-container .educators-page-wrapper .educators-room-container .header-wrapper .filters-wrapper {
-        width: 100%;
+    .educators-page-container .educators-page-wrapper .educators-room-container .header-wrapper {
         flex-direction: column;
-        align-items: stretch;
+        gap: 12px;
+    }
+
+    .educators-page-container .educators-page-wrapper .educators-room-container .header-wrapper .filters-wrapper {
+        display: grid;
+        grid-template-columns: 1fr;
+        width: 100%;
+        height: fit-content;
         gap: 10px;
     }
 
     .educators-page-container .educators-page-wrapper .educators-room-container .header-wrapper .filters-wrapper .search-wrapper {
         width: 100%;
         min-height: 42px;
+        height: 42px;
+        grid-column: auto;
+        flex: initial;
     }
 
     .educators-page-container .educators-page-wrapper .educators-room-container .header-wrapper .filters-wrapper .search-wrapper input {
@@ -204,10 +212,12 @@
     .educators-page-container .educators-page-wrapper .educators-room-container .header-wrapper .filters-wrapper > select {
         width: 100%;
         min-height: 42px;
+        height: 42px;
+        flex: initial;
     }
 
     .educators-page-container .educators-page-wrapper .educators-room-container .grid-wrapper {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
         gap: 14px;
     }
 
@@ -215,10 +225,21 @@
         min-height: 58px;
         margin: 8px 10px 6px;
         gap: 10px;
+        align-items: flex-start;
     }
 
     .educators-page-container .educators-page-wrapper .educators-room-container .grid-wrapper .course-item .description span {
         font-size: 16px;
+        line-height: 1.2;
+        white-space: normal;
+        overflow: visible;
+        text-overflow: unset;
+    }
+
+    .educators-page-container .educators-page-wrapper .educators-room-container .grid-wrapper .course-item .description .course-progress {
+        width: 34px;
+        min-width: 34px;
+        height: 34px;
     }
 
     .educators-page-container .educators-page-wrapper .educators-room-container .grid-wrapper .course-item a {
@@ -230,6 +251,29 @@
 @media (max-width: 520px) {
     .educators-page-container .educators-page-wrapper .educators-room-container .header-wrapper b {
         font-size: 24px;
+    }
+
+    .educators-page-container .educators-page-wrapper .educators-room-container .grid-wrapper {
+        grid-template-columns: repeat(auto-fill, minmax(132px, 1fr));
+    }
+
+    .educators-page-container .educators-page-wrapper .educators-room-container .grid-wrapper .course-item .description {
+        min-height: 52px;
+    }
+
+    .educators-page-container .educators-page-wrapper .educators-room-container .grid-wrapper .course-item .description span {
+        font-size: 14px;
+    }
+
+    .educators-page-container .educators-page-wrapper .educators-room-container .grid-wrapper .course-item a {
+        font-size: 14px;
+        padding: 14px;
+    }
+}
+
+@media (max-width: 390px) {
+    .educators-page-container .educators-page-wrapper .educators-room-container .header-wrapper b {
+        font-size: 22px;
     }
 
     .educators-page-container .educators-page-wrapper .educators-room-container .grid-wrapper {

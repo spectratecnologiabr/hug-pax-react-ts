@@ -7,8 +7,10 @@
 
 .educators-room-element .header-wrapper {
     display: flex;
+    flex-direction: column;
     width: 100%;
     justify-content: space-between;
+    gap: 12px;
 }
 
 .educators-room-element .header-wrapper b {
@@ -19,12 +21,17 @@
 .educators-room-element .header-wrapper .filters-wrapper {
     display: flex;
     gap: 20px;
-    align-items: flex-end;
+    align-items: stretch;
+    justify-content: flex-end;
+    flex-wrap: nowrap;
 }
 
 .educators-room-element .header-wrapper .filters-wrapper .search-wrapper {
     display: flex;
-    height: 100%;
+    height: 44px;
+    position: relative;
+    min-width: 0;
+    flex: 1 1 240px;
 }
 
 .educators-room-element .header-wrapper .filters-wrapper .search-wrapper input, .educators-room-element .header-wrapper .filters-wrapper select {
@@ -38,8 +45,18 @@
 
 .educators-room-element .header-wrapper .filters-wrapper .search-wrapper button {
     position: absolute;
-    margin-left: 160px;
+    right: 10px;
     align-self: center;
+}
+
+.educators-room-element .header-wrapper .filters-wrapper .search-wrapper input {
+    width: 100%;
+}
+
+.educators-room-element .header-wrapper .filters-wrapper select {
+    height: 44px;
+    min-height: 44px;
+    flex: 0 1 180px;
 }
 
 .educators-room-element .grid-wrapper {
@@ -116,39 +133,63 @@
     background-color: #5CADE0;
 }
 
-@media (max-width: 1450px) {
+@media (max-width: 769px) {
     .educators-room-element .header-wrapper {
         flex-direction: column;
-    }
-
-    .educators-room-element .header-wrapper .filters-wrapper {
-        height: 45px;
+        gap: 12px;
     }
 
     .educators-room-element .grid-wrapper {
-        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-    }
-}
-
-@media (max-width: 769px) {
-    .educators-room-element .grid-wrapper {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-template-columns: repeat(4, minmax(0, 1fr));
         gap: 14px;
     }
 
     .educators-room-element .header-wrapper .filters-wrapper {
-        flex-direction: column;
+        display: grid;
+        grid-template-columns: 1fr;
         height: fit-content;
+        width: 100%;
+        gap: 10px;
+    }
+
+    .educators-room-element .header-wrapper .filters-wrapper .search-wrapper {
+        width: 100%;
+        min-height: 42px;
+        height: 42px;
+        grid-column: auto;
+        flex: initial;
+    }
+
+    .educators-room-element .header-wrapper .filters-wrapper .search-wrapper input {
+        width: 100%;
+    }
+
+    .educators-room-element .header-wrapper .filters-wrapper select {
+        width: 100%;
+        height: 42px;
+        min-height: 42px;
+        flex: initial;
     }
 
     .educators-room-element .grid-wrapper .course-item .description {
         min-height: 58px;
         margin: 8px 10px 6px;
         gap: 10px;
+        align-items: flex-start;
     }
 
     .educators-room-element .grid-wrapper .course-item .description span {
         font-size: 16px;
+        line-height: 1.2;
+        white-space: normal;
+        overflow: visible;
+        text-overflow: unset;
+    }
+
+    .educators-room-element .grid-wrapper .course-item .description .course-progress {
+        width: 34px;
+        min-width: 34px;
+        height: 34px;
     }
 
     .educators-room-element .grid-wrapper .course-item a {
@@ -159,6 +200,29 @@
 
 @media (max-width: 520px) {
     .educators-room-element .grid-wrapper {
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .educators-room-element .grid-wrapper .course-item .description {
+        min-height: 52px;
+    }
+
+    .educators-room-element .grid-wrapper .course-item .description span {
+        font-size: 14px;
+    }
+
+    .educators-room-element .grid-wrapper .course-item a {
+        font-size: 14px;
+        padding: 14px;
+    }
+}
+
+@media (max-width: 390px) {
+    .educators-room-element .header-wrapper b {
+        font-size: 28px;
+    }
+
+    .educators-room-element .grid-wrapper {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 }

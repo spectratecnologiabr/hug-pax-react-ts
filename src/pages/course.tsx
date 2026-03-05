@@ -699,14 +699,44 @@ function Course() {
     }
 
     const toggleFullscreen = () => {
-        const elem = document.querySelector('.pdf-page-wrapper');
+        const elem = document.querySelector('.pdf-page-wrapper') as any;
+
+        if (!elem) return;
 
         if (!document.fullscreenElement) {
-            elem?.requestFullscreen();
-        } else {
-            document.exitFullscreen();
+            const requestFullscreen =
+                elem.requestFullscreen?.bind(elem) ||
+                elem.webkitRequestFullscreen?.bind(elem);
+
+            if (requestFullscreen) {
+                void requestFullscreen().catch?.(() => undefined);
+            }
+        } else if (document.exitFullscreen) {
+            void document.exitFullscreen().catch?.(() => undefined);
         }
     };
+
+    function openVideoFullscreen() {
+        const video = videoRef.current as any;
+        if (!video) return;
+
+        const requestFullscreen =
+            video.requestFullscreen?.bind(video) ||
+            video.webkitRequestFullscreen?.bind(video);
+
+        if (requestFullscreen) {
+            void requestFullscreen().catch?.(() => undefined);
+            return;
+        }
+
+        if (typeof video.webkitEnterFullscreen === "function") {
+            try {
+                video.webkitEnterFullscreen();
+            } catch {
+                // Ignore unsupported mobile fullscreen errors.
+            }
+        }
+    }
 
     async function setRatedStar(star: number) {
         await rateLesson(Number(lessonId), star);
@@ -1159,7 +1189,7 @@ function Course() {
                                                                     </svg>
                                                                 </button>
                                                             )}
-                                                            <button className="control-btn" onClick={() => videoRef.current?.requestFullscreen()}>
+                                                            <button className="control-btn" onClick={openVideoFullscreen}>
                                                                 ⛶
                                                             </button>
                                                         </div>
@@ -1208,10 +1238,11 @@ function Course() {
 
                                                     </button>
 
-                                                    <span>{pageNumber} / {numPages}</span>
+                                                    
                                                 </div>
 
                                                 <div className="right">
+                                                    <span>{pageNumber} / {numPages}</span>
                                                       {lessionData?.allowDownload && lessionData?.extUrl && (
                                                         <button
                                                             type="button"

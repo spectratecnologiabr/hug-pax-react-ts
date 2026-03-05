@@ -3,25 +3,35 @@
     min-height: 100vh;
     padding: 20px;
     gap: 20px;
-    width: -webkit-fill-available;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
 }
 
 .course-container .course-wrapper {
-    width: -webkit-fill-available;
+    width: 100%;
+    min-width: 0;
     display: flex;
     flex-direction: column;
     gap: 25px;
     margin-left: 110px;
 }
 
+.course-container .course-wrapper,
+.course-container .right-container {
+    min-width: 0;
+}
+
 .course-container .course-wrapper .course-header {
     display: flex;
     justify-content: space-between;
-    width: -webkit-fill-available;
+    width: 100%;
     background-color: #F5F5F7;
-    height: 100px;
+    min-height: 100px;
+    max-height: 100px;
     border-radius: 10px;
-    padding-right: 20px;
+    padding: 16px 20px;
+    gap: 16px;
 }
 
 .course-container .course-wrapper .course-header .course-progress {
@@ -35,6 +45,7 @@
 .course-container .course-wrapper .course-header .left {
     display: flex;
     gap: 40px;
+    min-width: 0;
 }
 
 .course-container .course-wrapper .course-header .left img {
@@ -46,16 +57,19 @@
     flex-direction: column;
     align-self: center;
     gap: 10px;
+    min-width: 0;
 }
 
 .course-container .course-wrapper .course-header .course-title b {
     font-family: 'SF UI Display Medium';
     font-size: 35px;
+    overflow-wrap: anywhere;
 }
 
 .course-container .course-wrapper .course-header .course-title span {
     font-family: 'SF UI Display Medium';
     font-size: 20px;
+    overflow-wrap: anywhere;
 }
 
 .course-container .course-wrapper .lession-title {
@@ -113,13 +127,13 @@
 
 .course-container .course-wrapper .lession-document-wrapper {
     min-height: 90vh;
-    max-width: 60vw;
+    max-width: 100%;
     display: none;
 }
 
 
 .course-container .course-wrapper .lession-media-wrapper {
-    width: 90%;
+    width: 100%;
     align-self: center;
     display: none;
 }
@@ -195,6 +209,9 @@
   align-items: center;
   gap: 16px;
   color: #000;
+  width: min(100%, 760px);
+  flex-wrap: wrap;
+  justify-content: space-between;
 }
 
 .pdf-controls .left {
@@ -278,6 +295,7 @@
   justify-content: space-between;
   align-items: center;
   color: white;
+  gap: 14px;
 }
 
 .course-container .course-wrapper .lession-media-wrapper .video-controls.bar .left-controls,
@@ -285,6 +303,7 @@
   display: flex;
   align-items: center;
   gap: 16px;
+  flex-wrap: wrap;
 }
 
 .course-container .course-wrapper .lession-media-wrapper .video-controls.bar .control-btn {
@@ -347,6 +366,8 @@
   align-items: center;
   width: 100%;
   background-color: transparent;
+  gap: 16px;
+  flex-wrap: wrap;
 }
 
 .course-container .course-wrapper .lession-document-wrapper .pdf-controls .left, .course-container .course-wrapper .lession-document-wrapper .pdf-controls .right {
@@ -472,6 +493,7 @@
   height: 100%;
   display: flex;
   align-items: center;
+  position: relative;
 }
 
 .course-container .right-container .profile-container .search-wrapper .main-search {
@@ -545,33 +567,45 @@
     cursor: pointer;
     z-index: 10;
     box-shadow: 0 4px 4px 2px rgba(0, 0, 0, 0.05);
+    gap: 12px;
+    color: #000000;
+    -webkit-text-fill-color: #000000;
 }
 
 .course-container .right-container .steps-list .steps-group .step-button .left {
     display: flex;
     align-items: center;
     gap: 20px;
+    min-width: 0;
 }
 
 .course-container .right-container .steps-list .steps-group .step-button .left .group-number {
     font-family: 'SF UI Display Bold';
     font-size: 50px;
+    color: #000000;
+    -webkit-text-fill-color: #000000;
 }
 
 .course-container .right-container .steps-list .steps-group .step-button .left .text {
     display: flex;
     flex-direction: column;
     text-align: left;
+    min-width: 0;
 }
 
 .course-container .right-container .steps-list .steps-group .step-button .left .text b {
     font-family: 'SF UI Display Medium';
     font-size: 24px;
+    overflow-wrap: anywhere;
+    color: #000000;
+    -webkit-text-fill-color: #000000;
 }
 
 .course-container .right-container .steps-list .steps-group .step-button .left .text span {
     font-family: 'SF UI Display Light';
     font-size: 14px;
+    color: #6b7280;
+    -webkit-text-fill-color: #6b7280;
 }
 
 .course-container .right-container .steps-list .steps-group .step-button .right {
@@ -579,6 +613,7 @@
     align-items: center;
     gap: 10px;
     text-align: left;
+    flex-shrink: 0;
 }
 
 .course-container .right-container .steps-list .steps-group .step-button .right .course-progress {
@@ -610,6 +645,7 @@
     border-top: none;
     align-self: center;
     background-color: #F5F5F7;
+    gap: 12px;
 }
 
 .course-container .right-container .steps-list .steps-group .lessions-list .lession-item:first-of-type {
@@ -620,11 +656,13 @@
     display: flex;
     align-items: center;
     gap: 10px;
+    min-width: 0;
 }
 
 .course-container .right-container .steps-list .steps-group .lessions-list .lession-item .left b {
     font-family: 'SF UI Display Medium';
     font-size: 14px;
+    overflow-wrap: anywhere;
 }
 
 .course-container .right-container .steps-list .steps-group .lessions-list .lession-item a, .course-container .right-container .steps-list .steps-group .lessions-list .lession-item button {
@@ -708,7 +746,7 @@
 }
 
 .course-container .course-wrapper .comments-wrapper .comment-form #commentEl {
-    width: -webkit-fill-available;
+    width: 100%;
     height: 100%;
     background-color: #F5F5F7;
     padding-left: 25px;
@@ -763,10 +801,11 @@
 
 .course-container .course-wrapper .comments-wrapper .comments-list .comment-element span {
   font-family: 'SF UI Display Light';
+  overflow-wrap: anywhere;
 }
 
 .course-container .course-wrapper .comments-wrapper .comments-list .comment-element hr {
-    width: -webkit-fill-available;
+    width: 100%;
     height: 0.2px;
     background: #8e8e8e3d;
 }
@@ -780,9 +819,14 @@
     max-width: 100%;
   }
 
+  .course-container .course-wrapper {
+    margin-left: 110px;
+  }
+
   .course-container .right-container {
     margin-left: 110px;
     min-width: 0;
+    width: 100%;
   }
 
   .course-container .right-container .profile-container {
@@ -801,8 +845,15 @@
 }
 
 @media (max-width: 900px) {
+  .course-container .course-wrapper .course-header .course-progress {
+    height: 64px;
+    width: 64px;
+  }
+
   .course-container .course-wrapper .course-header {
     height: auto;
+    min-height: unset;
+    max-height: none;
     padding: 12px;
     align-items: flex-start;
     gap: 12px;
@@ -810,6 +861,8 @@
 
   .course-container .course-wrapper .course-header .left {
     gap: 14px;
+    flex-direction: column;
+    align-items: flex-start;
   }
 
   .course-container .course-wrapper .course-header .left .course-icon {
@@ -846,6 +899,11 @@
     font-size: 18px;
   }
 
+  .course-container .right-container .steps-list .steps-group .step-button .right .course-progress {
+    height: 52px;
+    width: 52px;
+  }
+
   .course-container .right-container .steps-list .steps-group .lessions-list .lession-item {
     width: 100%;
   }
@@ -860,6 +918,11 @@
   .course-container .course-wrapper .comments-wrapper .comment-form button {
     width: 100%;
     min-height: 42px;
+  }
+
+  .course-container .course-wrapper .avaliation-wrapper {
+    justify-content: flex-start;
+    flex-wrap: wrap;
   }
 }
 
@@ -907,7 +970,8 @@
 
   .course-container .course-wrapper .lession-media-wrapper .video-controls.bar .controls-row {
     gap: 10px;
-    flex-wrap: wrap;
+    flex-direction: column;
+    align-items: stretch;
   }
 
   .course-container .course-wrapper .lession-media-wrapper .video-controls.bar .left-controls,
@@ -919,10 +983,15 @@
 
   .course-container .course-wrapper .lession-media-wrapper .video-controls.bar .controls-row .volume-slider {
     width: 100%;
+    max-width: 120px;
   }
 
   .course-container .course-wrapper .lession-document-wrapper .pdf-page-wrapper {
     padding: 12px;
+  }
+
+  .course-container .course-wrapper .lession-document-wrapper {
+    min-height: unset;
   }
 
   .course-container .course-wrapper .lession-document-wrapper .pdf-controls {
@@ -938,5 +1007,89 @@
 
   .course-container .course-wrapper .lession-document-wrapper .pdf-controls span {
     font-size: 16px;
+  }
+
+  .course-container .right-container .profile-container .profile-wrapper {
+    display: none;
+  }
+
+  .course-container .right-container .steps-list .steps-group .step-button {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .course-container .right-container .steps-list .steps-group .step-button .right {
+    width: auto;
+    justify-content: flex-end;
+  }
+
+  .course-container .right-container .steps-list .steps-group .step-button .right .course-progress {
+    height: 46px;
+    width: 46px;
+  }
+}
+
+@media (max-width: 560px) {
+  .course-container .course-wrapper .course-header .course-progress {
+    height: 56px;
+    width: 56px;
+  }
+
+  .course-container .course-wrapper .course-header {
+    padding: 10px;
+    gap: 10px;
+  }
+
+  .course-container .course-wrapper .course-header .left .course-icon {
+    width: 64px;
+    height: 64px;
+  }
+
+  .course-container .course-wrapper .course-header .course-title b {
+    font-size: 24px;
+  }
+
+  .course-container .course-wrapper .course-header .course-title span {
+    font-size: 15px;
+  }
+
+  .course-container .course-wrapper .lession-document-wrapper .pdf-controls .left,
+  .course-container .course-wrapper .lession-document-wrapper .pdf-controls .right {
+    justify-content: space-between;
+  }
+
+  .course-container .course-wrapper .lession-media-wrapper .video-controls.bar .time-display {
+    width: 100%;
+  }
+
+  .course-container .right-container .steps-list .steps-group .step-button .right .course-progress {
+    height: 42px;
+    width: 42px;
+  }
+
+  .course-container .right-container .steps-list .steps-group .step-button {
+    padding: 10px;
+    gap: 8px;
+  }
+
+  .course-container .right-container .steps-list .steps-group .step-button .left {
+    gap: 10px;
+  }
+
+  .course-container .right-container .steps-list .steps-group .step-button .left .group-number {
+    font-size: 30px;
+  }
+
+  .course-container .right-container .steps-list .steps-group .step-button .left .text b {
+    font-size: 16px;
+  }
+
+  .course-container .right-container .steps-list .steps-group .step-button .left .text span {
+    font-size: 12px;
+  }
+
+  .course-container .right-container .steps-list .steps-group .step-button .right {
+    gap: 8px;
   }
 }

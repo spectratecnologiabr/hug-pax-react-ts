@@ -11,7 +11,7 @@ function hasMinimumScreen() {
 }
 
 function App() {
-  if (!hasMinimumScreen()) {
+  /*if (!hasMinimumScreen()) {
     return (
       <div style={{
         height: "100vh",
@@ -30,7 +30,7 @@ function App() {
         </div>
       </div>
     );
-  }
+  }*/
 
   return (
     <>

@@ -3,11 +3,14 @@
     min-height: 100vh;
     padding: 20px;
     gap: 40px;
-    width: -webkit-fill-available;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
 }
 
 .certificates-container .certificates-wrapper {
-    width: -webkit-fill-available;
+    width: 100%;
+    min-width: 0;
     display: flex;
     flex-direction: column;
     gap: 25px;
@@ -36,6 +39,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 18px;
     padding: 22px 26px;
     border-radius: 12px;
     background: #ffffff;
@@ -46,23 +50,28 @@
     display: flex;
     flex-direction: column;
     gap: 6px;
+    min-width: 0;
 }
 
 .certificate-info b {
     font-size: 18px;
     font-family: 'SF UI Display Bold';
+    word-break: break-word;
 }
 
 .certificate-info span {
     font-size: 14px;
     font-family: 'SF UI Display Medium';
     color: #555;
+    overflow-wrap: anywhere;
 }
 
 .certificate-actions {
     display: flex;
     align-items: center;
     gap: 14px;
+    flex-wrap: wrap;
+    flex-shrink: 0;
 }
 
 .certificate-actions a {
@@ -134,6 +143,10 @@
         justify-content: flex-start;
         flex-wrap: wrap;
     }
+
+    .certificate-actions a {
+        min-height: 40px;
+    }
 }
 
 @media (max-width: 769px) {
@@ -152,6 +165,10 @@
         font-size: 30px;
     }
 
+    .certificates-container .certificates-wrapper .page-title-wrapper {
+        justify-content: flex-start;
+    }
+
     .certificates-listing {
         margin-top: 14px;
         gap: 14px;
@@ -163,5 +180,62 @@
 
     .certificate-info b {
         font-size: 16px;
+    }
+
+    .certificate-actions {
+        width: 100%;
+        gap: 10px;
+    }
+
+    .certificate-actions a {
+        flex: 1 1 180px;
+        width: 100%;
+    }
+
+    .certificate-actions button {
+        flex: 0 0 40px;
+    }
+}
+
+@media (max-width: 520px) {
+    .certificates-container .certificates-wrapper .page-title-wrapper b {
+        font-size: 24px;
+    }
+
+    .certificate-card {
+        padding: 14px;
+        gap: 12px;
+    }
+
+    .certificate-info {
+        gap: 4px;
+    }
+
+    .certificate-info b {
+        font-size: 15px;
+        line-height: 1.25;
+    }
+
+    .certificate-info span {
+        font-size: 13px;
+        line-height: 1.35;
+    }
+
+    .certificate-actions {
+        display: grid;
+        grid-template-columns: 1fr 40px 40px;
+        align-items: stretch;
+    }
+
+    .certificate-actions a {
+        flex: initial;
+        min-width: 0;
+        padding: 10px 12px;
+        font-size: 13px;
+    }
+
+    .certificate-actions button {
+        width: 40px;
+        height: 40px;
     }
 }

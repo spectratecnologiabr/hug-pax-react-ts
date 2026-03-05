@@ -8,6 +8,7 @@ import { listLast30Visits } from "../controllers/admin/listLast30Visits.controll
 import { listVistsThisMonth } from "../controllers/admin/listVisitsThisMonth.controller";
 import { listVistsThisWeek } from "../controllers/admin/listVisitsThisWeek.controller";
 import { listUsersAdmin } from "../controllers/user/listUsersAdmin.controller";
+import { listContracts } from "../controllers/contract/listContracts.controller";
 import { getAdminLogsTimeline } from "../controllers/logs/getAdminLogsTimeline.controller";
 import { getLogDashboardList } from "../controllers/logs/getLogDashboardList.controller";
 
@@ -21,6 +22,8 @@ type TConsultant = {
   isBlocked?: boolean;
   vacationMode?: boolean;
   management?: string;
+  contractId?: number;
+  contract_id?: number;
 };
 
 type TEducator = {
@@ -32,12 +35,24 @@ type TEducator = {
   lastAccessAt?: string | null;
   management?: string;
   collegeId?: number;
+  contractId?: number;
+  contract_id?: number;
 };
 
 type TCollege = {
   id: number;
   name?: string;
   management?: string;
+  contractId?: number;
+  contract_id?: number;
+};
+
+type TContract = {
+  id: number;
+  name?: string;
+  consultantIds?: number[];
+  consultants?: Array<{ id: number }>;
+  schools?: Array<{ id: number }>;
 };
 
 type TVisit = {
@@ -155,12 +170,13 @@ function CoordinatorPerformancePage() {
   const isAdminPath = window.location.pathname.startsWith("/admin");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [managementFilter, setManagementFilter] = useState<string>("all");
+  const [contractFilter, setContractFilter] = useState<string>("all");
   const [consultantFilter, setConsultantFilter] = useState<number | "all">("all");
 
   const [consultants, setConsultants] = useState<TConsultant[]>([]);
   const [educators, setEducators] = useState<TEducator[]>([]);
   const [colleges, setColleges] = useState<TCollege[]>([]);
+  const [contracts, setContracts] = useState<TContract[]>([]);
   const [last30Visits, setLast30Visits] = useState<TVisit[]>([]);
   const [thisMonthVisits, setThisMonthVisits] = useState<TVisit[]>([]);
   const [thisWeekVisits, setThisWeekVisits] = useState<TVisit[]>([]);
@@ -173,13 +189,14 @@ function CoordinatorPerformancePage() {
       setLoading(true);
       setError(null);
       try {
-        const [consultantsData, educatorsData, collegesData, last30Data, thisMonthData, thisWeekData] = await Promise.all([
+        const [consultantsData, educatorsData, collegesData, last30Data, thisMonthData, thisWeekData, contractsData] = await Promise.all([
           listConsultants(),
           listEducators(),
           listColleges(),
           listLast30Visits(),
           listVistsThisMonth(),
           listVistsThisWeek(),
+          listContracts().catch(() => []),
         ]);
 
         if (cancelled) return;
@@ -187,6 +204,7 @@ function CoordinatorPerformancePage() {
         setConsultants(Array.isArray(consultantsData) ? consultantsData : []);
         setEducators(Array.isArray(educatorsData) ? educatorsData : []);
         setColleges(Array.isArray(collegesData) ? collegesData : []);
+        setContracts(Array.isArray(contractsData) ? contractsData : []);
         setLast30Visits(Array.isArray(last30Data) ? last30Data.map(normalizeVisit) : []);
         setThisMonthVisits(Array.isArray(thisMonthData) ? thisMonthData.map(normalizeVisit) : []);
         setThisWeekVisits(Array.isArray(thisWeekData) ? thisWeekData.map(normalizeVisit) : []);
@@ -284,53 +302,121 @@ function CoordinatorPerformancePage() {
 
   const filteredThisWeekVisits = useMemo(() => thisWeekVisits, [thisWeekVisits]);
 
-  const managementOptions = useMemo(() => {
-    const set = new Set<string>();
-    consultants.forEach((item) => {
-      const mgmt = String(item.management || "").trim();
-      if (mgmt) set.add(mgmt);
+  const contractsById = useMemo(() => {
+    const map = new Map<number, TContract>();
+    contracts.forEach((contract) => {
+      const id = toInt(contract.id);
+      if (id > 0) map.set(id, contract);
     });
-    colleges.forEach((item) => {
-      const mgmt = String(item.management || "").trim();
-      if (mgmt) set.add(mgmt);
-    });
-    educators.forEach((item) => {
-      const mgmt = String(item.management || "").trim();
-      if (mgmt) set.add(mgmt);
-    });
-    return Array.from(set).sort((a, b) => a.localeCompare(b, "pt-BR"));
-  }, [consultants, colleges, educators]);
+    return map;
+  }, [contracts]);
 
-  const collegeManagementById = useMemo(() => {
-    const map = new Map<number, string>();
+  const collegeContractById = useMemo(() => {
+    const map = new Map<number, number | null>();
     colleges.forEach((college) => {
       const id = toInt(college.id);
       if (id <= 0) return;
-      map.set(id, String(college.management || "").trim());
+      const contractId = toInt((college as any).contractId ?? (college as any).contract_id);
+      map.set(id, contractId > 0 ? contractId : null);
     });
     return map;
   }, [colleges]);
 
+  const selectedContractId = useMemo(() => {
+    if (!isAdminPath || contractFilter === "all") return null;
+    const parsed = Number(contractFilter);
+    return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+  }, [isAdminPath, contractFilter]);
+
+  const selectedContractConsultantSet = useMemo(() => {
+    if (!selectedContractId) return null;
+    const set = new Set<number>();
+    const contract = contractsById.get(selectedContractId);
+    if (Array.isArray(contract?.consultantIds)) {
+      contract!.consultantIds!.forEach((id) => {
+        const parsed = toInt(id);
+        if (parsed > 0) set.add(parsed);
+      });
+    }
+    if (Array.isArray(contract?.consultants)) {
+      contract!.consultants!.forEach((item) => {
+        const parsed = toInt(item?.id);
+        if (parsed > 0) set.add(parsed);
+      });
+    }
+    return set;
+  }, [selectedContractId, contractsById]);
+
+  const selectedContractCollegeSet = useMemo(() => {
+    if (!selectedContractId) return null;
+    const set = new Set<number>();
+
+    colleges.forEach((college) => {
+      const collegeId = toInt(college.id);
+      const contractId = toInt((college as any).contractId ?? (college as any).contract_id);
+      if (collegeId > 0 && contractId === selectedContractId) set.add(collegeId);
+    });
+
+    const contract = contractsById.get(selectedContractId);
+    if (Array.isArray(contract?.schools)) {
+      contract!.schools!.forEach((school) => {
+        const collegeId = toInt(school?.id);
+        if (collegeId > 0) set.add(collegeId);
+      });
+    }
+
+    return set;
+  }, [selectedContractId, contractsById, colleges]);
+
+  const hasConsultantFilter = consultantFilter !== "all";
+
+  const contractScopedConsultants = useMemo(() => {
+    return consultants.filter((item) => {
+      const consultantId = toInt(item.id);
+      if (consultantId <= 0) return false;
+      if (selectedContractConsultantSet && !selectedContractConsultantSet.has(consultantId)) return false;
+      return true;
+    });
+  }, [consultants, selectedContractConsultantSet]);
+
   const consultantsScoped = useMemo(() => {
-    if (!isAdminPath || managementFilter === "all") return consultants;
-    return consultants.filter((item) => String(item.management || "").trim() === managementFilter);
-  }, [consultants, isAdminPath, managementFilter]);
+    if (!hasConsultantFilter) return contractScopedConsultants;
+    return contractScopedConsultants.filter((item) => toInt(item.id) === consultantFilter);
+  }, [contractScopedConsultants, hasConsultantFilter, consultantFilter]);
 
   const collegesScoped = useMemo(() => {
-    if (!isAdminPath || managementFilter === "all") return colleges;
-    return colleges.filter((item) => String(item.management || "").trim() === managementFilter);
-  }, [colleges, isAdminPath, managementFilter]);
+    return colleges.filter((item) => {
+      const collegeId = toInt(item.id);
+      if (collegeId <= 0) return false;
+      if (selectedContractCollegeSet && !selectedContractCollegeSet.has(collegeId)) return false;
+      return true;
+    });
+  }, [colleges, selectedContractCollegeSet]);
+
+  const collegesScopedSet = useMemo(() => {
+    const set = new Set<number>();
+    collegesScoped.forEach((item) => {
+      const id = toInt(item.id);
+      if (id > 0) set.add(id);
+    });
+    return set;
+  }, [collegesScoped]);
 
   const educatorsScoped = useMemo(() => {
-    if (!isAdminPath || managementFilter === "all") return educators;
+    if (!selectedContractId) return educators;
+
     return educators.filter((item) => {
-      const mgmt = String(item.management || "").trim();
-      if (mgmt) return mgmt === managementFilter;
       const collegeId = toInt(item.collegeId);
-      if (collegeId <= 0) return false;
-      return String(collegeManagementById.get(collegeId) || "") === managementFilter;
+      if (collegeId > 0 && collegesScopedSet.has(collegeId)) return true;
+
+      const explicitContractId = toInt((item as any).contractId ?? (item as any).contract_id);
+      if (explicitContractId > 0) {
+        return explicitContractId === selectedContractId;
+      }
+
+      return false;
     });
-  }, [educators, isAdminPath, managementFilter, collegeManagementById]);
+  }, [educators, collegesScopedSet, selectedContractId]);
 
   const consultantsScopeSet = useMemo(() => {
     const set = new Set<number>();
@@ -352,28 +438,33 @@ function CoordinatorPerformancePage() {
 
   const visitsByScope = useMemo(() => {
     const filterByScope = (visit: TVisit) => {
-      if (isAdminPath && managementFilter !== "all") {
-        const consultantId = toInt(visit.creatorId ?? visit.creator_id);
-        const collegeId = toInt(visit.collegeId ?? visit.college_id);
-        return consultantsScopeSet.has(consultantId) || collegesScopeSet.has(collegeId);
+      const consultantId = toInt(visit.creatorId ?? visit.creator_id);
+      const collegeId = toInt(visit.collegeId ?? visit.college_id);
+
+      if (selectedContractId) {
+        const contractByCollege = collegeContractById.get(collegeId);
+        const matchesByCollege = contractByCollege === selectedContractId || collegesScopeSet.has(collegeId);
+        const matchesByConsultant = consultantsScopeSet.has(consultantId);
+        if (!matchesByCollege && !matchesByConsultant) return false;
       }
+
+      if (hasConsultantFilter && consultantId !== consultantFilter) {
+        return false;
+      }
+
       return true;
     };
 
-    const byConsultant = (visit: TVisit) => {
-      if (consultantFilter === "all") return true;
-      return toInt(visit.creatorId ?? visit.creator_id) === consultantFilter;
-    };
-
-    const last30 = filteredLast30Visits.filter((visit) => filterByScope(visit) && byConsultant(visit));
-    const thisMonth = filteredThisMonthVisits.filter((visit) => filterByScope(visit) && byConsultant(visit));
-    const thisWeek = filteredThisWeekVisits.filter((visit) => filterByScope(visit) && byConsultant(visit));
+    const last30 = filteredLast30Visits.filter((visit) => filterByScope(visit));
+    const thisMonth = filteredThisMonthVisits.filter((visit) => filterByScope(visit));
+    const thisWeek = filteredThisWeekVisits.filter((visit) => filterByScope(visit));
 
     return { last30, thisMonth, thisWeek };
   }, [
-    isAdminPath,
-    managementFilter,
+    selectedContractId,
+    hasConsultantFilter,
     consultantFilter,
+    collegeContractById,
     consultantsScopeSet,
     collegesScopeSet,
     filteredLast30Visits,
@@ -467,7 +558,6 @@ function CoordinatorPerformancePage() {
     });
 
     return consultantsScoped
-      .filter((consultant) => consultantFilter === "all" || consultant.id === consultantFilter)
       .map((consultant) => {
         const stats = statsByConsultant.get(consultant.id) ?? { total: 0, completed: 0, cancelled: 0 };
         const completionRate = stats.total > 0 ? Math.round((stats.completed / stats.total) * 100) : 0;
@@ -481,7 +571,14 @@ function CoordinatorPerformancePage() {
         };
       })
       .sort((a, b) => (b.completionRate - a.completionRate) || (b.completed - a.completed) || (b.total - a.total));
-  }, [consultantsScoped, visitsByScope.last30, consultantFilter]);
+  }, [consultantsScoped, visitsByScope.last30]);
+
+  const contractOptions = useMemo(() => {
+    return contracts
+      .map((item) => ({ id: toInt(item.id), name: String(item.name || "").trim() }))
+      .filter((item) => item.id > 0)
+      .sort((a, b) => a.name.localeCompare(b.name, "pt-BR"));
+  }, [contracts]);
 
   const schoolsById = useMemo(() => {
     const map = new Map<number, string>();
@@ -703,7 +800,8 @@ function CoordinatorPerformancePage() {
     const now = new Date();
     const stamp = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, "0")}${String(now.getDate()).padStart(2, "0")}`;
     link.href = url;
-    link.download = `performance-rede-${stamp}.csv`;
+    const contractSuffix = selectedContractId ? `-contrato-${selectedContractId}` : "";
+    link.download = `performance-consultores${contractSuffix}-${stamp}.csv`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -723,19 +821,19 @@ function CoordinatorPerformancePage() {
           <div className="cpf-header-actions">
             {isAdminPath && (
               <div className="cpf-filter">
-                <label htmlFor="managementFilter">Rede</label>
+                <label htmlFor="contractFilter">Contrato</label>
                 <select
-                  id="managementFilter"
-                  value={managementFilter}
+                  id="contractFilter"
+                  value={contractFilter}
                   onChange={(event) => {
-                    setManagementFilter(event.target.value);
+                    setContractFilter(event.target.value);
                     setConsultantFilter("all");
                   }}
                 >
-                  <option value="all">Todas</option>
-                  {managementOptions.map((item) => (
-                    <option key={item} value={item}>
-                      {item}
+                  <option value="all">Todos os contratos</option>
+                  {contractOptions.map((item) => (
+                    <option key={item.id} value={item.id}>
+                      {item.name || `Contrato #${item.id}`}
                     </option>
                   ))}
                 </select>
@@ -747,12 +845,12 @@ function CoordinatorPerformancePage() {
                 id="consultantFilter"
                 value={String(consultantFilter)}
                 onChange={(event) => {
-                  const value = event.target.value;
-                  setConsultantFilter(value === "all" ? "all" : Number(value));
+                  const value = Number(event.target.value);
+                  setConsultantFilter(Number.isFinite(value) && value > 0 ? value : "all");
                 }}
               >
                 <option value="all">Todos</option>
-                {consultantsScoped.map((consultant) => (
+                {contractScopedConsultants.map((consultant) => (
                   <option key={consultant.id} value={consultant.id}>
                     {consultantName(consultant)}
                   </option>
@@ -774,7 +872,7 @@ function CoordinatorPerformancePage() {
             <small>Em férias: {loading ? "—" : formatMetric(summary.consultantsOnVacation)}</small>
           </article>
           <article className="cpf-kpi-card">
-            <span>Educadores (Rede)</span>
+            <span>Educadores (Contrato)</span>
             <b>{loading ? "—" : formatMetric(summary.totalEducators)}</b>
             <small>Escolas: {loading ? "—" : formatMetric(summary.totalSchools)}</small>
           </article>
