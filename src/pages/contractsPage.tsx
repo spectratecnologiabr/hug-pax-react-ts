@@ -121,6 +121,8 @@ function ContractsPage() {
 
   const [contracts, setContracts] = useState<TContractItem[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(25);
   const [consultants, setConsultants] = useState<TConsultant[]>([]);
   const [coordinators, setCoordinators] = useState<TCoordinator[]>([]);
 
@@ -197,6 +199,16 @@ function ContractsPage() {
       return searchable.includes(normalizedSearchTerm);
     });
   }, [contracts, coordinatorLabelById, normalizedSearchTerm]);
+
+  const totalPages = useMemo(() => {
+    if (pageSize <= 0) return 1;
+    return Math.max(1, Math.ceil(filteredContracts.length / pageSize));
+  }, [filteredContracts.length, pageSize]);
+
+  const paginatedContracts = useMemo(() => {
+    const start = (page - 1) * pageSize;
+    return filteredContracts.slice(start, start + pageSize);
+  }, [filteredContracts, page, pageSize]);
 
   const selectedContractSchoolIds = useMemo(() => {
     const ids = new Set<number>();
@@ -275,6 +287,14 @@ function ContractsPage() {
   useEffect(() => {
     void loadData();
   }, []);
+
+  useEffect(() => {
+    setPage(1);
+  }, [searchTerm]);
+
+  useEffect(() => {
+    setPage((prev) => Math.min(prev, totalPages));
+  }, [totalPages]);
 
   function openCreate() {
     setModalMode("create");
@@ -535,7 +555,7 @@ function ContractsPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredContracts.map((item) => (
+                    {paginatedContracts.map((item) => (
                       <tr key={item.id}>
                         <td>#{item.id}</td>
                         <td>{item.name}</td>
@@ -556,6 +576,48 @@ function ContractsPage() {
                 </table>
               </div>
             )}
+            {!loading && filteredContracts.length ? (
+              <div className="contracts-list-footer">
+                <span>Total: {filteredContracts.length} contrato(s)</span>
+                <div className="contracts-list-footer-meta">
+                  <div className="contracts-page-size-control">
+                    <span>Por página</span>
+                    <select
+                      value={pageSize}
+                      onChange={(event) => {
+                        const nextPageSize = Math.max(1, Number(event.target.value) || 25);
+                        setPageSize(nextPageSize);
+                        setPage(1);
+                      }}
+                    >
+                      <option value={10}>10</option>
+                      <option value={25}>25</option>
+                      <option value={50}>50</option>
+                      <option value={100}>100</option>
+                    </select>
+                  </div>
+                </div>
+                <div className="contracts-list-footer-nav">
+                  <button
+                    type="button"
+                    className="contracts-ghost-button"
+                    onClick={() => setPage((prev) => Math.max(1, prev - 1))}
+                    disabled={page <= 1}
+                  >
+                    Anterior
+                  </button>
+                  <span>Página {page} de {totalPages}</span>
+                  <button
+                    type="button"
+                    className="contracts-ghost-button"
+                    onClick={() => setPage((prev) => Math.min(totalPages, prev + 1))}
+                    disabled={page >= totalPages}
+                  >
+                    Próxima
+                  </button>
+                </div>
+              </div>
+            ) : null}
           </div>
         </div>
       </div>

@@ -1,12 +1,17 @@
+.coordinator-agenda-wrapper {
+  padding-bottom: 148px;
+}
+
 /* === Agenda Filters Card === */
 
 .agenda-filters-card {
-  margin-top: 20px;
-  margin: 0 20px;
+  margin: 0;
   border: 1px solid #E0E5EB;
   border-radius: 12px;
   background-color: #FFFFFF;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .agenda-filters-wrapper {
@@ -24,6 +29,7 @@
   display: flex;
   align-items: center;
   gap: 10px;
+  min-width: 0;
 }
 
 .agenda-filter-select svg {
@@ -53,6 +59,7 @@
   background-repeat: no-repeat;
   background-position: right 12px center;
   background-size: 14px;
+  box-sizing: border-box;
 }
 
 .agenda-consultant-select:focus {
@@ -99,7 +106,9 @@
     flex-direction: column;
     align-items: flex-start;
     gap: 20px;
-    margin: 0 20px;
+    margin: 0;
+    width: 100%;
+    min-width: 0;
 }
 
 /* === View Tabs (Lista / Calendário) === */
@@ -151,7 +160,8 @@
 
 .agenda-list-panel {
   margin-top: 16px;
-  width: -webkit-fill-available;
+  width: 100%;
+  margin-bottom: 70px;
 }
 
 .agenda-list-card {
@@ -196,6 +206,7 @@
 .agenda-item-main {
   display: flex;
   gap: 14px;
+  min-width: 0;
 }
 
 .agenda-item-icon {
@@ -218,6 +229,7 @@
   display: flex;
   flex-direction: column;
   gap: 4px;
+  min-width: 0;
 }
 
 .agenda-item-title {
@@ -225,19 +237,23 @@
   font-size: 14px;
   font-weight: 500;
   color: #29303D;
+  word-break: break-word;
 }
 
 .agenda-item-sub {
   font-family: "Inter";
   font-size: 12px;
   color: #737B8C;
+  word-break: break-word;
 }
 
 .agenda-item-meta {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
+  justify-content: flex-end;
   gap: 8px;
+  flex-shrink: 0;
 }
 
 .agenda-item-date {
@@ -298,6 +314,8 @@
 
 .agenda-calendar-panel {
   width: 100%;
+  min-width: 0;
+  margin-bottom: 70px;
 }
 
 
@@ -495,6 +513,40 @@
 
 
 @media (max-width: 768px) {
+  .admin-dashboard-container .admin-dashboard-wrapper .admin-header-wrapper {
+    align-items: flex-start;
+    gap: 12px;
+    flex-direction: column;
+  }
+
+  .admin-dashboard-container .admin-dashboard-wrapper .admin-header-wrapper button {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .agenda-filters-wrapper {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .agenda-filter-select {
+    width: 100%;
+  }
+
+  .agenda-consultant-select {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .agenda-quick-filters {
+    width: 100%;
+  }
+
+  .agenda-filter-btn {
+    flex: 1 1 calc(50% - 4px);
+    justify-content: center;
+  }
+
   .agenda-view-tabs {
     width: 100%;
     justify-content: space-between;
@@ -510,9 +562,53 @@
     font-size: 12px;
   }
 
+  .agenda-calendar-header.is-inline {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .agenda-calendar-month {
+    width: 100%;
+    grid-column: span 3;
+    display: flex;
+    justify-content: center;
+    justify-self: center;
+  }
+
+  .agenda-week-nav {
+    width: 100%;
+    justify-content: space-between;
+  }
+
   .agenda-week-grid {
-    grid-auto-columns: minmax(220px, 1fr);
+    grid-auto-flow: row;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-auto-columns: unset;
     padding: 14px;
+    overflow-x: visible;
+    overflow-y: visible;
+    scroll-snap-type: none;
+  }
+
+  .agenda-item {
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .agenda-item-meta {
+    width: 100%;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .agenda-item-date,
+  .agenda-item-extra {
+    width: auto;
+    justify-content: flex-end;
   }
 }
 
@@ -525,6 +621,14 @@
     padding: 12px;
   }
 
+  .agenda-list-header {
+    padding: 16px 16px 10px;
+  }
+
+  .agenda-filter-btn {
+    flex-basis: 100%;
+  }
+
   .agenda-item-title {
     font-size: 13px;
   }
@@ -533,9 +637,29 @@
     font-size: 11px;
   }
 
+  .agenda-item-main {
+    gap: 10px;
+  }
+
+  .agenda-item-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+  }
+
+  .agenda-item-extra {
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 6px;
+  }
+
   .agenda-week-day {
     min-height: 110px;
     padding: 8px;
+  }
+
+  .agenda-week-grid {
+    grid-template-columns: 1fr;
   }
 
   .agenda-week-day-header strong {

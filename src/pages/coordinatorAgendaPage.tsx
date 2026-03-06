@@ -264,7 +264,7 @@ function CoordinatorAgendaPage() {
         <React.Fragment>
             <div className="admin-dashboard-container">
                 <Menubar/>
-                <div className="admin-dashboard-wrapper">
+                <div className="admin-dashboard-wrapper coordinator-agenda-wrapper">
                     <div className="admin-header-wrapper">
                         <div>
                             <b>Agenda de Consultores</b>

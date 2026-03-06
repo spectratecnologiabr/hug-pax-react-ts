@@ -10,6 +10,7 @@
   flex-direction: column;
   gap: 4px;
   min-width: 220px;
+  min-width: 0;
 }
 
 .coordinator-performance-wrapper .admin-header-wrapper {
@@ -19,6 +20,11 @@
 .coordinator-performance-wrapper .admin-header-wrapper > div:first-child {
   flex: 1;
   min-width: 0;
+}
+
+.coordinator-performance-wrapper .admin-header-wrapper > div:first-child b,
+.coordinator-performance-wrapper .admin-header-wrapper > div:first-child span {
+  display: block;
 }
 
 .coordinator-performance-wrapper .admin-header-wrapper .cpf-header-actions {
@@ -72,7 +78,6 @@
 }
 
 .cpf-error {
-  margin: 0 20px;
   border: 1px solid #fecaca;
   background: #fef2f2;
   color: #b42318;
@@ -83,10 +88,11 @@
 }
 
 .cpf-grid-kpi {
-  margin: 0 20px;
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 12px;
+  width: 100%;
+  min-width: 0;
 }
 
 .cpf-kpi-card {
@@ -119,18 +125,21 @@
 }
 
 .cpf-grid-main {
-  margin: 0 20px;
   display: grid;
   grid-template-columns: 1.4fr 1fr;
   gap: 12px;
+  width: 100%;
+  min-width: 0;
 }
 
 .cpf-panel {
-  margin: 0 20px;
   border: 1px solid rgba(0, 0, 0, 0.08);
   border-radius: 14px;
   background: #fff;
   padding: 14px 16px;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
 }
 
 .cpf-grid-main .cpf-panel {
@@ -152,11 +161,13 @@
 
 .cpf-table-wrap {
   overflow-x: auto;
+  min-width: 0;
 }
 
 .cpf-table {
   width: 100%;
   border-collapse: collapse;
+  min-width: 620px;
 }
 
 .cpf-table th,
@@ -236,6 +247,17 @@
 }
 
 @media (max-width: 760px) {
+  .coordinator-performance-wrapper .admin-header-wrapper {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 14px;
+  }
+
+  .coordinator-performance-wrapper .admin-header-wrapper > div:first-child {
+    width: 100%;
+    order: 1;
+  }
+
   .cpf-grid-kpi {
     grid-template-columns: 1fr;
   }
@@ -245,18 +267,40 @@
     gap: 6px;
   }
 
-  .coordinator-performance-wrapper .admin-header-wrapper {
-    align-items: flex-start;
-  }
-
   .coordinator-performance-wrapper .admin-header-wrapper .cpf-header-actions {
     width: 100%;
     flex-wrap: wrap;
     justify-content: flex-start;
     margin-left: 0;
+    gap: 12px;
+    order: 2;
   }
 
   .cpf-filter {
-    min-width: 180px;
+    width: 100%;
+  }
+
+  .coordinator-performance-wrapper .admin-header-wrapper .cpf-header-actions .cpf-filter {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .cpf-export-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .cpf-panel {
+    padding: 13px 14px;
+  }
+
+  .cpf-panel-header {
+    align-items: flex-start;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .cpf-table {
+    min-width: 540px;
   }
 }

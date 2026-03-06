@@ -4,6 +4,7 @@
   padding: 32px;
   font-family: Arial, sans-serif;
   background: #ffffff;
+  box-sizing: border-box;
 }
 
 .report-container h1 {
@@ -95,6 +96,49 @@
   margin: 8px 0 0;
   color: #4b5563;
   font-size: 13px;
+}
+
+@media (max-width: 640px) {
+  .report-container {
+    padding: 20px 16px 104px;
+  }
+
+  .report-container h1 {
+    margin-bottom: 16px;
+    font-size: 26px;
+    line-height: 1.15;
+  }
+
+  .report-section {
+    margin-bottom: 20px;
+  }
+
+  .report-section h2 {
+    font-size: 18px;
+    line-height: 1.2;
+  }
+
+  .report-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    padding: 10px 0;
+  }
+
+  .report-row .label {
+    width: 100%;
+  }
+
+  .report-back-button,
+  .report-print-button {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .report-photo-preview {
+    max-width: 100%;
+    max-height: none;
+  }
 }
 
 @page {

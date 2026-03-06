@@ -237,10 +237,11 @@
 }
 
 .custom-calendar-header.admin .calendar-nav {
-  width: -webkit-fill-available;
-  display: flex;
-  justify-content: space-between;
+  width: 100%;
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr) 32px;
   align-items: center;
+  gap: 12px;
 }
 
 .custom-calendar-header.admin .calendar-nav .calendar-nav-btn {
@@ -250,6 +251,7 @@
 
 .custom-calendar-header.admin .calendar-nav .calendar-month-label {
   font-size: 14px;
+  text-align: center;
 }
 
 @media (max-width: 1200px) {
@@ -259,9 +261,16 @@
 }
 
 @media (max-width: 640px) {
-  .admin-date-picker .react-datepicker {
+  .admin-date-picker.admin {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+  }
+
+  .admin-date-picker.admin .react-datepicker {
     border-radius: 18px;
     padding: 14px 12px;
+    margin: 0 auto;
   }
 
   .custom-calendar-header {
@@ -285,6 +294,16 @@
   .calendar-nav {
     order: 4;
     margin-left: auto;
+  }
+
+  .custom-calendar-header.admin .calendar-nav {
+    order: 0;
+    margin-left: 0;
+  }
+
+  .custom-calendar-header.admin .calendar-nav .calendar-nav-btn,
+  .custom-calendar-header.admin .calendar-nav .calendar-month-label {
+    order: 0;
   }
 
   .react-datepicker__day,

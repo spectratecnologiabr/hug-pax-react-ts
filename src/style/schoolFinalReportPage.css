@@ -12,6 +12,7 @@
 
 .school-report-page .school-report-main {
   padding: 24px 28px;
+  padding-bottom: 104px;
 }
 
 .school-report-page .school-report-header {
@@ -262,6 +263,80 @@
 
   .school-report-page .sr-radar-layout {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .school-report-page .school-report-main {
+    padding: 24px 16px 104px;
+  }
+
+  .school-report-page .school-report-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 14px;
+  }
+
+  .school-report-page .school-report-header h1 {
+    font-size: 26px;
+    line-height: 1.15;
+  }
+
+  .school-report-page .school-report-header p {
+    font-size: 14px;
+  }
+
+  .school-report-page .school-report-actions {
+    width: 100%;
+    flex-direction: column;
+  }
+
+  .school-report-page .sr-primary,
+  .school-report-page .sr-secondary {
+    width: 100%;
+  }
+
+  .school-report-page .school-report-filters {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .school-report-page .school-report-filters label,
+  .school-report-page .school-report-filters input,
+  .school-report-page .school-report-filters .sr-secondary {
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .school-report-page .school-report-sheet {
+    padding: 16px 14px;
+  }
+
+  .school-report-page .sr-meta-grid,
+  .school-report-page .sr-kpi-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .school-report-page .sr-section h2 {
+    font-size: 17px;
+    line-height: 1.2;
+  }
+
+  .school-report-page .sr-table-like > div {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+
+  .school-report-page .sr-radar-summary > div {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+
+  .school-report-page .sr-radar-canvas svg {
+    width: 100%;
+    height: auto;
   }
 }
 

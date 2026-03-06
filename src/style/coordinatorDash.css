@@ -21,10 +21,11 @@
 }
 
 .coord-shortcuts {
-  margin: 0 20px;
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 12px;
+  width: 100%;
+  min-width: 0;
 }
 
 .coord-shortcut-card {
@@ -69,5 +70,9 @@
   .coordinator-main-dash .cards-list,
   .coord-shortcuts {
     grid-template-columns: 1fr;
+  }
+
+  .coord-shortcut-card {
+    padding: 13px 14px;
   }
 }

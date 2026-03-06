@@ -336,19 +336,19 @@ function CoordinatorConsultantsPage() {
           </div>
 
           <div className="colleges-card">
-            <div className="colleges-card-header" style={{ gap: 10, alignItems: "center", display: "flex", justifyContent: "space-between" }}>
+            <div className="colleges-card-header coord-consultants-card-header">
               <b>Lista de Consultores</b>
-              <div style={{ display: "flex", gap: 8 }}>
+              <div className="coord-consultants-card-actions">
                 <input
                   value={search}
                   onChange={(event) => setSearch(event.target.value)}
                   placeholder="Buscar consultor"
-                  style={{ height: 36, borderRadius: 8, border: "1px solid #d0d7e2", padding: "0 10px" }}
+                  className="coord-consultants-search-input"
                 />
                 <select
                   value={statusFilter}
                   onChange={(event) => setStatusFilter(event.target.value as typeof statusFilter)}
-                  style={{ height: 36, borderRadius: 8, border: "1px solid #d0d7e2", padding: "0 10px" }}
+                  className="coord-consultants-filter-select"
                 >
                   <option value="all">Todos</option>
                   <option value="active">Ativos</option>
