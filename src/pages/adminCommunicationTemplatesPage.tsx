@@ -1,4 +1,5 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Link from "@tiptap/extension-link";
@@ -222,6 +223,9 @@ function AdminCommunicationTemplatesPage() {
   const [selected, setSelected] = useState<TTemplate | null>(null);
   const [modalLoading, setModalLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [openActionsTemplateId, setOpenActionsTemplateId] = useState<number | string | null>(null);
+  const actionsMenuRef = useRef<HTMLDivElement | null>(null);
+  const [actionsMenuPos, setActionsMenuPos] = useState<{ top: number; left: number }>({ top: 0, left: 0 });
 
   const [createForm, setCreateForm] = useState({
     name: "",
@@ -309,6 +313,19 @@ function AdminCommunicationTemplatesPage() {
     return () => clearTimeout(timer);
   }, [q, status, channel, category, language]);
 
+  useEffect(() => {
+    if (openActionsTemplateId == null) return;
+
+    function handleOutsideClick(event: MouseEvent) {
+      const target = event.target as Node | null;
+      if (actionsMenuRef.current?.contains(target)) return;
+      setOpenActionsTemplateId(null);
+    }
+
+    document.addEventListener("mousedown", handleOutsideClick);
+    return () => document.removeEventListener("mousedown", handleOutsideClick);
+  }, [openActionsTemplateId]);
+
   const channelOptions = useMemo(() => {
     const values = rows.map(item => String(item.channel ?? "").trim()).filter(Boolean);
     return Array.from(new Set(values));
@@ -332,6 +349,29 @@ function AdminCommunicationTemplatesPage() {
     setPreviewError(null);
     setModalLoading(false);
     setSaving(false);
+  }
+
+  function toggleActionsMenu(template: TTemplate, target: HTMLElement) {
+    if (openActionsTemplateId === template.id) {
+      setOpenActionsTemplateId(null);
+      return;
+    }
+
+    const rect = target.getBoundingClientRect();
+    const viewportPadding = 12;
+    const estimatedMenuWidth = window.innerWidth <= 640 ? Math.min(220, window.innerWidth - 24) : 190;
+    const estimatedMenuHeight = 232;
+    const nextLeft = Math.max(
+      estimatedMenuWidth + viewportPadding,
+      Math.min(rect.right, window.innerWidth - viewportPadding)
+    );
+    const nextTop = Math.max(
+      viewportPadding,
+      Math.min(rect.bottom + 8, window.innerHeight - estimatedMenuHeight - viewportPadding)
+    );
+
+    setActionsMenuPos({ top: nextTop, left: nextLeft });
+    setOpenActionsTemplateId(template.id);
   }
 
   async function openDetail(template: TTemplate) {
@@ -542,25 +582,16 @@ function AdminCommunicationTemplatesPage() {
                     <td>{template.version ?? "—"}</td>
                     <td>{template.updatedAt ? new Date(template.updatedAt).toLocaleString("pt-BR") : "—"}</td>
                     <td className="atp-actions">
-                      <button type="button" onClick={() => openDetail(template)}>Ver</button>
                       <button
                         type="button"
-                        onClick={() => {
-                          setSelected(template);
-                          setVersionForm({
-                            name: template.name ?? "",
-                            category: template.category ?? "",
-                            subject: template.subject ?? "",
-                            body: template.body ?? "",
-                          });
-                          setModal("version");
-                        }}
+                        className="atp-actions-trigger"
+                        aria-label="Ações"
+                        aria-haspopup="menu"
+                        aria-expanded={openActionsTemplateId === template.id}
+                        onClick={(event) => toggleActionsMenu(template, event.currentTarget)}
                       >
-                        Nova versão
+                        ⋮
                       </button>
-                      <button type="button" onClick={() => openPreview(template)}>Preview</button>
-                      <button type="button" onClick={() => handleActivate(template.id)}>Ativar</button>
-                      <button type="button" className="danger" onClick={() => handleArchive(template.id)}>Arquivar</button>
                     </td>
                   </tr>
                 ))}
@@ -571,6 +602,87 @@ function AdminCommunicationTemplatesPage() {
           )}
         </div>
       </div>
+
+      {openActionsTemplateId != null &&
+        (() => {
+          const template = rows.find((row) => row.id === openActionsTemplateId);
+          if (!template) return null;
+
+          return createPortal(
+            <div
+              className="atp-actions-menu-portal"
+              role="menu"
+              ref={actionsMenuRef}
+              style={{ top: actionsMenuPos.top, left: actionsMenuPos.left }}
+            >
+              <button
+                className="atp-actions-item"
+                role="menuitem"
+                onClick={() => {
+                  setOpenActionsTemplateId(null);
+                  openDetail(template);
+                }}
+              >
+                Ver
+              </button>
+              <button
+                className="atp-actions-item"
+                role="menuitem"
+                onClick={() => {
+                  setOpenActionsTemplateId(null);
+                  setSelected(template);
+                  setVersionForm({
+                    name: template.name ?? "",
+                    category: template.category ?? "",
+                    subject: template.subject ?? "",
+                    body: template.body ?? "",
+                  });
+                  setModal("version");
+                }}
+              >
+                Nova versão
+              </button>
+              <button
+                className="atp-actions-item"
+                role="menuitem"
+                onClick={() => {
+                  setOpenActionsTemplateId(null);
+                  openPreview(template);
+                }}
+              >
+                Preview
+              </button>
+              {String(template.status ?? "").toLowerCase() !== "active" && (
+                <button
+                  className="atp-actions-item"
+                  role="menuitem"
+                  onClick={() => {
+                    setOpenActionsTemplateId(null);
+                    handleActivate(template.id);
+                  }}
+                >
+                  Ativar
+                </button>
+              )}
+              {String(template.status ?? "").toLowerCase() !== "archived" && (
+                <>
+                  <div className="atp-actions-sep" role="separator" />
+                  <button
+                    className="atp-actions-item danger"
+                    role="menuitem"
+                    onClick={() => {
+                      setOpenActionsTemplateId(null);
+                      handleArchive(template.id);
+                    }}
+                  >
+                    Arquivar
+                  </button>
+                </>
+              )}
+            </div>,
+            document.body
+          );
+        })()}
 
       {modal && (
         <div className="modal-overlay" onClick={closeModal}>

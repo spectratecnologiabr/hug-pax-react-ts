@@ -146,9 +146,11 @@ function AdminLogsPage() {
   const [search, setSearch] = useState("");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
-  const [limitFilter, setLimitFilter] = useState(50);
   const [moduleFilter, setModuleFilter] = useState("all");
   const [levelFilter, setLevelFilter] = useState<"all" | "info" | "warning" | "error" | "critical" | "debug">("all");
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(25);
+  const [total, setTotal] = useState(0);
   const [detailsModal, setDetailsModal] = useState<TDetailsModal>({ open: false, log: null });
   const [detailsLoading, setDetailsLoading] = useState(false);
 
@@ -209,19 +211,34 @@ function AdminLogsPage() {
       setError(null);
       try {
         const data = await getLogDashboardList({
+          search: search || undefined,
           from: dateFrom || undefined,
           to: dateTo || undefined,
           module: moduleFilter === "all" ? undefined : moduleFilter,
           level: levelFilter === "all" ? undefined : levelFilter,
-          limit: limitFilter,
+          page,
+          limit: pageSize,
         });
 
         if (cancelled) return;
-        setLogs(mapLogsPayload(data));
+        const items = Array.isArray((data as any)?.items)
+          ? (data as any).items
+          : mapLogsPayload(data);
+
+        const rawPagination = (data as any)?.pagination;
+        const nextTotal = Number(rawPagination?.total ?? (data as any)?.total ?? items.length);
+        const nextPage = Math.max(1, Number(rawPagination?.page ?? (data as any)?.page ?? page));
+        const nextPageSize = Math.max(1, Number(rawPagination?.pageSize ?? (data as any)?.limit ?? pageSize));
+
+        setLogs(items);
+        setTotal(nextTotal);
+        if (nextPage !== page) setPage(nextPage);
+        if (nextPageSize !== pageSize) setPageSize(nextPageSize);
       } catch (e) {
         console.error("Erro ao carregar logs", e);
         if (cancelled) return;
         setLogs([]);
+        setTotal(0);
         setError("Não foi possível carregar os logs.");
       } finally {
         if (!cancelled) setLoading(false);
@@ -232,30 +249,31 @@ function AdminLogsPage() {
     return () => {
       cancelled = true;
     };
-  }, [dateFrom, dateTo, levelFilter, limitFilter, moduleFilter, search]);
+  }, [dateFrom, dateTo, levelFilter, moduleFilter, page, pageSize, search]);
 
-  const filteredLogs = useMemo(() => {
-    const term = search.trim().toLowerCase();
+  const totalPages = useMemo(() => {
+    if (pageSize <= 0) return 1;
+    return Math.max(1, Math.ceil(total / pageSize));
+  }, [pageSize, total]);
 
-    return logs.filter(log => {
-      const user = extractUser(log);
-      const action = extractAction(log);
-      const module = extractModule(log);
-      const ip = extractIp(log);
-      const level = normalizeLevel(log.level);
+  useEffect(() => {
+    setPage(1);
+  }, [search, dateFrom, dateTo, moduleFilter, levelFilter, pageSize]);
 
-      if (!term) return true;
-      return `${user} ${action} ${module} ${ip} ${level}`.toLowerCase().includes(term);
-    });
-  }, [logs, search]);
+  useEffect(() => {
+    if (page > totalPages) {
+      setPage(totalPages);
+    }
+  }, [page, totalPages]);
 
   async function exportCsv() {
     const blob = await exportLogDashboardCsv({
+      q: search || undefined,
       from: dateFrom || undefined,
       to: dateTo || undefined,
       module: moduleFilter === "all" ? undefined : moduleFilter,
       level: levelFilter === "all" ? undefined : levelFilter,
-      limit: limitFilter,
+      limit: pageSize,
     });
 
     const url = URL.createObjectURL(blob);
@@ -303,10 +321,11 @@ function AdminLogsPage() {
 
           <input type="date" className="alp-filter-input date" value={dateFrom} onChange={event => setDateFrom(event.target.value)} />
           <input type="date" className="alp-filter-input date" value={dateTo} onChange={event => setDateTo(event.target.value)} />
-          <select className="alp-filter-input" value={String(limitFilter)} onChange={event => setLimitFilter(Number(event.target.value))}>
+          <select className="alp-filter-input" value={String(pageSize)} onChange={event => setPageSize(Number(event.target.value))}>
+            <option value="10">10</option>
+            <option value="25">25</option>
             <option value="50">50</option>
             <option value="100">100</option>
-            <option value="200">200</option>
           </select>
 
           <select className="alp-filter-input" value={moduleFilter} onChange={event => setModuleFilter(event.target.value)}>
@@ -354,7 +373,7 @@ function AdminLogsPage() {
                 </tr>
               )}
 
-              {!loading && !error && filteredLogs.length === 0 && (
+              {!loading && !error && logs.length === 0 && (
                 <tr>
                   <td colSpan={7} className="alp-state-row">Nenhum log encontrado.</td>
                 </tr>
@@ -362,7 +381,7 @@ function AdminLogsPage() {
 
               {!loading &&
                 !error &&
-                filteredLogs.map((log, index) => {
+                logs.map((log, index) => {
                   const level = normalizeLevel(log.level);
                   const metadataText = JSON.stringify(log.metadata ?? {}, null, 2);
 
@@ -415,6 +434,32 @@ function AdminLogsPage() {
             </tbody>
           </table>
         </div>
+
+        <div className="alp-list-footer">
+          <div className="alp-list-footer-meta">
+            <span>Total: {total} log(s)</span>
+            <label className="alp-page-size-control">
+              <span>Por página</span>
+              <select value={pageSize} onChange={(event) => setPageSize(Number(event.target.value))}>
+                <option value="10">10</option>
+                <option value="25">25</option>
+                <option value="50">50</option>
+                <option value="100">100</option>
+              </select>
+            </label>
+          </div>
+
+          <div className="alp-list-footer-nav">
+            <button type="button" className="alp-export-btn" onClick={() => setPage((prev) => Math.max(1, prev - 1))} disabled={loading || page <= 1}>
+              Anterior
+            </button>
+            <span>Página {page} de {totalPages}</span>
+            <button type="button" className="alp-export-btn" onClick={() => setPage((prev) => Math.min(totalPages, prev + 1))} disabled={loading || page >= totalPages}>
+              Próxima
+            </button>
+          </div>
+        </div>
+
         {detailsModal.open && detailsModal.log && (
           <div className="alp-modal-backdrop" onClick={() => setDetailsModal({ open: false, log: null })}>
             <div className="alp-modal-card" onClick={event => event.stopPropagation()}>

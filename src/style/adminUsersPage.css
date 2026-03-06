@@ -1,5 +1,16 @@
 /* Página: Usuários e Permissões (escopado para evitar conflitos globais) */
 
+.admin-users-page.admin-dashboard-wrapper {
+  padding-bottom: 120px;
+}
+
+.admin-users-page .sap-top-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
 .admin-users-page .sap-btn-icon {
   width: 16px;
   height: 16px;
@@ -26,7 +37,7 @@
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 16px;
-  margin: 0 20px 20px;
+  margin: 0 0 20px;
 }
 
 .admin-users-page .sap-summary-card {
@@ -115,7 +126,7 @@
   border: 1px solid #eef2f7;
   border-radius: 12px;
   background: #ffffff;
-  margin: 0 20px 16px;
+  margin: 0 0 16px;
   align-items: center;
 }
 
@@ -183,7 +194,7 @@
   background: #ffffff;
   border: 1px solid #eef2f7;
   border-radius: 14px;
-  margin: 0 20px;
+  margin: 0;
   overflow: hidden;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
@@ -274,6 +285,15 @@
   .admin-users-page .sap-pagination {
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  .admin-users-page .sap-top-actions {
+    width: 100%;
+    align-items: stretch;
+  }
+
+  .admin-users-page .sap-top-actions button {
+    min-height: 40px;
   }
 }
 
@@ -516,6 +536,164 @@
   }
 }
 
+@media (max-width: 640px) {
+  .admin-users-page .sap-top-actions button {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .admin-users-page .sap-summary-card {
+    padding: 14px 16px;
+  }
+
+  .admin-users-page .sap-card-header {
+    flex-wrap: wrap;
+  }
+
+  .admin-users-page .sap-table,
+  .admin-users-page .sap-table thead,
+  .admin-users-page .sap-table tbody,
+  .admin-users-page .sap-table tr,
+  .admin-users-page .sap-table td {
+    display: block;
+  }
+
+  .admin-users-page .sap-table thead {
+    display: none;
+  }
+
+  .admin-users-page .sap-table tbody {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 12px;
+  }
+
+  .admin-users-page .sap-table tbody tr {
+    position: relative;
+    border: 1px solid #eef2f7;
+    border-radius: 12px;
+    padding: 14px;
+    background: #ffffff;
+  }
+
+  .admin-users-page .sap-table td {
+    border-bottom: none;
+    padding: 0;
+  }
+
+  .admin-users-page .sap-table td:nth-child(1) {
+    padding-right: 40px;
+  }
+
+  .admin-users-page .sap-table td:nth-child(2),
+  .admin-users-page .sap-table td:nth-child(3),
+  .admin-users-page .sap-table td:nth-child(4) {
+    margin-top: 10px;
+  }
+
+  .admin-users-page .sap-table td:nth-child(5) {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+  }
+
+  .admin-users-page .sap-user-cell {
+    align-items: flex-start;
+  }
+
+  .admin-users-page .sap-user-meta b,
+  .admin-users-page .sap-user-email {
+    max-width: 100%;
+    white-space: normal;
+    overflow: visible;
+    text-overflow: initial;
+  }
+
+  .admin-users-page .sap-pagination {
+    gap: 14px;
+    padding: 12px 14px 16px;
+  }
+
+  .admin-users-page .sap-pagination-controls {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 10px;
+    align-items: center;
+  }
+
+  .admin-users-page .sap-pagination-size {
+    grid-column: 1 / -1;
+    justify-content: space-between;
+    width: 100%;
+  }
+
+  .admin-users-page .sap-pagination-page {
+    grid-column: 2;
+    text-align: center;
+    white-space: nowrap;
+  }
+
+  .sap-actions-menu-portal {
+    width: min(220px, calc(100vw - 24px));
+    max-width: calc(100vw - 24px);
+  }
+
+  .admin-users-page .sap-modal-overlay,
+  .admin-users-page .sap-user-modal-overlay {
+    padding: 12px;
+    align-items: center;
+  }
+
+  .admin-users-page .sap-modal-card,
+  .admin-users-page .sap-user-modal-card {
+    width: min(100%, 420px);
+    max-width: min(100%, 420px);
+    max-height: calc(100vh - 24px);
+    overflow: hidden;
+  }
+
+  .admin-users-page .sap-modal-header,
+  .admin-users-page .sap-user-modal-header {
+    padding: 14px 16px;
+  }
+
+  .admin-users-page .sap-modal-body,
+  .admin-users-page .sap-user-modal-body {
+    padding: 14px 16px;
+  }
+
+  .admin-users-page .sap-user-modal-body {
+    padding-bottom: 16px;
+  }
+
+  .admin-users-page .sap-user-modal-actions {
+    padding: 12px 16px 16px;
+    border-top: 1px solid #eef2f7;
+    background: #ffffff;
+  }
+
+  .admin-users-page .sap-modal-actions,
+  .admin-users-page .sap-user-modal-actions,
+  .admin-users-page .sap-import-actions {
+    flex-direction: column-reverse;
+  }
+
+  .admin-users-page .sap-modal-actions button,
+  .admin-users-page .sap-user-modal-actions button,
+  .admin-users-page .sap-import-actions button {
+    width: 100%;
+  }
+
+  .admin-users-page .sap-modal-scroll,
+  .admin-users-page .sap-user-modal-scroll {
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+  }
+}
+
 /* ===== Confirmation Modal ===== */
 .admin-users-page .sap-modal-overlay {
   position: fixed;
@@ -526,6 +704,8 @@
   justify-content: center;
   z-index: 100000;
   padding: 20px;
+  overflow: hidden;
+  overscroll-behavior: contain;
 }
 
 .admin-users-page .sap-modal-card {
@@ -536,6 +716,8 @@
   border: 1px solid #eef2f7;
   box-shadow: 0 24px 70px rgba(16, 24, 40, 0.25);
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .admin-users-page .sap-modal-header {
@@ -575,6 +757,15 @@
 
 .admin-users-page .sap-modal-body {
   padding: 16px 18px;
+}
+
+.admin-users-page .sap-modal-scroll,
+.admin-users-page .sap-user-modal-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
 }
 
 .admin-users-page .sap-modal-user {
@@ -689,6 +880,8 @@
   justify-content: center;
   z-index: 100000;
   padding: 20px;
+  overflow: hidden;
+  overscroll-behavior: contain;
 }
 
 .admin-users-page .sap-user-modal-card {
@@ -698,7 +891,9 @@
   border-radius: 14px;
   border: 1px solid #eef2f7;
   box-shadow: 0 24px 70px rgba(16, 24, 40, 0.25);
-  overflow: visible;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .admin-users-page .sap-import-modal-card {

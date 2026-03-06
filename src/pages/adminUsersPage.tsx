@@ -1241,6 +1241,21 @@ function AdminUsersPage() {
     return () => document.removeEventListener("mousedown", handleMouseDown);
   }, [seriesMultiselectOpen]);
 
+  useEffect(() => {
+    if (!userModal.open) return;
+
+    const previousOverflow = document.body.style.overflow;
+    const previousOverscroll = document.body.style.overscrollBehavior;
+
+    document.body.style.overflow = "hidden";
+    document.body.style.overscrollBehavior = "none";
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.body.style.overscrollBehavior = previousOverscroll;
+    };
+  }, [userModal.open]);
+
   return (
     <div className="admin-dashboard-container">
       <Menubar />
@@ -1647,49 +1662,51 @@ function AdminUsersPage() {
                     ×
                   </button>
                 </div>
-                <div className="sap-modal-body">
-                  <div className="sap-modal-user">
-                    <div className="sap-avatar" aria-hidden="true">
-                      {getInitials(passwordModal.user.name)}
+                <div className="sap-modal-scroll">
+                  <div className="sap-modal-body">
+                    <div className="sap-modal-user">
+                      <div className="sap-avatar" aria-hidden="true">
+                        {getInitials(passwordModal.user.name)}
+                      </div>
+                      <div className="sap-modal-user-meta">
+                        <b>{passwordModal.user.name}</b>
+                        <span>{passwordModal.user.email}</span>
+                      </div>
                     </div>
-                    <div className="sap-modal-user-meta">
-                      <b>{passwordModal.user.name}</b>
-                      <span>{passwordModal.user.email}</span>
+
+                    <div className="sap-password-form-grid">
+                      <label className="sap-user-field">
+                        <span>Nova senha</span>
+                        <input
+                          type="password"
+                          value={passwordForm.password}
+                          onChange={e => setPasswordForm(prev => ({ ...prev, password: e.target.value }))}
+                          disabled={passwordModalSubmitting}
+                          placeholder="Digite a nova senha"
+                        />
+                      </label>
+                      <label className="sap-user-field">
+                        <span>Confirmar senha</span>
+                        <input
+                          type="password"
+                          value={passwordForm.confirmPassword}
+                          onChange={e => setPasswordForm(prev => ({ ...prev, confirmPassword: e.target.value }))}
+                          disabled={passwordModalSubmitting}
+                          placeholder="Confirme a nova senha"
+                        />
+                      </label>
                     </div>
-                  </div>
 
-                  <div className="sap-password-form-grid">
-                    <label className="sap-user-field">
-                      <span>Nova senha</span>
-                      <input
-                        type="password"
-                        value={passwordForm.password}
-                        onChange={e => setPasswordForm(prev => ({ ...prev, password: e.target.value }))}
-                        disabled={passwordModalSubmitting}
-                        placeholder="Digite a nova senha"
-                      />
-                    </label>
-                    <label className="sap-user-field">
-                      <span>Confirmar senha</span>
-                      <input
-                        type="password"
-                        value={passwordForm.confirmPassword}
-                        onChange={e => setPasswordForm(prev => ({ ...prev, confirmPassword: e.target.value }))}
-                        disabled={passwordModalSubmitting}
-                        placeholder="Confirme a nova senha"
-                      />
-                    </label>
+                    {passwordModalError && <div className="sap-modal-error">{passwordModalError}</div>}
                   </div>
-
-                  {passwordModalError && <div className="sap-modal-error">{passwordModalError}</div>}
-                </div>
-                <div className="sap-modal-actions">
-                  <button className="sap-secondary" onClick={closePasswordModal} disabled={passwordModalSubmitting}>
-                    Cancelar
-                  </button>
-                  <button className="sap-primary" onClick={handleSubmitPasswordModal} disabled={passwordModalSubmitting}>
-                    {passwordModalSubmitting ? "Salvando..." : "Salvar nova senha"}
-                  </button>
+                  <div className="sap-modal-actions">
+                    <button className="sap-secondary" onClick={closePasswordModal} disabled={passwordModalSubmitting}>
+                      Cancelar
+                    </button>
+                    <button className="sap-primary" onClick={handleSubmitPasswordModal} disabled={passwordModalSubmitting}>
+                      {passwordModalSubmitting ? "Salvando..." : "Salvar nova senha"}
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -1716,94 +1733,96 @@ function AdminUsersPage() {
                     ×
                   </button>
                 </div>
-                <div className="sap-modal-body">
-                  <p className="sap-modal-desc" style={{ marginTop: 0 }}>
-                    Envie um arquivo `.csv` ou `.json` com os usuários. Você pode criar, atualizar ou usar modo híbrido (upsert).
-                  </p>
+                <div className="sap-modal-scroll">
+                  <div className="sap-modal-body">
+                    <p className="sap-modal-desc" style={{ marginTop: 0 }}>
+                      Envie um arquivo `.csv` ou `.json` com os usuários. Você pode criar, atualizar ou usar modo híbrido (upsert).
+                    </p>
 
-                  <label className="sap-user-field" style={{ maxWidth: 360 }}>
-                    <span>Modo de importação</span>
-                    <select
-                      value={importMode}
-                      onChange={(e) => setImportMode(e.target.value as ImportUsersMode)}
-                      disabled={importSubmitting}
-                    >
-                      <option value="upsert">Criar e atualizar (upsert)</option>
-                      <option value="create">Somente criar novos</option>
-                      <option value="update">Somente atualizar existentes</option>
-                    </select>
-                  </label>
+                    <label className="sap-user-field" style={{ maxWidth: 360 }}>
+                      <span>Modo de importação</span>
+                      <select
+                        value={importMode}
+                        onChange={(e) => setImportMode(e.target.value as ImportUsersMode)}
+                        disabled={importSubmitting}
+                      >
+                        <option value="upsert">Criar e atualizar (upsert)</option>
+                        <option value="create">Somente criar novos</option>
+                        <option value="update">Somente atualizar existentes</option>
+                      </select>
+                    </label>
 
-                  <p className="sap-modal-desc" style={{ marginTop: 8 }}>
-                    Colunas suportadas: `id`, `email`, `nome` (aceita nome completo), `sobrenome` (opcional), `perfil`, `status`, `senha`, `escola`/`escolaId`, `contractId`/`contratoId`, `rede`, `segmento`, `series`, `tipoDocumento`, `numeroDocumento`, `dataNascimento`, `genero`, `telefone`, `idioma`, `isActive`, `isBlocked`.
-                  </p>
+                    <p className="sap-modal-desc" style={{ marginTop: 8 }}>
+                      Colunas suportadas: `id`, `email`, `nome` (aceita nome completo), `sobrenome` (opcional), `perfil`, `status`, `senha`, `escola`/`escolaId`, `contractId`/`contratoId`, `rede`, `segmento`, `series`, `tipoDocumento`, `numeroDocumento`, `dataNascimento`, `genero`, `telefone`, `idioma`, `isActive`, `isBlocked`.
+                    </p>
 
-                  <input
-                    ref={importFileRef}
-                    type="file"
-                    accept=".csv,.json,text/csv,application/json"
-                    style={{ display: "none" }}
-                    onChange={handleImportFileChange}
-                  />
+                    <input
+                      ref={importFileRef}
+                      type="file"
+                      accept=".csv,.json,text/csv,application/json"
+                      style={{ display: "none" }}
+                      onChange={handleImportFileChange}
+                    />
 
-                  <div className="sap-import-actions">
-                    <button className="sap-secondary" onClick={triggerImportFileSelect} disabled={importSubmitting}>
-                      Selecionar arquivo
+                    <div className="sap-import-actions">
+                      <button className="sap-secondary" onClick={triggerImportFileSelect} disabled={importSubmitting}>
+                        Selecionar arquivo
+                      </button>
+                      <button className="sap-secondary" onClick={handleDownloadTemplateCsv} disabled={importSubmitting}>
+                        Baixar modelo CSV
+                      </button>
+                    </div>
+
+                    {importFileName && (
+                      <div className="sap-import-meta">
+                        <b>Arquivo:</b> {importFileName}
+                      </div>
+                    )}
+
+                    {importUsersBuffer.length > 0 && (
+                      <div className="sap-import-meta">
+                        <b>Linhas prontas para importar:</b> {importUsersBuffer.length}
+                      </div>
+                    )}
+
+                    {importError && <div className="sap-modal-error">{importError}</div>}
+
+                    {importResult && (
+                      <div className="sap-import-result">
+                        <div className="sap-import-summary">
+                          <span>Total: {importResult.summary.total}</span>
+                          <span>Criados: {importResult.summary.created}</span>
+                          <span>Atualizados: {importResult.summary.updated}</span>
+                          <span>Falhas: {importResult.summary.failed}</span>
+                        </div>
+
+                        {importResult.summary.failed > 0 && (
+                          <div className="sap-import-failures">
+                            {importResult.results
+                              .filter(item => !item.success)
+                              .slice(0, 10)
+                              .map(item => (
+                                <div key={`${item.row}-${item.email ?? "sem-email"}`} className="sap-import-failure-row">
+                                  Linha {item.row} ({item.email ?? "sem e-mail"}): {item.message ?? "Erro"}
+                                </div>
+                              ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                  <div className="sap-modal-actions">
+                    <button className="sap-secondary" onClick={closeImportModal} disabled={importSubmitting}>
+                      Fechar
                     </button>
-                    <button className="sap-secondary" onClick={handleDownloadTemplateCsv} disabled={importSubmitting}>
-                      Baixar modelo CSV
+                    <button
+                      className="sap-primary"
+                      onClick={handleImportSubmit}
+                      disabled={importSubmitting || importUsersBuffer.length === 0}
+                    >
+                      {importSubmitting ? "Importando..." : "Importar agora"}
                     </button>
                   </div>
-
-                  {importFileName && (
-                    <div className="sap-import-meta">
-                      <b>Arquivo:</b> {importFileName}
-                    </div>
-                  )}
-
-                  {importUsersBuffer.length > 0 && (
-                    <div className="sap-import-meta">
-                      <b>Linhas prontas para importar:</b> {importUsersBuffer.length}
-                    </div>
-                  )}
-
-                  {importError && <div className="sap-modal-error">{importError}</div>}
-
-                  {importResult && (
-                    <div className="sap-import-result">
-                      <div className="sap-import-summary">
-                        <span>Total: {importResult.summary.total}</span>
-                        <span>Criados: {importResult.summary.created}</span>
-                        <span>Atualizados: {importResult.summary.updated}</span>
-                        <span>Falhas: {importResult.summary.failed}</span>
-                      </div>
-
-                      {importResult.summary.failed > 0 && (
-                        <div className="sap-import-failures">
-                          {importResult.results
-                            .filter(item => !item.success)
-                            .slice(0, 10)
-                            .map(item => (
-                              <div key={`${item.row}-${item.email ?? "sem-email"}`} className="sap-import-failure-row">
-                                Linha {item.row} ({item.email ?? "sem e-mail"}): {item.message ?? "Erro"}
-                              </div>
-                            ))}
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-                <div className="sap-modal-actions">
-                  <button className="sap-secondary" onClick={closeImportModal} disabled={importSubmitting}>
-                    Fechar
-                  </button>
-                  <button
-                    className="sap-primary"
-                    onClick={handleImportSubmit}
-                    disabled={importSubmitting || importUsersBuffer.length === 0}
-                  >
-                    {importSubmitting ? "Importando..." : "Importar agora"}
-                  </button>
                 </div>
               </div>
             </div>
@@ -1837,11 +1856,12 @@ function AdminUsersPage() {
                   </button>
                 </div>
 
-                <div className="sap-user-modal-body">
-                  {userModalDetailsLoading && (
-                    <div style={{ marginBottom: 12, fontSize: 13, color: "#667085" }}>Carregando dados do usuário...</div>
-                  )}
-                  <div className="sap-user-form-grid">
+                <div className="sap-user-modal-scroll">
+                  <div className="sap-user-modal-body">
+                    {userModalDetailsLoading && (
+                      <div style={{ marginBottom: 12, fontSize: 13, color: "#667085" }}>Carregando dados do usuário...</div>
+                    )}
+                    <div className="sap-user-form-grid">
                     <label className="sap-user-field">
                       <span>Nome</span>
                       <input
@@ -2198,20 +2218,21 @@ function AdminUsersPage() {
                         <option value="false">Inativo</option>
                       </select>
                     </label>
+                    </div>
+
+                    {userModalError && <div className="sap-user-modal-error">{userModalError}</div>}
                   </div>
 
-                  {userModalError && <div className="sap-user-modal-error">{userModalError}</div>}
-                </div>
-
-                <div className="sap-user-modal-actions">
-                  <button className="sap-secondary" onClick={closeUserModal} disabled={userModalSubmitting}>
-                    {userModal.mode === "view" ? "Fechar" : "Cancelar"}
-                  </button>
-                  {userModal.mode !== "view" && (
-                    <button className="sap-primary" onClick={handleSubmitUserModal} disabled={userModalSubmitting}>
-                      {userModalSubmitting ? "Salvando..." : userModal.mode === "create" ? "Criar usuário" : "Salvar alterações"}
+                  <div className="sap-user-modal-actions">
+                    <button className="sap-secondary" onClick={closeUserModal} disabled={userModalSubmitting}>
+                      {userModal.mode === "view" ? "Fechar" : "Cancelar"}
                     </button>
-                  )}
+                    {userModal.mode !== "view" && (
+                      <button className="sap-primary" onClick={handleSubmitUserModal} disabled={userModalSubmitting}>
+                        {userModalSubmitting ? "Salvando..." : userModal.mode === "create" ? "Criar usuário" : "Salvar alterações"}
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>

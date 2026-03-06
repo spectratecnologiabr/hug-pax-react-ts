@@ -2,7 +2,11 @@
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 14px;
-  margin: 0 20px 18px;
+  margin: 0 0 18px;
+}
+
+.retention-page.admin-dashboard-wrapper {
+  padding-bottom: 120px;
 }
 
 .retention-page .retention-card {
@@ -140,5 +144,106 @@
 
   .retention-page .modal-card {
     max-height: calc(100vh - 20px);
+  }
+}
+
+@media (max-width: 768px) {
+  .retention-page .sap-top-actions {
+    width: 100%;
+    align-items: stretch;
+  }
+
+  .retention-page .sap-top-actions a,
+  .retention-page .sap-top-actions button {
+    min-height: 40px;
+  }
+}
+
+@media (max-width: 640px) {
+  .retention-page .sap-table td:last-child {
+    display: flex;
+  }
+
+  .retention-page .sap-top-actions {
+    gap: 10px;
+  }
+
+  .retention-page .sap-top-actions a {
+    width: auto;
+    min-height: 36px;
+    padding: 8px 14px;
+    border-radius: 999px;
+    white-space: nowrap;
+  }
+
+  .retention-page .sap-top-actions button {
+    width: 100%;
+  }
+
+  .retention-page .sap-table,
+  .retention-page .sap-table thead,
+  .retention-page .sap-table tbody,
+  .retention-page .sap-table tr,
+  .retention-page .sap-table td {
+    display: block;
+  }
+
+  .retention-page .sap-table thead {
+    display: none;
+  }
+
+  .retention-page .sap-table tbody {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .retention-page .sap-table tr {
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 14px;
+    background: #ffffff;
+  }
+
+  .retention-page .sap-table td {
+    border-bottom: none;
+    padding: 0;
+  }
+
+  .retention-page .sap-table td:nth-child(1) {
+    font-size: 14px;
+    font-weight: 700;
+    color: #111827;
+  }
+
+  .retention-page .sap-table td:nth-child(2),
+  .retention-page .sap-table td:nth-child(3),
+  .retention-page .sap-table td:nth-child(4),
+  .retention-page .sap-table td:nth-child(5),
+  .retention-page .sap-table td:nth-child(6),
+  .retention-page .sap-table td:nth-child(7) {
+    margin-top: 10px;
+  }
+
+  .retention-page .sap-actions {
+    justify-content: flex-start;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding-right: 44px;
+  }
+
+  .retention-page .sap-actions-trigger {
+    min-height: 36px;
+  }
+
+  .retention-page .modal-overlay {
+    padding: 16px 12px;
+    z-index: 1500;
+  }
+
+  .retention-page .modal-card {
+    width: min(100%, 420px);
+    max-height: calc(100vh - 32px);
+    border-radius: 14px;
   }
 }

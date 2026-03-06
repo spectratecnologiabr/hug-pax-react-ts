@@ -115,6 +115,10 @@
     flex: 0 0 auto;
 }
 
+.admin-menubar #logout span {
+    display: none;
+}
+
 .admin-menubar #logout:hover {
     background-color: #3696D3;
     border: 1px solid #ffffff;
@@ -189,7 +193,7 @@
         position: sticky;
         top: 12px;
         gap: 8px;
-        z-index: 40;
+        z-index: 1300;
     }
 
     .admin-menubar-mobile-bar {
@@ -205,7 +209,7 @@
         box-sizing: border-box;
         box-shadow: 0 10px 24px rgba(26, 87, 146, 0.22);
         position: relative;
-        z-index: 40;
+        z-index: 1301;
     }
 
     .admin-menubar-mobile-brand {
@@ -267,7 +271,10 @@
         top: 86px;
         right: 16px;
         margin: 0;
-        z-index: 31;
+        z-index: 1300;
+        max-height: calc(100vh - 108px);
+        overflow-y: auto;
+        overscroll-behavior: contain;
     }
 
     .admin-menubar.mobile-open .admin-menubar-shell {
