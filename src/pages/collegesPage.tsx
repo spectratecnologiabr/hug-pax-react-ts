@@ -395,16 +395,17 @@ function CollegesPage() {
     return Math.max(1, Math.ceil(pagination.total / pagination.pageSize));
   }, [pagination.total, pagination.pageSize]);
 
-  async function loadColleges(params?: { page?: number; search?: string }) {
+  async function loadColleges(params?: { page?: number; search?: string; pageSize?: number }) {
     setLoading(true);
     try {
       const requestedPage = Math.max(1, Number(params?.page ?? pagination.page));
       const requestedSearch = String(params?.search ?? search).trim();
+      const requestedPageSize = Math.max(1, Number(params?.pageSize ?? pagination.pageSize));
 
       const response: any = await listColleges({
         search: requestedSearch || undefined,
         page: requestedPage,
-        pageSize: pagination.pageSize,
+        pageSize: requestedPageSize,
       });
 
       const isPaginatedPayload = Array.isArray(response?.items) && response?.pagination;
@@ -437,8 +438,8 @@ function CollegesPage() {
           : fullList;
 
         total = filtered.length;
-        const start = (requestedPage - 1) * pagination.pageSize;
-        const end = start + pagination.pageSize;
+        const start = (requestedPage - 1) * requestedPageSize;
+        const end = start + requestedPageSize;
         rows = filtered.slice(start, end);
       }
 
@@ -446,6 +447,7 @@ function CollegesPage() {
       setPagination((prev) => ({
         ...prev,
         page: resolvedPage,
+        pageSize: requestedPageSize,
         total: Number.isFinite(total) ? total : rows.length,
       }));
     } catch (error) {
@@ -491,6 +493,12 @@ function CollegesPage() {
     const safePage = Math.min(Math.max(1, nextPage), totalPages);
     setPagination((prev) => ({ ...prev, page: safePage }));
     void loadColleges({ page: safePage });
+  }
+
+  function handlePageSizeChange(nextPageSize: number) {
+    const safePageSize = Math.max(1, Number(nextPageSize) || 50);
+    setPagination((prev) => ({ ...prev, page: 1, pageSize: safePageSize }));
+    void loadColleges({ page: 1, pageSize: safePageSize });
   }
 
   useEffect(() => {
@@ -941,13 +949,13 @@ function mapCollegeToForm(college: any): TCollegeForm {
                   <tbody>
                     {colleges.map((college) => (
                       <tr key={college.id}>
-                        <td>{college.name}</td>
-                        <td>{college.city} - {college.state}</td>
-                        <td>{college.partner}</td>
-                        <td>#{Number(college.contractId ?? college.contract_id) || "-"}</td>
-                        <td>{college.educatorsLength}</td>
-                        <td>{normalizeArray(college.contractSeries).length}</td>
-                        <td className="colleges-actions-cell">
+                        <td data-label="Nome">{college.name}</td>
+                        <td data-label="Cidade / UF">{college.city} - {college.state}</td>
+                        <td data-label="Parceiro Contratante">{college.partner}</td>
+                        <td data-label="Contrato">#{Number(college.contractId ?? college.contract_id) || "-"}</td>
+                        <td data-label="Educadores">{college.educatorsLength}</td>
+                        <td data-label="Séries Contratadas">{normalizeArray(college.contractSeries).length}</td>
+                        <td data-label="Ações" className="colleges-actions-cell">
                           <button
                             type="button"
                             className="colleges-actions-btn"
@@ -975,10 +983,25 @@ function mapCollegeToForm(college: any): TCollegeForm {
               className="colleges-modal-footer"
               style={{ borderTop: "1px solid #e5e7eb", justifyContent: "space-between" }}
             >
-              <span style={{ fontSize: 13, color: "#6b7280" }}>
-                Total: {pagination.total} escola(s)
-              </span>
-              <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+              <div className="colleges-list-footer-meta">
+                <span style={{ fontSize: 13, color: "#6b7280" }}>
+                  Total: {pagination.total} escola(s)
+                </span>
+                <label className="colleges-page-size-control">
+                  <span>Por página</span>
+                  <select
+                    value={pagination.pageSize}
+                    onChange={(event) => handlePageSizeChange(Number(event.target.value))}
+                    disabled={loading}
+                  >
+                    <option value={10}>10</option>
+                    <option value={25}>25</option>
+                    <option value={50}>50</option>
+                    <option value={100}>100</option>
+                  </select>
+                </label>
+              </div>
+              <div className="colleges-list-footer-nav">
                 <button
                   type="button"
                   className="colleges-ghost-button"

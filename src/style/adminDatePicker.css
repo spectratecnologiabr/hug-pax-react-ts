@@ -1,5 +1,19 @@
 .admin-date-picker {
   min-width: 400px;
+  width: 100%;
+}
+
+@media (min-width: 1201px) {
+  .admin-date-picker {
+    width: 400px;
+    min-width: 400px;
+    max-width: 400px;
+    flex: 0 0 400px;
+  }
+
+  .admin-date-picker .react-datepicker {
+    min-height: 400px;
+  }
 }
 
 .admin-date-picker .react-datepicker {
@@ -238,3 +252,45 @@
   font-size: 14px;
 }
 
+@media (max-width: 1200px) {
+  .admin-date-picker {
+    min-width: 0;
+  }
+}
+
+@media (max-width: 640px) {
+  .admin-date-picker .react-datepicker {
+    border-radius: 18px;
+    padding: 14px 12px;
+  }
+
+  .custom-calendar-header {
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+
+  .main-calendar-label {
+    width: 100%;
+  }
+
+  .calendar-month-label {
+    order: 2;
+  }
+
+  .custom-calendar-header .today {
+    order: 3;
+  }
+
+  .calendar-nav {
+    order: 4;
+    margin-left: auto;
+  }
+
+  .react-datepicker__day,
+  .react-datepicker__day-name {
+    height: 32px;
+    line-height: 32px;
+    font-size: 12px;
+  }
+}

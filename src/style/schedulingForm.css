@@ -9,6 +9,8 @@
     justify-content: center;
     align-items: center;
     z-index: 1000;
+    padding: 20px;
+    box-sizing: border-box;
 }
 
 .scheduling-form-container.visible {
@@ -19,8 +21,13 @@
     background-color: #fff;
     padding: 20px;
     border-radius: 8px;
-    width: 500px;
+    width: min(500px, 100%);
+    max-height: calc(100vh - 40px);
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
 }
 
 .scheduling-form .scheduling-header {
@@ -28,7 +35,8 @@
     gap: 20px;
     justify-content: center;
     align-items: center;
-    margin-bottom: 15px;
+    margin-bottom: 0;
+    flex-shrink: 0;
 }
 
 .scheduling-form .scheduling-header button {
@@ -54,9 +62,10 @@
 .scheduling-form .scheduling-body {
     display: flex;
     flex-direction: column;
-    max-height: 500px;
-    overflow-y: scroll;
+    max-height: calc(100vh - 160px);
+    overflow-y: auto;
     scrollbar-width: thin;
+    min-width: 0;
 }
 
 .scheduling-form .scheduling-body .form-wrapper, .scheduling-form .scheduling-body .form-wrapper.container div {
@@ -92,6 +101,26 @@
     border-radius: 4px;
     font-family: 'SF UI Display Medium';
     background-color: #f9f9f9;
+    width: 100%;
+    box-sizing: border-box;
+    line-height: 1.2;
+}
+
+.scheduling-form .scheduling-body .form-wrapper input[type="date"],
+.scheduling-form .scheduling-body .form-wrapper input[type="time"] {
+    appearance: none;
+    -webkit-appearance: none;
+    min-height: 40px;
+}
+
+.scheduling-form .scheduling-body .form-wrapper input[type="date"]::-webkit-date-and-time-value,
+.scheduling-form .scheduling-body .form-wrapper input[type="time"]::-webkit-date-and-time-value {
+    text-align: left;
+}
+
+.scheduling-form .scheduling-body .form-wrapper input[type="date"]::-webkit-calendar-picker-indicator,
+.scheduling-form .scheduling-body .form-wrapper input[type="time"]::-webkit-calendar-picker-indicator {
+    opacity: 1;
 }
 
 .scheduling-form .scheduling-body .form-wrapper input:focus,
@@ -147,4 +176,89 @@
 
 .scheduling-form .scheduling-body .form-wrapper button.cancel-button:hover {
     background-color: #c55a18;
+}
+
+@media (max-width: 640px) {
+    .scheduling-form-container {
+        align-items: flex-start;
+        padding: 12px;
+    }
+
+    .scheduling-form {
+        width: 100%;
+        max-height: calc(100vh - 24px);
+        padding: 16px;
+        border-radius: 16px;
+        gap: 14px;
+    }
+
+    .scheduling-form .scheduling-header {
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        position: sticky;
+        top: 0;
+        background: #fff;
+        z-index: 2;
+        padding-bottom: 4px;
+    }
+
+    .scheduling-form .scheduling-header b {
+        font-size: 20px;
+    }
+
+    .scheduling-form .scheduling-header button {
+        padding: 8px 14px;
+        white-space: nowrap;
+    }
+
+    .scheduling-form .scheduling-body {
+        max-height: calc(100vh - 120px);
+    }
+
+    .scheduling-form .scheduling-body .form-wrapper,
+    .scheduling-form .scheduling-body .form-wrapper.container,
+    .scheduling-form .scheduling-body .form-wrapper.container div {
+        width: 100%;
+    }
+
+    .scheduling-form .scheduling-body .form-wrapper.container {
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .scheduling-form .scheduling-body .form-wrapper label,
+    .scheduling-form .scheduling-body .form-wrapper span,
+    .scheduling-form .scheduling-body .form-wrapper b {
+        line-height: 1.35;
+    }
+
+    .scheduling-form .scheduling-body .form-wrapper input,
+    .scheduling-form .scheduling-body .form-wrapper select,
+    .scheduling-form .scheduling-body .form-wrapper textarea {
+        font-size: 16px;
+        padding: 10px 12px;
+        border-radius: 10px;
+    }
+
+    .scheduling-form .scheduling-body .form-wrapper input[type="date"],
+    .scheduling-form .scheduling-body .form-wrapper input[type="time"] {
+        height: 44px;
+        min-height: 44px;
+        padding-top: 10px;
+        padding-bottom: 10px;
+    }
+
+    .scheduling-form .scheduling-body .form-wrapper input[type="date"]::-webkit-date-and-time-value,
+    .scheduling-form .scheduling-body .form-wrapper input[type="time"]::-webkit-date-and-time-value {
+        min-height: 22px;
+    }
+
+    .scheduling-form .scheduling-body .form-wrapper button.submit-button,
+    .scheduling-form .scheduling-body .form-wrapper button.rescheduling-button,
+    .scheduling-form .scheduling-body .form-wrapper button.go-button,
+    .scheduling-form .scheduling-body .form-wrapper button.cancel-button {
+        width: 100%;
+        margin-top: 12px;
+    }
 }

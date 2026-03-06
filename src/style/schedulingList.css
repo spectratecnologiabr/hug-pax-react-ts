@@ -1,5 +1,6 @@
 .scheduling-container {
-    min-width: 600px;
+    min-width: 0;
+    width: 100%;
     display: flex;
     flex-direction: column;
     gap: 16px;
@@ -233,4 +234,99 @@
 
 .visits-filter-popup button:hover {
   background: #f3f0ff;
+}
+
+@media (max-width: 900px) {
+  .scheduling-container .buttons-wrapper {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+}
+
+@media (max-width: 640px) {
+  .scheduling-container .header-wrapper b {
+    font-size: 20px;
+  }
+
+  .scheduling-container .header-wrapper div {
+    font-size: 14px;
+  }
+
+  .scheduling-container .buttons-wrapper {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .scheduling-container .buttons-wrapper .show-filter,
+  .scheduling-container .buttons-wrapper .new-schedule {
+    justify-content: center;
+  }
+
+  .schedule-card {
+    grid-template-columns: auto auto 1fr;
+    gap: 10px 8px;
+    padding: 14px;
+    align-items: start;
+  }
+
+  .schedule-info {
+    grid-column: 1 / -1;
+    grid-row: 1;
+  }
+
+  .schedule-info strong {
+    font-size: 16px;
+    line-height: 1.3;
+  }
+
+  .schedule-info span {
+    display: block;
+    margin-top: 4px;
+    line-height: 1.4;
+  }
+
+  .schedule-time {
+    grid-column: 1;
+    grid-row: 2;
+    min-width: 72px;
+    padding: 8px 12px;
+  }
+
+  .schedule-status {
+    grid-column: 2;
+    grid-row: 2;
+    width: fit-content;
+    align-self: center;
+  }
+
+  .schedule-actions {
+    grid-column: 3;
+    grid-row: 2;
+    justify-content: flex-end;
+    align-self: center;
+    justify-self: end;
+  }
+
+  .schedule-actions .status-dot {
+    display: none;
+  }
+
+  .schedule-actions button {
+    width: 32px;
+    height: 32px;
+    border-radius: 999px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f1f5f9;
+  }
+
+  .visits-filter {
+    width: 100%;
+  }
+
+  .visits-filter-popup {
+    width: 100%;
+    min-width: 0;
+  }
 }

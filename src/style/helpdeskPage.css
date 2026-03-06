@@ -71,4 +71,9 @@
   .helpdesk-header {
     flex-direction: column;
   }
+
+  .helpdesk-standalone {
+    max-height: calc(100vh - 220px);
+    overflow: hidden;
+  }
 }

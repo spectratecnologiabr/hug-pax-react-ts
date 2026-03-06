@@ -18,6 +18,7 @@ function Menubar(props: {notificationCount: number}) {
     const userName = (getCookies("userData")).firstName;
     const pathname = window.location.pathname;
     const [ userRole, setUserRole ] = useState<TRole | null>(null);
+    const [mobileOpen, setMobileOpen] = useState(false);
 
     useEffect(() => {
         async function fetchUserRole() {
@@ -43,98 +44,91 @@ function Menubar(props: {notificationCount: number}) {
         fetchUserRole();
         const timer = window.setInterval(fetchUserRole, 30000);
         return () => window.clearInterval(timer);
-    }, []); 
+    }, []);
+
+    useEffect(() => {
+        function handleResize() {
+            if (window.innerWidth > 769) {
+                setMobileOpen(false);
+            }
+        }
+
+        window.addEventListener("resize", handleResize);
+        return () => window.removeEventListener("resize", handleResize);
+    }, []);
 
     return (
-        <div className="admin-menubar">
-            <div className="logo-wrapper">
-                <img src={paxIconWhite} className="pax-logo" />
-                <b>Olá {userName}!</b>
+        <div className={`admin-menubar ${mobileOpen ? "mobile-open" : ""}`}>
+            <div className="admin-menubar-mobile-bar">
+                <a href="/consultant" className="admin-menubar-mobile-brand" aria-label="Ir para início do painel do consultor">
+                    <img src={paxIconWhite} className="pax-logo" alt="Hug" />
+                </a>
+                <button
+                    type="button"
+                    className="admin-menubar-mobile-toggle"
+                    onClick={() => setMobileOpen(prev => !prev)}
+                    aria-expanded={mobileOpen}
+                    aria-label="Abrir menu"
+                >
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
             </div>
 
+            <div className="admin-menubar-shell">
+                <div className="logo-wrapper">
+                    <img src={paxIconWhite} className="pax-logo" alt="Hug" />
+                    <b>Olá {userName}!</b>
+                </div>
 
-            <div className="menu-wrapper">
-                <a href="/consultant" className={pathname.endsWith("/consultant") ? "menu-link selected" : "menu-link"}>
-                    <img src={homeIcon} />
-                    <span>Início</span>
-                </a>
+                <div className="menu-wrapper">
+                    <a href="/consultant" className={pathname.endsWith("/consultant") ? "menu-link selected" : "menu-link"}>
+                        <img src={homeIcon} alt="" />
+                        <span>Início</span>
+                    </a>
 
-                <a href="/consultant/colleges" className={pathname.includes("/consultant/colleges") ? "menu-link selected" : "menu-link"}>
-                    <svg height="18" viewBox="0 0 22 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M21 5L11 1L1 5L11 9L21 5ZM21 5V11" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                        <path d="M5 6.60001V12C5 12.7957 5.63214 13.5587 6.75736 14.1213C7.88258 14.6839 9.4087 15 11 15C12.5913 15 14.1174 14.6839 15.2426 14.1213C16.3679 13.5587 17 12.7957 17 12V6.60001" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
+                    <a href="/consultant/colleges" className={pathname.includes("/consultant/colleges") ? "menu-link selected" : "menu-link"}>
+                        <svg height="18" viewBox="0 0 22 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M21 5L11 1L1 5L11 9L21 5ZM21 5V11" stroke="#FFFFFF" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                            <path d="M5 6.60001V12C5 12.7957 5.63214 13.5587 6.75736 14.1213C7.88258 14.6839 9.4087 15 11 15C12.5913 15 14.1174 14.6839 15.2426 14.1213C16.3679 13.5587 17 12.7957 17 12V6.60001" stroke="#FFFFFF" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                        <span>Escolas</span>
+                    </a>
 
+                    <a href="/consultant/educators" className={pathname.includes("/consultant/educators") ? "menu-link selected" : "menu-link"}>
+                         <img src={personIcon} alt="" />
+                        <span>Educadores</span>
+                    </a>
+
+                    {(userRole !== "consultant") ? (
+                        <React.Fragment>
+                            <a href="/consultant/courses" className={pathname.includes("/consultant/courses") ? "menu-link selected" : "menu-link"}>
+                                <img src={hatIcon} alt="" />
+                                <span>Cursos</span>
+                            </a>
+
+                            <a href="#" className={pathname.includes("/consultant/reports") ? "menu-link selected" : "menu-link"}>
+                                <svg width="16" height="20" viewBox="0 0 16 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M5 3H3C2.46957 3 1.96086 3.21071 1.58579 3.58579C1.21071 3.96086 1 4.46957 1 5V17C1 17.5304 1.21071 18.0391 1.58579 18.4142C1.96086 18.7893 2.46957 19 3 19H13C13.5304 19 14.0391 18.7893 14.4142 18.4142C14.7893 18.0391 15 17.5304 15 17V5C15 4.46957 14.7893 3.96086 14.4142 3.58579C14.0391 3.21071 13.5304 3 13 3H11" stroke="#FFFFFF" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                                    <path d="M9 1H7C5.89543 1 5 1.89543 5 3C5 4.10457 5.89543 5 7 5H9C10.1046 5 11 4.10457 11 3C11 1.89543 10.1046 1 9 1Z" stroke="#FFFFFF" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                                    <path d="M5 15V10" stroke="#FFFFFF" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                                    <path d="M8 15V14" stroke="#FFFFFF" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                                    <path d="M11 15V12" stroke="#FFFFFF" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                                </svg>
+                                <span>Relatórios</span>
+                            </a>
+                        </React.Fragment>
+                    ) : ""}
+
+                    <PageSelector />
                     
-                    <span>Escolas</span>
-                </a>
-
-                <a href="/consultant/educators" className={pathname.includes("/consultant/educators") ? "menu-link selected" : "menu-link"}>
-                     <img src={personIcon} />
-
-                    <span>Educadores</span>
-                </a>
-
-                {
-                    (userRole !== "consultant") ?
-                    <React.Fragment>
-                        <a href="/consultant/courses" className={pathname.includes("/consultant/courses") ? "menu-link selected" : "menu-link"}>
-                            <img src={hatIcon} />
-                            <span>Cursos</span>
-                        </a>
-
-                        <a href="#" className={pathname.includes("/consultant/reports") ? "menu-link selected" : "menu-link"}>
-                            <svg width="16" height="20" viewBox="0 0 16 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M5 3H3C2.46957 3 1.96086 3.21071 1.58579 3.58579C1.21071 3.96086 1 4.46957 1 5V17C1 17.5304 1.21071 18.0391 1.58579 18.4142C1.96086 18.7893 2.46957 19 3 19H13C13.5304 19 14.0391 18.7893 14.4142 18.4142C14.7893 18.0391 15 17.5304 15 17V5C15 4.46957 14.7893 3.96086 14.4142 3.58579C14.0391 3.21071 13.5304 3 13 3H11" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                                <path d="M9 1H7C5.89543 1 5 1.89543 5 3C5 4.10457 5.89543 5 7 5H9C10.1046 5 11 4.10457 11 3C11 1.89543 10.1046 1 9 1Z" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                                <path d="M5 15V10" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                                <path d="M8 15V14" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                                <path d="M11 15V12" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                            </svg>
-
-
-                            <span>Relatórios</span>
-                        </a>
-                    </React.Fragment>
-                    : ""
-                    
-                }
-
-                <PageSelector/>
-
-                 <a href="/notifications" className="menu-link">
-                    <svg height="20" viewBox="0 0 24 26" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M23.0209 11.6458C22.5724 11.6458 22.2084 11.2818 22.2084 10.8333C22.2084 7.72192 20.9974 4.79803 18.7981 2.59777C18.4807 2.28039 18.4807 1.76583 18.7981 1.44845C19.1155 1.13107 19.63 1.13107 19.9476 1.44845C22.4534 3.95518 23.8334 7.28869 23.8334 10.8333C23.8334 11.2818 23.4694 11.6458 23.0209 11.6458Z" fill="#ffffff"/>
-                    <path d="M0.8125 11.6458C0.363998 11.6458 0 11.2818 0 10.8333C0 7.28869 1.38022 3.95518 3.88695 1.44944C4.20433 1.13206 4.71909 1.13206 5.03647 1.44944C5.35385 1.76682 5.35385 2.28158 5.03647 2.59896C2.83621 4.79803 1.625 7.72192 1.625 10.8333C1.625 11.2818 1.261 11.6458 0.8125 11.6458Z" fill="#ffffff"/>
-                    <path d="M11.9165 26C9.67618 26 7.854 24.1778 7.854 21.9375C7.854 21.489 8.218 21.125 8.6665 21.125C9.11501 21.125 9.479 21.489 9.479 21.9375C9.479 23.282 10.572 24.375 11.9165 24.375C13.2608 24.375 14.354 23.282 14.354 21.9375C14.354 21.489 14.718 21.125 15.1665 21.125C15.615 21.125 15.979 21.489 15.979 21.9375C15.979 24.1778 14.1568 26 11.9165 26Z" fill="#ffffff"/>
-                    <path d="M20.8542 22.75H2.97922C1.93364 22.75 1.08325 21.8996 1.08325 20.8542C1.08325 20.2994 1.32486 19.7741 1.74638 19.4133C3.394 18.0212 4.33325 15.9977 4.33325 13.8538V10.8333C4.33325 6.65174 7.735 3.24999 11.9167 3.24999C16.0982 3.24999 19.5 6.65174 19.5 10.8333V13.8538C19.5 15.9977 20.4392 18.0212 22.0761 19.4058C22.5084 19.7741 22.75 20.2994 22.75 20.8542C22.75 21.8996 21.8996 22.75 20.8542 22.75ZM11.9167 4.87499C8.63081 4.87499 5.95825 7.54755 5.95825 10.8333V13.8538C5.95825 16.4763 4.80893 18.9529 2.80585 20.6461C2.76796 20.6787 2.70825 20.7459 2.70825 20.8542C2.70825 21.0014 2.83183 21.125 2.97922 21.125H20.8542C21.0014 21.125 21.125 21.0014 21.125 20.8542C21.125 20.7459 21.0655 20.6787 21.0296 20.6483C19.0243 18.9529 17.875 16.4763 17.875 13.8538V10.8333C17.875 7.54755 15.2024 4.87499 11.9167 4.87499Z" fill="#ffffff"/>
-                    <path d="M11.9165 4.875C11.468 4.875 11.104 4.511 11.104 4.0625V0.8125C11.104 0.363998 11.468 0 11.9165 0C12.365 0 12.729 0.363998 12.729 0.8125V4.0625C12.729 4.511 12.365 4.875 11.9165 4.875Z" fill="#ffffff"/>
-                    </svg>
-
-                    {
-                        props.notificationCount > 0 && (
-                            <span className="notification-count">
-                                {props.notificationCount > 9 ? "9+" : props.notificationCount}
-                            </span>
-                        )
-                    }
-                </a>
-
-                <a href="#" className="menu-link config">
-                    <svg height="20" viewBox="0 0 25 25" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M25 11.7155L25 13.2845C25 14.5535 23.9676 15.586 22.6986 15.586L22.1678 15.586C21.9954 16.1255 21.7778 16.6497 21.5172 17.1532L21.8934 17.5294C22.8056 18.4405 22.7789 19.8999 21.8931 20.7845L20.7842 21.8935C19.899 22.7796 18.44 22.8051 17.5291 21.8932L17.1532 21.5173C16.6496 21.7779 16.1255 21.9954 15.5859 22.1678L15.5859 22.6986C15.5859 23.9675 14.5535 25 13.2845 25L11.7155 25C10.4465 25 9.41406 23.9675 9.41406 22.6985L9.41406 22.1678C8.87451 21.9954 8.35039 21.7778 7.84683 21.5172L7.4707 21.8934C6.56026 22.8048 5.10117 22.7797 4.21558 21.8931L3.10659 20.7841C2.2187 19.8974 2.19653 18.4383 3.10689 17.529L3.48272 17.1532C3.22217 16.6496 3.00459 16.1254 2.83218 15.5859L2.30142 15.5859C1.03242 15.5859 7.20272e-07 14.5535 6.75019e-07 13.2845L6.1907e-07 11.7155C5.73818e-07 10.4465 1.03242 9.41406 2.30142 9.41406L2.83223 9.41406C3.00459 8.87456 3.22217 8.35039 3.48276 7.84683L3.10659 7.47065C2.19439 6.55957 2.22114 5.10015 3.10693 4.21553L4.21582 3.10659C5.10103 2.22041 6.55996 2.19492 7.47095 3.10688L7.84683 3.48276C8.35039 3.22217 8.87446 3.00464 9.41406 2.83223L9.41406 2.30146C9.41406 1.03247 10.4465 -5.59743e-07 11.7155 -6.27738e-07L13.2845 -7.1181e-07C14.5535 -7.79805e-07 15.5859 1.03247 15.5859 2.30146L15.5859 2.83222C16.1255 3.00464 16.6496 3.22217 17.1532 3.48276L17.5293 3.10659C18.4398 2.19516 19.8989 2.22031 20.7845 3.10688L21.8935 4.21592C22.7813 5.10259 22.8035 6.56167 21.8932 7.471L21.5173 7.84683C21.7779 8.35039 21.9955 8.87456 22.1679 9.41406L22.6987 9.41406C23.9676 9.41406 25 10.4465 25 11.7155ZM19.979 16.9083C20.3927 16.2088 20.7053 15.4559 20.908 14.6705C20.9914 14.3471 21.2831 14.1211 21.6171 14.1211L22.6986 14.1211C23.1599 14.1211 23.5352 13.7458 23.5352 13.2845L23.5352 11.7155C23.5352 11.2542 23.1599 10.8789 22.6986 10.8789L21.6171 10.8789C21.2831 10.8789 20.9914 10.6529 20.908 10.3294C20.7053 9.54409 20.3927 8.79116 19.979 8.0916C19.8088 7.80376 19.8551 7.4373 20.0916 7.20083L20.8576 6.43481C21.1883 6.10454 21.1806 5.57417 20.858 5.252L19.7483 4.14229C19.4273 3.8209 18.8968 3.81015 18.5654 4.14199L17.7991 4.90835C17.5626 5.14477 17.1961 5.19106 16.9084 5.0209C16.2088 4.60718 15.4559 4.29468 14.6705 4.09199C14.3471 4.00849 14.1211 3.7168 14.1211 3.38281L14.1211 2.30142C14.1211 1.84013 13.7458 1.46479 13.2846 1.46479L11.7155 1.46479C11.2542 1.46479 10.879 1.84013 10.879 2.30142L10.879 3.38281C10.879 3.71685 10.653 4.00849 10.3296 4.09199C9.54419 4.29468 8.79126 4.60723 8.09175 5.0209C7.80395 5.19106 7.43745 5.14477 7.20103 4.90835L6.43496 4.14229C6.1042 3.81113 5.57393 3.81977 5.2521 4.14199L4.14248 5.25161C3.82041 5.57324 3.81099 6.10371 4.14219 6.43447L4.90855 7.20078C5.14502 7.43721 5.19131 7.80381 5.02109 8.09155C4.60737 8.79111 4.29482 9.54404 4.09214 10.3294C4.00869 10.6528 3.71699 10.8788 3.38296 10.8788L2.30142 10.8788C1.84014 10.8788 1.46484 11.2542 1.46484 11.7154L1.46484 13.2844C1.46484 13.7457 1.84014 14.121 2.30142 14.121L3.38286 14.121C3.7169 14.121 4.00859 14.347 4.09204 14.6705C4.29473 15.4558 4.60728 16.2087 5.021 16.9083C5.19116 17.1962 5.14487 17.5626 4.90845 17.7991L4.14238 18.5651C3.81172 18.8954 3.81939 19.4258 4.14204 19.7479L5.25171 20.8576C5.57271 21.179 6.10313 21.1897 6.43457 20.8579L7.20093 20.0916C7.43735 19.8551 7.80386 19.8088 8.09165 19.979C8.79116 20.3927 9.54409 20.7052 10.3295 20.9079C10.6529 20.9914 10.8789 21.2831 10.8789 21.6171L10.8789 22.6985C10.8789 23.1598 11.2542 23.5352 11.7155 23.5352L13.2845 23.5352C13.7458 23.5352 14.1211 23.1598 14.1211 22.6985L14.1211 21.6171C14.1211 21.2831 14.3471 20.9915 14.6705 20.908C15.4559 20.7053 16.2088 20.3927 16.9083 19.9791C17.1961 19.8089 17.5626 19.8552 17.799 20.0916L18.5651 20.8577C18.8959 21.1888 19.4261 21.1802 19.7479 20.858L20.8576 19.7483C21.1796 19.4267 21.1891 18.8962 20.8579 18.5655L20.0915 17.7992C19.9173 17.6249 19.7695 17.2625 19.979 16.9083Z" fill="white"/>
-                        <path d="M17.9395 12.5001C17.9395 15.4994 15.4993 17.9395 12.5 17.9395C9.50069 17.9395 7.06055 15.4994 7.06055 12.5001C7.06055 9.50072 9.50069 7.06063 12.5 7.06063C15.4993 7.06063 17.9395 9.50072 17.9395 12.5001ZM8.52539 12.5001C8.52539 14.6917 10.3084 16.4747 12.5 16.4747C14.6916 16.4747 16.4746 14.6917 16.4746 12.5001C16.4746 10.3085 14.6916 8.52547 12.5 8.52547C10.3084 8.52547 8.52539 10.3084 8.52539 12.5001Z" fill="white"/>
-                    </svg>
-                </a>
-
                 <button id="logout" onClick={doLogout}>
                     <svg height="20" viewBox="0 0 25 25" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M17.6277 19.1415V21.0947C17.6277 23.2487 15.8754 25.0011 13.7213 25.0011L3.90642 25.0011C1.75236 25.0011 0 23.2487 0 21.0947L0 3.90642C0 1.75236 1.75236 0 3.90642 0L13.7213 0C15.8754 0 17.6277 1.75236 17.6277 3.90642V5.85963C17.6277 6.39905 17.1905 6.83624 16.6511 6.83624C16.1117 6.83624 15.6745 6.39905 15.6745 5.85963V3.90642C15.6745 2.82949 14.7982 1.95321 13.7213 1.95321L3.90642 1.95321C2.82949 1.95321 1.95321 2.82949 1.95321 3.90642L1.95321 21.0947C1.95321 22.1716 2.82949 23.0479 3.90642 23.0479L13.7213 23.0479C14.7982 23.0479 15.6745 22.1716 15.6745 21.0947L15.6745 19.1415C15.6745 18.602 16.1117 18.1649 16.6511 18.1649C17.1905 18.1649 17.6277 18.602 17.6277 19.1415ZM24.286 10.823L22.0991 8.63609C21.7176 8.2546 21.0993 8.2546 20.718 8.63609C20.3365 9.01739 20.3365 9.63578 20.718 10.0171L22.2735 11.5728L10.5473 11.5728C10.0079 11.5728 9.57073 12.01 9.57073 12.5494C9.57073 13.0888 10.0079 13.526 10.5473 13.526L22.2735 13.526L20.718 15.0817C20.3365 15.463 20.3365 16.0814 20.718 16.4627C20.9087 16.6534 21.1586 16.7488 21.4084 16.7488C21.6585 16.7488 21.9084 16.6534 22.0991 16.4627L24.286 14.2758C25.238 13.3238 25.238 11.775 24.286 10.823Z" fill="white"/>
                     </svg>
                 </button>
-
-                
-
+                </div>
             </div>
         </div>
     )

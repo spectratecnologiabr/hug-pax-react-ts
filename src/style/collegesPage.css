@@ -1,6 +1,7 @@
 .admin-dashboard-wrapper.colleges-page {
   font-family: "SF UI Display", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
   color: #29303d;
+  padding-bottom: 104px;
 }
 
 .admin-dashboard-wrapper.colleges-page .colleges-header {
@@ -232,6 +233,7 @@
 
 @media (max-width: 780px) {
   .admin-dashboard-wrapper.colleges-page .colleges-header {
+    margin: 0 0 14px;
     flex-direction: column;
     align-items: flex-start;
   }
@@ -244,6 +246,243 @@
   .admin-dashboard-wrapper.colleges-page .colleges-card-header {
     flex-direction: column;
     align-items: stretch;
+  }
+
+  .admin-dashboard-wrapper.colleges-page .colleges-card {
+    margin: 0;
+  }
+}
+
+@media (max-width: 640px) {
+  .admin-dashboard-wrapper.colleges-page .colleges-header b {
+    font-size: 26px;
+  }
+
+  .admin-dashboard-wrapper.colleges-page .colleges-header span {
+    font-size: 14px;
+  }
+
+  .admin-dashboard-wrapper.colleges-page .colleges-header-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .admin-dashboard-wrapper.colleges-page .colleges-new-button,
+  .admin-dashboard-wrapper.colleges-page .colleges-secondary-button {
+    width: 100%;
+  }
+
+  .admin-dashboard-wrapper.colleges-page .colleges-card-header {
+    padding: 14px;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+
+  .admin-dashboard-wrapper.colleges-page .colleges-card-header b {
+    flex: 0 0 auto;
+    font-size: 15px;
+    line-height: 1.2;
+  }
+
+  .admin-dashboard-wrapper.colleges-page .colleges-search-input {
+    flex: 1 1 auto;
+    min-width: 0;
+    width: auto;
+  }
+
+  .admin-dashboard-wrapper.colleges-page .colleges-table-wrap {
+    overflow-x: auto;
+  }
+
+  .admin-dashboard-wrapper.colleges-page .colleges-table {
+    display: table;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .admin-dashboard-wrapper.colleges-page .colleges-table thead th:not(:first-child):not(:last-child) {
+    display: none;
+  }
+
+  .admin-dashboard-wrapper.colleges-page .colleges-table thead th {
+    padding: 10px 12px;
+  }
+
+  .admin-dashboard-wrapper.colleges-page .colleges-table thead th:first-child {
+    width: 100%;
+  }
+
+  .admin-dashboard-wrapper.colleges-page .colleges-table thead th:last-child {
+    text-align: right;
+    width: 52px;
+  }
+
+  .admin-dashboard-wrapper.colleges-page .colleges-table tbody tr {
+    display: table-row;
+  }
+
+  .admin-dashboard-wrapper.colleges-page .colleges-table tbody td:not(:first-child):not(.colleges-actions-cell) {
+    display: none;
+  }
+
+  .admin-dashboard-wrapper.colleges-page .colleges-table tbody td:first-child {
+    display: table-cell;
+  }
+
+  .admin-dashboard-wrapper.colleges-page .colleges-actions-cell {
+    justify-content: flex-end;
+  }
+
+  .admin-dashboard-wrapper.colleges-page .colleges-actions-btn {
+    width: 36px;
+    height: 36px;
+    flex: 0 0 36px;
+  }
+
+  .colleges-actions-menu-portal {
+    min-width: 180px;
+    max-width: calc(100vw - 24px);
+    transform: translateX(calc(-100% + 36px));
+  }
+
+  .colleges-modal-overlay {
+    padding: 12px;
+  }
+
+  .colleges-modal-card,
+  .colleges-contract-modal-card,
+  .colleges-import-modal-card {
+    width: 100%;
+    max-height: calc(100vh - 24px);
+    border-radius: 16px;
+  }
+
+  .colleges-modal-header,
+  .colleges-modal-body,
+  .colleges-modal-footer {
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+
+  .colleges-modal-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .colleges-modal-header-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .colleges-modal-footer {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .colleges-modal-footer .colleges-primary-button,
+  .colleges-modal-footer .colleges-ghost-button {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .colleges-modal-footer[style] {
+    align-items: stretch !important;
+  }
+
+  .colleges-modal-footer[style] > div {
+    width: 100%;
+    justify-content: space-between;
+    flex-wrap: wrap;
+  }
+
+  .colleges-form-grid,
+  .colleges-manager-form,
+  .colleges-team-form,
+  .colleges-special-needs-form,
+  .colleges-contract-modal-body .colleges-form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .colleges-contract-modal-body .colleges-form-grid label:first-child,
+  .colleges-form-grid .colleges-field-span-3 {
+    grid-column: auto;
+  }
+
+  .colleges-form-grid input[type="date"] {
+    height: 44px;
+    min-height: 44px;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    font-size: 16px;
+  }
+
+  .colleges-form-grid input[type="date"]::-webkit-date-and-time-value {
+    min-height: 22px;
+  }
+
+  .colleges-contract-consultants {
+    grid-template-columns: 1fr;
+    padding: 10px 12px;
+  }
+
+  .colleges-managers-table-wrap {
+    overflow: visible;
+    max-height: none;
+  }
+
+  .colleges-managers-table {
+    min-width: 0;
+  }
+
+  .admin-dashboard-wrapper.colleges-page .colleges-card > .colleges-modal-footer {
+    padding: 12px 14px;
+    gap: 12px;
+  }
+
+  .admin-dashboard-wrapper.colleges-page .colleges-card > .colleges-modal-footer > span {
+    width: 100%;
+  }
+
+  .admin-dashboard-wrapper.colleges-page .colleges-card > .colleges-modal-footer > .colleges-list-footer-meta {
+    width: 100%;
+    gap: 10px;
+    justify-content: space-between;
+  }
+
+  .admin-dashboard-wrapper.colleges-page .colleges-card > .colleges-modal-footer > .colleges-list-footer-meta > span {
+    width: 100%;
+  }
+
+  .admin-dashboard-wrapper.colleges-page .colleges-card > .colleges-modal-footer > .colleges-list-footer-meta .colleges-page-size-control {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .admin-dashboard-wrapper.colleges-page .colleges-card > .colleges-modal-footer > .colleges-list-footer-meta .colleges-page-size-control select {
+    flex: 1 1 auto;
+  }
+
+  .admin-dashboard-wrapper.colleges-page .colleges-card > .colleges-modal-footer > .colleges-list-footer-nav {
+    width: 100%;
+    display: grid !important;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 10px;
+    align-items: center;
+  }
+
+  .admin-dashboard-wrapper.colleges-page .colleges-card > .colleges-modal-footer .colleges-ghost-button:first-child {
+    justify-self: stretch;
+  }
+
+  .admin-dashboard-wrapper.colleges-page .colleges-card > .colleges-modal-footer .colleges-ghost-button:last-child {
+    justify-self: stretch;
+  }
+
+  .admin-dashboard-wrapper.colleges-page .colleges-card > .colleges-modal-footer > .colleges-list-footer-nav span {
+    text-align: center;
+    white-space: nowrap;
   }
 }
 
@@ -369,8 +608,25 @@
   color: #1e1e1e;
   background: #ffffff;
   width: 100%;
+  box-sizing: border-box;
   outline: none;
+  line-height: 1.2;
   transition: border-color .2s ease, box-shadow .2s ease;
+}
+
+.colleges-form-grid input[type="date"] {
+  appearance: none;
+  -webkit-appearance: none;
+  min-height: 40px;
+  line-height: 1.2;
+}
+
+.colleges-form-grid input[type="date"]::-webkit-date-and-time-value {
+  text-align: left;
+}
+
+.colleges-form-grid input[type="date"]::-webkit-calendar-picker-indicator {
+  opacity: 1;
 }
 
 .colleges-form-grid input:not([type="checkbox"]):not([type="radio"]):focus,
@@ -387,6 +643,7 @@
 .colleges-multiselect-trigger:disabled {
   background: #f9fafb;
   color: #667085;
+  -webkit-text-fill-color: #667085;
   cursor: not-allowed;
 }
 
@@ -667,6 +924,39 @@
   width: auto;
   min-width: 120px;
   flex: 0 0 auto;
+}
+
+.colleges-list-footer-meta {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.colleges-page-size-control {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #6b7280;
+  font-family: "SF UI Display Medium", "SF UI Display", "Segoe UI", sans-serif;
+}
+
+.colleges-page-size-control select {
+  height: 36px;
+  border: 1px solid #d5dee8;
+  border-radius: 10px;
+  padding: 0 12px;
+  background: #ffffff;
+  color: #1e293b;
+  font-size: 13px;
+  font-family: "SF UI Display", "Segoe UI", sans-serif;
+}
+
+.colleges-list-footer-nav {
+  display: flex;
+  gap: 8px;
+  align-items: center;
 }
 
 .colleges-import-modal-card {

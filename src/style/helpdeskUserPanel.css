@@ -5,6 +5,9 @@
   padding: 12px;
   font-family: "SF UI Display", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
 }
 
 .helpdesk-user-panel.popup {
@@ -45,6 +48,7 @@
   display: grid;
   grid-template-columns: 300px 1fr;
   gap: 10px;
+  min-height: 0;
 }
 
 .helpdesk-user-panel.popup .helpdesk-user-grid {
@@ -174,7 +178,7 @@
   border: 1px solid #dce8f4;
   border-radius: 10px;
   padding: 10px;
-  min-height: 430px;
+  min-height: min(430px, calc(100vh - 270px));
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -182,7 +186,7 @@
 }
 
 .helpdesk-user-panel.popup .helpdesk-user-chat {
-  min-height: 500px;
+  min-height: min(500px, calc(100vh - 220px));
 }
 
 .helpdesk-user-chat-header {
@@ -245,7 +249,7 @@
   }
 
   .helpdesk-user-chat {
-    min-height: 420px;
+    min-height: min(380px, calc(100vh - 320px));
   }
 }
 
@@ -300,6 +304,30 @@
 }
 
 @media (max-width: 720px) {
+  .helpdesk-user-panel {
+    height: 100%;
+    max-height: calc(100vh - 220px);
+    overflow: hidden;
+  }
+
+  .helpdesk-user-grid {
+    overflow-y: auto;
+    padding-right: 2px;
+  }
+
+  .helpdesk-user-tickets {
+    max-height: 180px;
+  }
+
+  .helpdesk-user-chat {
+    min-height: 260px;
+  }
+
+  .helpdesk-user-messages {
+    min-height: 180px;
+    max-height: 240px;
+  }
+
   .helpdesk-user-chat-header {
     flex-direction: column;
   }

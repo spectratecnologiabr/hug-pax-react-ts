@@ -53,6 +53,7 @@
     display: flex;
     justify-content: center;
     width: -webkit-fill-available;
+    position: relative;
 }
 
 .auth-container .auth-wrapper .form-wrapper .input-wrapper div label {
@@ -60,8 +61,10 @@
     cursor: pointer;
     display: flex;
     justify-content: center;
-    margin-right: -400px;
     position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
 }
 
 .auth-container .auth-wrapper .form-wrapper .input-wrapper span {
@@ -74,9 +77,11 @@
     font-size: 16px;
     height: 40px;
     padding-left: 10px;
+    padding-right: 44px;
     border-radius: 8px;
     border: 1px solid #ACACAC;
     width: -webkit-fill-available;
+    box-sizing: border-box;
 }
 
 .auth-container .auth-wrapper .form-wrapper .input-wrapper input:focus-visible {

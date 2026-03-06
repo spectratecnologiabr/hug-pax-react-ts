@@ -99,6 +99,7 @@ function EducatorsList() {
   const [overviewData, setOverviewData] = useState<TOverviewData | null>(null);
   const [educators, setEducators] = useState<TEducator[]>([]);
   const [colleges, setColleges] = useState<TCollege[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
   const [userRole, setUserRole] = useState<TRole | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -127,6 +128,24 @@ function EducatorsList() {
     });
     return map;
   }, [colleges]);
+
+  const filteredEducators = useMemo(() => {
+    const normalizedSearch = searchTerm.trim().toLowerCase();
+
+    if (!normalizedSearch) return educators;
+
+    return educators.filter((educator) => {
+      const fullName = `${educator.firstName} ${educator.lastName}`.trim().toLowerCase();
+      const email = educator.email.toLowerCase();
+      const collegeName = educator.collegeId ? (collegesById[educator.collegeId] || "").toLowerCase() : "";
+
+      return (
+        fullName.includes(normalizedSearch) ||
+        email.includes(normalizedSearch) ||
+        collegeName.includes(normalizedSearch)
+      );
+    });
+  }, [collegesById, educators, searchTerm]);
 
   useEffect(() => {
     async function bootstrap() {
@@ -366,11 +385,19 @@ function EducatorsList() {
           <div className="colleges-card">
             <div className="colleges-card-header">
               <b>Lista de Educadores</b>
+              <input
+                type="search"
+                className="colleges-search-input"
+                placeholder="Buscar por nome, email ou escola"
+                value={searchTerm}
+                onChange={(event) => setSearchTerm(event.target.value)}
+                aria-label="Buscar educadores"
+              />
             </div>
 
             {loading ? (
               <div className="colleges-empty">Carregando educadores...</div>
-            ) : !educators.length ? (
+            ) : !filteredEducators.length ? (
               <div className="colleges-empty">Nenhum educador encontrado.</div>
             ) : (
               <div className="colleges-table-wrap">
@@ -386,14 +413,14 @@ function EducatorsList() {
                     </tr>
                   </thead>
                   <tbody>
-                    {educators.map((educator) => (
+                    {filteredEducators.map((educator) => (
                       <tr key={educator.id}>
-                        <td>{educator.firstName} {educator.lastName}</td>
-                        <td>{educator.email}</td>
-                        <td>{educator.isActive ? "Ativo" : "Inativo"}</td>
-                        <td>{educator.collegeId ? collegesById[educator.collegeId] || "Carregando..." : "-"}</td>
-                        <td>{new Date(educator.createdAt).toLocaleDateString("pt-BR")}</td>
-                        <td className="colleges-actions-cell">
+                        <td data-label="Nome">{educator.firstName} {educator.lastName}</td>
+                        <td data-label="Email">{educator.email}</td>
+                        <td data-label="Status">{educator.isActive ? "Ativo" : "Inativo"}</td>
+                        <td data-label="Escola Associada">{educator.collegeId ? collegesById[educator.collegeId] || "Carregando..." : "-"}</td>
+                        <td data-label="Criado Em">{new Date(educator.createdAt).toLocaleDateString("pt-BR")}</td>
+                        <td data-label="Ações" className="colleges-actions-cell">
                           <button
                             type="button"
                             title="Ações"
