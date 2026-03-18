@@ -43,7 +43,7 @@ type TScheduling = {
 	schedulingObservations: string
 }
 
-function NewSchedulingForm(props: { opened: boolean; onClose: () => void }) {
+function NewSchedulingForm(props: { opened: boolean; onClose: () => void; initialCollegeId?: number }) {
     const [ colleges, setColleges ] = useState<Array<TCollege>>([])
     const [ consultants, setConsultants ] = useState<Array<any>>([])
     const [ selectedCollege, setSelectedCollege ] = useState<TCollege | null>(null)
@@ -101,6 +101,15 @@ function NewSchedulingForm(props: { opened: boolean; onClose: () => void }) {
         getUserId();
     }, []);
 
+    useEffect(() => {
+        if (!props.opened) return;
+        if (!props.initialCollegeId) return;
+        const college = colleges.find((item) => Number(item.id) === Number(props.initialCollegeId)) || null;
+        if (college) {
+            setSelectedCollege(college);
+        }
+    }, [colleges, props.initialCollegeId, props.opened]);
+
     function normalizeInternalManagement(value: any): Array<{ name?: string; role?: string }> {
         if (Array.isArray(value)) return value;
 
@@ -157,7 +166,20 @@ function NewSchedulingForm(props: { opened: boolean; onClose: () => void }) {
     }
 
     async function handleSubmit() {
-        if (!selectedCollege) return;
+        if (!selectedCollege) {
+            handleModalMessage({ isError: true, message: "Selecione uma escola para criar o agendamento." });
+            return;
+        }
+
+        if (!String(schedulingData.institutionProfile || "").trim()) {
+            handleModalMessage({ isError: true, message: "Perfil da instituição é obrigatório." });
+            return;
+        }
+
+        if (!String(schedulingData.visitType || "").trim()) {
+            handleModalMessage({ isError: true, message: "Tipo da visita é obrigatório." });
+            return;
+        }
 
         const payload: TScheduling = {
             collegeId: selectedCollege.id,
@@ -210,7 +232,7 @@ function NewSchedulingForm(props: { opened: boolean; onClose: () => void }) {
                     <div className="scheduling-body">
                     <div className="form-wrapper">
                         <label htmlFor="collegeId">Selecione a Escola</label>
-                        <select id="collegeId" className="collegeId" onChange={handleCollegeChange}>
+                        <select id="collegeId" className="collegeId" onChange={handleCollegeChange} value={selectedCollege?.id || ""}>
                             <option value="">Selecione uma escola</option>
                             {colleges.map((college) => (
                                 <option key={college.id} value={college.id}>{college.name}</option>
@@ -242,7 +264,7 @@ function NewSchedulingForm(props: { opened: boolean; onClose: () => void }) {
                     </div>
                     <div className="form-wrapper">
                         <label htmlFor="institutionProfile">Perfil da Instituição</label>
-                        <select name="institutionProfile" id="institutionProfile" onChange={handleSchedulingData}>
+                        <select name="institutionProfile" id="institutionProfile" onChange={handleSchedulingData} required>
                             <option value="">Selecione um tipo</option>
                             <option value="Implantação">Implantação (Ano 1)</option>
                             <option value="Veterana">Veterana (Ano 2+)</option>
@@ -250,7 +272,7 @@ function NewSchedulingForm(props: { opened: boolean; onClose: () => void }) {
                     </div>
                     <div className="form-wrapper">
                         <label htmlFor="visitType">Tipo da Visita</label>
-                        <select name="visitType" id="visitType" onChange={handleSchedulingData}>
+                        <select name="visitType" id="visitType" onChange={handleSchedulingData} required>
                             <option value="">Selecione um tipo</option>
                             <option value="Visita Inicial">Visita Inicial</option>
                             <option value="Acompanhamento">Acompanhamento</option>

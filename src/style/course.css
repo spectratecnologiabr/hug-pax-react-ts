@@ -123,6 +123,24 @@
     .course-container .course-wrapper .lession-title .next-lesson-btn {
         width: 100%;
     }
+
+    .lesson-attachments-header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .lesson-attachments-count {
+        align-self: flex-start;
+    }
+
+    .lesson-attachment-card {
+        grid-template-columns: 1fr;
+        align-items: flex-start;
+    }
+
+    .lesson-attachment-button {
+        width: 100%;
+    }
 }
 
 .course-container .course-wrapper .lession-document-wrapper {
@@ -144,6 +162,75 @@
 
 .course-container .course-wrapper .lession-document-wrapper.active {
     display: block;
+}
+
+.lesson-audio-wrapper {
+    display: none;
+}
+
+.lesson-audio-wrapper.active {
+    display: block;
+}
+
+.lesson-audio-card {
+    background: linear-gradient(135deg, #f7fbff 0%, #edf6ff 100%);
+    border: 1px solid #dbe7f3;
+    border-radius: 18px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    box-shadow: 0 10px 30px rgba(30, 90, 140, 0.08);
+}
+
+.lesson-audio-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.lesson-audio-badge {
+    align-self: flex-start;
+    background: rgba(54, 150, 211, 0.12);
+    color: #257ab1;
+    border-radius: 999px;
+    padding: 6px 10px;
+    font-family: 'SF UI Display Medium';
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.lesson-audio-meta b {
+    font-family: 'SF UI Display Semibold';
+    font-size: 24px;
+    color: #16324f;
+}
+
+.lesson-audio-meta span {
+    font-family: 'SF UI Display Light';
+    font-size: 15px;
+    color: #557086;
+}
+
+.lesson-audio-card audio {
+    width: 100%;
+}
+
+.lesson-audio-download {
+    align-self: flex-start;
+    padding: 10px 16px;
+    border-radius: 10px;
+    background: #3696D3;
+    color: #ffffff;
+    font-family: 'SF UI Display Medium';
+    font-size: 13px;
+    cursor: pointer;
+    transition: ease-in-out .2s all;
+}
+
+.lesson-audio-download:hover {
+    background: #277fb6;
 }
 
 .pdf-page-wrapper {
@@ -667,15 +754,22 @@
 
 .course-container .right-container .steps-list .steps-group .lessions-list .lession-item a, .course-container .right-container .steps-list .steps-group .lessions-list .lession-item button {
     padding: 10px 20px;
-    height: fit-content;
+    min-height: 40px;
     align-self: center;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     background-color: #3696D3;
     color: #FFFFFF;
     border-radius: 8px;
     font-family: 'SF UI Display Medium';
+    font-size: 16px;
+    line-height: 1;
+    border: none;
     text-decoration: none;
     cursor: pointer;
     transition: ease-in-out .2s all;
+    white-space: nowrap;
 }
 
 .course-container .right-container .steps-list .steps-group .lessions-list .lession-item button:disabled {
@@ -730,6 +824,120 @@
 .course-container .course-wrapper .avaliation-wrapper .stars-wrapper .star-btn.hover-preview {
   color: #FFC72C;
   transform: scale(1.1);
+}
+
+.lesson-attachments-panel {
+    background: linear-gradient(135deg, #f8fbff 0%, #eef6ff 100%);
+    border: 1px solid #d7e7f7;
+    border-radius: 16px;
+    padding: 18px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    box-shadow: 0 10px 24px rgba(54, 150, 211, 0.08);
+}
+
+.lesson-attachments-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+}
+
+.lesson-attachments-header b {
+    display: block;
+    font-family: 'SF UI Display Semibold';
+    font-size: 20px;
+    color: #10243e;
+}
+
+.lesson-attachments-eyebrow {
+    display: inline-block;
+    margin-bottom: 6px;
+    font-family: 'SF UI Display Medium';
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #3696D3;
+}
+
+.lesson-attachments-count {
+    background: rgba(54, 150, 211, 0.12);
+    color: #1f5e86;
+    border-radius: 999px;
+    padding: 7px 12px;
+    font-family: 'SF UI Display Medium';
+    font-size: 12px;
+    white-space: nowrap;
+}
+
+.lesson-attachments-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.lesson-attachment-card {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 16px;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.88);
+    border: 1px solid rgba(148, 184, 214, 0.35);
+}
+
+.lesson-attachment-icon {
+    min-width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #3696D3 0%, #78b8e5 100%);
+    color: #ffffff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'SF UI Display Bold';
+    font-size: 12px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.lesson-attachment-content {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    gap: 4px;
+}
+
+.lesson-attachment-content b {
+    font-family: 'SF UI Display Medium';
+    font-size: 15px;
+    color: #111827;
+    overflow-wrap: anywhere;
+}
+
+.lesson-attachment-content span {
+    font-family: 'SF UI Display Light';
+    font-size: 13px;
+    color: #5f6f82;
+    overflow-wrap: anywhere;
+}
+
+.lesson-attachment-button {
+    padding: 11px 16px;
+    border-radius: 10px;
+    background: #3696D3;
+    color: #ffffff;
+    font-family: 'SF UI Display Medium';
+    font-size: 13px;
+    cursor: pointer;
+    transition: ease-in-out .2s all;
+    white-space: nowrap;
+}
+
+.lesson-attachment-button:hover {
+    background: #277fb6;
 }
 
 .course-container .course-wrapper .comments-wrapper {

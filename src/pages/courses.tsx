@@ -126,6 +126,7 @@ function Courses() {
                     
                     <div className="library-toolbar">
                         <input
+                          type="search"
                           className="library-search"
                           placeholder="Buscar conteúdos..."
                           value={search}

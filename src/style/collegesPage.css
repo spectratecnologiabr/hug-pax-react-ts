@@ -123,6 +123,48 @@
   box-shadow: 0 0 0 3px rgba(43, 140, 207, 0.14);
 }
 
+.admin-dashboard-wrapper.colleges-page .colleges-card-filters {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px;
+  width: 100%;
+}
+
+.admin-dashboard-wrapper.colleges-page .colleges-filter-select,
+.admin-dashboard-wrapper.colleges-page .colleges-filter-reset {
+  height: 38px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-family: "SF UI Display", "Segoe UI", sans-serif;
+}
+
+.admin-dashboard-wrapper.colleges-page .colleges-filter-select {
+  min-width: 170px;
+  border: 1px solid #d5dee8;
+  background: #ffffff;
+  color: #1e293b;
+  padding: 0 12px;
+  outline: none;
+}
+
+.admin-dashboard-wrapper.colleges-page .colleges-filter-select:focus {
+  border-color: #2b8ccf;
+  box-shadow: 0 0 0 3px rgba(43, 140, 207, 0.14);
+}
+
+.admin-dashboard-wrapper.colleges-page .colleges-filter-reset {
+  border: 1px solid #d0d7e2;
+  background: #ffffff;
+  color: #344054;
+  padding: 0 14px;
+  cursor: pointer;
+}
+
+.admin-dashboard-wrapper.colleges-page .colleges-filter-reset:hover {
+  background: #f8fafc;
+}
+
 .admin-dashboard-wrapper.colleges-page .colleges-table-wrap {
   overflow-x: auto;
 }
@@ -246,6 +288,16 @@
   .admin-dashboard-wrapper.colleges-page .colleges-card-header {
     flex-direction: column;
     align-items: stretch;
+  }
+
+  .admin-dashboard-wrapper.colleges-page .colleges-card-filters {
+    justify-content: stretch;
+  }
+
+  .admin-dashboard-wrapper.colleges-page .colleges-filter-select,
+  .admin-dashboard-wrapper.colleges-page .colleges-filter-reset,
+  .admin-dashboard-wrapper.colleges-page .colleges-search-input {
+    width: 100%;
   }
 
   .admin-dashboard-wrapper.colleges-page .colleges-card {
@@ -838,6 +890,27 @@
   color: #737b8c;
   font-size: 12px;
   font-family: "SF UI Display Medium", "SF UI Display", "Segoe UI", sans-serif;
+}
+
+.colleges-school-visits-table {
+  min-width: 760px;
+}
+
+.colleges-row-link-button {
+  border: 1px solid #dbe4ee;
+  background: #ffffff;
+  color: #1d4ed8;
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: 12px;
+  font-family: "SF UI Display Medium", "SF UI Display", "Segoe UI", sans-serif;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.colleges-row-link-button:hover {
+  background: #f8fbff;
+  border-color: #bfdbfe;
 }
 
 .colleges-remove-manager {

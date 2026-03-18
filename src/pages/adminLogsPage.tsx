@@ -313,6 +313,7 @@ function AdminLogsPage() {
               <path d="M21 21L16.65 16.65M11 18C14.866 18 18 14.866 18 11C18 7.13401 14.866 4 11 4C7.13401 4 4 7.13401 4 11C4 14.866 7.13401 18 11 18Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
             <input
+              type="search"
               placeholder="Buscar por usuário, ação ou IP..."
               value={search}
               onChange={event => setSearch(event.target.value)}

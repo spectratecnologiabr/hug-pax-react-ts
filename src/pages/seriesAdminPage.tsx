@@ -248,7 +248,7 @@ function SeriesAdminPage() {
           <div className="sap-filters">
             <div className="sap-input sap-input-wide">
               <IconSearch />
-              <input value={seriesSearch} onChange={(e) => handleSeriesSearch(e.target.value)} placeholder="Buscar séries..." />
+              <input type="search" value={seriesSearch} onChange={(e) => handleSeriesSearch(e.target.value)} placeholder="Buscar séries..." />
             </div>
 
             <div className="sap-select">

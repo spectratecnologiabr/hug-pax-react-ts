@@ -154,7 +154,7 @@ function AdminCommunicationPage() {
 
         <div className="sap-filters">
           <div className="sap-input sap-input-wide">
-            <input placeholder="Buscar comunicações..." value={search} onChange={e => setSearch(e.target.value)} />
+            <input type="search" placeholder="Buscar comunicações..." value={search} onChange={e => setSearch(e.target.value)} />
           </div>
           <div className="sap-select">
             <select value={status} onChange={e => setStatus(e.target.value)}>

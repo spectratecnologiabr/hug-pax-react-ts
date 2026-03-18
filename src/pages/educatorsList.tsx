@@ -100,6 +100,8 @@ function EducatorsList() {
   const [educators, setEducators] = useState<TEducator[]>([]);
   const [colleges, setColleges] = useState<TCollege[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("all");
+  const [collegeFilter, setCollegeFilter] = useState<string>("all");
   const [userRole, setUserRole] = useState<TRole | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -129,37 +131,21 @@ function EducatorsList() {
     return map;
   }, [colleges]);
 
-  const filteredEducators = useMemo(() => {
-    const normalizedSearch = searchTerm.trim().toLowerCase();
-
-    if (!normalizedSearch) return educators;
-
-    return educators.filter((educator) => {
-      const fullName = `${educator.firstName} ${educator.lastName}`.trim().toLowerCase();
-      const email = educator.email.toLowerCase();
-      const collegeName = educator.collegeId ? (collegesById[educator.collegeId] || "").toLowerCase() : "";
-
-      return (
-        fullName.includes(normalizedSearch) ||
-        email.includes(normalizedSearch) ||
-        collegeName.includes(normalizedSearch)
-      );
-    });
-  }, [collegesById, educators, searchTerm]);
+  const educatorCollegeOptions = useMemo(() => {
+    return [...colleges].sort((a, b) => a.name.localeCompare(b.name, "pt-BR"));
+  }, [colleges]);
 
   useEffect(() => {
     async function bootstrap() {
       setLoading(true);
       try {
-        const [overview, session, educatorsList, collegesList] = await Promise.all([
+        const [overview, session, collegesList] = await Promise.all([
           getOverviewData(),
           checkSession(),
-          listEducators(),
           listColleges(),
         ]);
         setOverviewData(overview);
         setUserRole(session?.session?.role as TRole);
-        setEducators(Array.isArray(educatorsList) ? educatorsList : []);
         setColleges(normalizeColleges(collegesList));
       } catch (error) {
         console.error("Error loading educators page:", error);
@@ -170,6 +156,27 @@ function EducatorsList() {
 
     void bootstrap();
   }, []);
+
+  useEffect(() => {
+    async function loadEducatorsList() {
+      setLoading(true);
+      try {
+        const educatorsList = await listEducators({
+          search: searchTerm.trim() || undefined,
+          status: statusFilter === "all" ? undefined : statusFilter,
+          collegeId: collegeFilter === "none" ? 0 : collegeFilter !== "all" ? Number(collegeFilter) : undefined,
+        });
+        setEducators(Array.isArray(educatorsList) ? educatorsList : []);
+      } catch (error) {
+        console.error("Error fetching educators:", error);
+        setEducators([]);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    void loadEducatorsList();
+  }, [collegeFilter, searchTerm, statusFilter]);
 
   useEffect(() => {
     if (!modalErrorOpen) return;
@@ -240,7 +247,11 @@ function EducatorsList() {
   async function loadEducators() {
     try {
       setLoading(true);
-      const educatorsList = await listEducators();
+      const educatorsList = await listEducators({
+        search: searchTerm.trim() || undefined,
+        status: statusFilter === "all" ? undefined : statusFilter,
+        collegeId: collegeFilter === "none" ? 0 : collegeFilter !== "all" ? Number(collegeFilter) : undefined,
+      });
       setEducators(Array.isArray(educatorsList) ? educatorsList : []);
     } catch (error) {
       console.error("Error fetching educators:", error);
@@ -385,19 +396,58 @@ function EducatorsList() {
           <div className="colleges-card">
             <div className="colleges-card-header">
               <b>Lista de Educadores</b>
-              <input
-                type="search"
-                className="colleges-search-input"
-                placeholder="Buscar por nome, email ou escola"
-                value={searchTerm}
-                onChange={(event) => setSearchTerm(event.target.value)}
-                aria-label="Buscar educadores"
-              />
+              <div className="colleges-card-filters">
+                <input
+                  type="search"
+                  className="colleges-search-input"
+                  placeholder="Buscar por nome, email ou escola"
+                  value={searchTerm}
+                  onChange={(event) => setSearchTerm(event.target.value)}
+                  aria-label="Buscar educadores"
+                />
+                <select
+                  className="colleges-filter-select"
+                  value={statusFilter}
+                  onChange={(event) => setStatusFilter(event.target.value as typeof statusFilter)}
+                  aria-label="Filtrar por status"
+                >
+                  <option value="all">Todos os status</option>
+                  <option value="active">Ativos</option>
+                  <option value="inactive">Inativos</option>
+                </select>
+                <select
+                  className="colleges-filter-select"
+                  value={collegeFilter}
+                  onChange={(event) => setCollegeFilter(event.target.value)}
+                  aria-label="Filtrar por escola"
+                >
+                  <option value="all">Todas as escolas</option>
+                  <option value="none">Sem escola</option>
+                  {educatorCollegeOptions.map((college) => (
+                    <option key={college.id} value={String(college.id)}>
+                      {college.name}
+                    </option>
+                  ))}
+                </select>
+                {(searchTerm || statusFilter !== "all" || collegeFilter !== "all") ? (
+                  <button
+                    type="button"
+                    className="colleges-filter-reset"
+                    onClick={() => {
+                      setSearchTerm("");
+                      setStatusFilter("all");
+                      setCollegeFilter("all");
+                    }}
+                  >
+                    Limpar filtros
+                  </button>
+                ) : null}
+              </div>
             </div>
 
             {loading ? (
               <div className="colleges-empty">Carregando educadores...</div>
-            ) : !filteredEducators.length ? (
+            ) : !educators.length ? (
               <div className="colleges-empty">Nenhum educador encontrado.</div>
             ) : (
               <div className="colleges-table-wrap">
@@ -413,7 +463,7 @@ function EducatorsList() {
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredEducators.map((educator) => (
+                    {educators.map((educator) => (
                       <tr key={educator.id}>
                         <td data-label="Nome">{educator.firstName} {educator.lastName}</td>
                         <td data-label="Email">{educator.email}</td>

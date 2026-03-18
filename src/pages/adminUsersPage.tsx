@@ -849,9 +849,9 @@ function AdminUsersPage() {
 
   function handleDownloadTemplateCsv() {
     const csvTemplate = [
-      "id;nome;email;perfil;status;senha;escola;escolaId;contractId;contratoId;rede;segmento;series;tipoDocumento;numeroDocumento;dataNascimento;genero;telefone;idioma;isActive;isBlocked",
-      ";Joao Silva;joao.silva@exemplo.com;educator;active;;Escola Exemplo;;12;12;Rede Norte;1,2;5,6;cpf;12345678901;1989-10-12;male;11999999999;pt-BR;true;false",
-      "42;Maria Souza;maria.souza@exemplo.com;consultant;inactive;;;;15;15;Rede Sul;;;;;;;female;21988888888;pt-BR;false;false"
+      "id;nome;email;perfil;status;senha;escola;escolaId;contractId;rede;segmento;series;tipoDocumento;numeroDocumento;dataNascimento;genero;telefone;idioma;isActive;isBlocked",
+      ";Joao Silva;joao.silva@exemplo.com;educator;active;;Escola Exemplo;;12;Rede Norte;1,2;5,6;cpf;12345678901;1989-10-12;male;11999999999;pt-BR;true;false",
+      "42;Maria Souza;maria.souza@exemplo.com;consultant;inactive;;;15;Rede Sul;;;;;;;female;21988888888;pt-BR;false;false"
     ].join("\n");
 
     const blob = new Blob([csvTemplate], { type: "text/csv;charset=utf-8;" });
@@ -981,13 +981,13 @@ function AdminUsersPage() {
     const gender = userForm.gender?.trim() || undefined;
     const phone = userForm.phone?.trim() || undefined;
     const language = userForm.language?.trim() || undefined;
-    const collegeId = role === "educator" ? (userForm.collegeId === "" ? null : userForm.collegeId) : null;
+    const collegeId = role === "educator" ? (userForm.collegeId === "" ? null : userForm.collegeId) : undefined;
     const collegeSegment = role === "educator"
       ? (Array.isArray(userForm.collegeSegment) && userForm.collegeSegment.length ? userForm.collegeSegment : null)
-      : null;
+      : undefined;
     const collegeSeries = role === "educator"
       ? (Array.isArray(userForm.collegeSeries) && userForm.collegeSeries.length ? userForm.collegeSeries : null)
-      : null;
+      : undefined;
     const management = userForm.management?.trim() || null;
 
     if (!firstName || !lastName || !email || !role) {
@@ -1005,8 +1005,8 @@ function AdminUsersPage() {
       return;
     }
 
-    if (userModal.mode === "create" && password.trim().length < 6) {
-      setUserModalError("A senha deve ter pelo menos 6 caracteres.");
+    if (userModal.mode === "create" && password.trim().length < 8) {
+      setUserModalError("A senha deve ter pelo menos 8 caracteres.");
       return;
     }
 
@@ -1059,9 +1059,10 @@ function AdminUsersPage() {
 
       closeUserModal();
       await loadUsers();
-    } catch (e) {
+    } catch (e: any) {
       console.error("Failed to submit user modal:", e);
-      setUserModalError("Não foi possível salvar. Verifique os dados e tente novamente.");
+      const apiMessage = String(e?.response?.data?.message ?? "").trim();
+      setUserModalError(apiMessage || "Não foi possível salvar. Verifique os dados e tente novamente.");
     } finally {
       setUserModalSubmitting(false);
     }
@@ -1322,6 +1323,7 @@ function AdminUsersPage() {
           <div className="sap-input sap-input-wide">
             <img className="sap-input-icon" src={iconSearch} alt="" />
             <input
+              type="search"
               placeholder="Buscar por nome ou e-mail..."
               value={search}
               onChange={e => setSearch(e.target.value)}
@@ -1753,7 +1755,7 @@ function AdminUsersPage() {
                     </label>
 
                     <p className="sap-modal-desc" style={{ marginTop: 8 }}>
-                      Colunas suportadas: `id`, `email`, `nome` (aceita nome completo), `sobrenome` (opcional), `perfil`, `status`, `senha`, `escola`/`escolaId`, `contractId`/`contratoId`, `rede`, `segmento`, `series`, `tipoDocumento`, `numeroDocumento`, `dataNascimento`, `genero`, `telefone`, `idioma`, `isActive`, `isBlocked`.
+                      Colunas suportadas: `id`, `email`, `nome` (aceita nome completo), `sobrenome` (opcional), `perfil`, `status`, `senha`, `escola`/`escolaId`, `contractId`, `rede`, `segmento`, `series`, `tipoDocumento`, `numeroDocumento`, `dataNascimento`, `genero`, `telefone`, `idioma`, `isActive`, `isBlocked`.
                     </p>
 
                     <input
@@ -1977,7 +1979,7 @@ function AdminUsersPage() {
                           value={userForm.password}
                           onChange={e => setUserForm(s => ({ ...s, password: e.target.value }))}
                           disabled={userModalSubmitting || userModalDetailsLoading}
-                          placeholder="Mínimo 6 caracteres"
+                          placeholder="Mínimo 8 caracteres"
                           type="password"
                         />
                       </label>
@@ -2056,6 +2058,7 @@ function AdminUsersPage() {
                         {collegeSelectOpen && !collegesLoading ? (
                           <div className="sap-user-multiselect-popup sap-user-single-select-popup">
                             <input
+                              type="search"
                               className="sap-user-select-search"
                               value={collegeSearch}
                               onChange={(e) => setCollegeSearch(e.target.value)}
@@ -2263,7 +2266,7 @@ function formatDocId(docId: string, docType: string) {
 
 async function parseUsersImportFile(file: File): Promise<Array<Record<string, unknown>>> {
   const ext = file.name.toLowerCase().split(".").pop() ?? "";
-  const text = await file.text();
+  const text = await readImportFileText(file);
   if (!text.trim()) throw new Error("Arquivo vazio.");
 
   if (ext === "json") {
@@ -2278,6 +2281,28 @@ async function parseUsersImportFile(file: File): Promise<Array<Record<string, un
   }
 
   return parseCsvUsers(text);
+}
+
+async function readImportFileText(file: File): Promise<string> {
+  const buffer = await file.arrayBuffer();
+  const bytes = new Uint8Array(buffer);
+
+  try {
+    return new TextDecoder("utf-8", { fatal: true }).decode(bytes);
+  } catch {
+    const windows1252Text = new TextDecoder("windows-1252").decode(bytes);
+    const macintoshText = new TextDecoder("macintosh").decode(bytes);
+    return scoreDecodedText(macintoshText) < scoreDecodedText(windows1252Text)
+      ? macintoshText
+      : windows1252Text;
+  }
+}
+
+function scoreDecodedText(text: string): number {
+  const replacementChars = (text.match(/\uFFFD/g) ?? []).length * 10;
+  const mojibakeChars = (text.match(/[ÃÂâ€œâ€\u009d\u009c\u0094™œžŽ]/g) ?? []).length * 3;
+  const suspiciousOrdinals = (text.match(/\d[»ºª]/g) ?? []).length * 4;
+  return replacementChars + mojibakeChars + suspiciousOrdinals;
 }
 
 function parseCsvUsers(text: string): Array<Record<string, unknown>> {
@@ -2373,7 +2398,7 @@ function normalizeImportHeader(rawHeader: string): string {
   if (normalized === "password") return "password";
   if (normalized === "escola" || normalized === "college") return "escola";
   if (normalized === "escolaid" || normalized === "collegeid") return "collegeId";
-  if (normalized === "contractid" || normalized === "contratoid") return "contractId";
+  if (normalized === "contractid") return "contractId";
   if (normalized === "segmento" || normalized === "segmentoescola" || normalized === "collegesegment") return "collegeSegment";
   if (normalized === "serie" || normalized === "series" || normalized === "serieescola" || normalized === "seriesescola" || normalized === "collegeseries") return "collegeSeries";
   if (normalized === "gerencia" || normalized === "regional" || normalized === "rede") return "management";

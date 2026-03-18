@@ -763,7 +763,7 @@
 .admin-users-page .sap-user-modal-scroll {
   flex: 1 1 auto;
   min-height: 0;
-  overflow-y: auto;
+  overflow: visible;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
 }
@@ -891,7 +891,7 @@
   border-radius: 14px;
   border: 1px solid #eef2f7;
   box-shadow: 0 24px 70px rgba(16, 24, 40, 0.25);
-  overflow: hidden;
+  overflow: visible;
   display: flex;
   flex-direction: column;
 }
@@ -1163,6 +1163,14 @@
 }
 
 @media (max-width: 640px) {
+  .admin-users-page .sap-user-modal-card {
+    overflow: hidden;
+  }
+
+  .admin-users-page .sap-user-modal-scroll {
+    overflow-y: auto;
+  }
+
   .admin-users-page .sap-user-form-grid {
     grid-template-columns: 1fr;
   }

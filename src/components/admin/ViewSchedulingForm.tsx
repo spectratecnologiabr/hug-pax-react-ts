@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { findVisit } from "../../controllers/consultant/findVisit.controller";
 import { updateVisit } from "../../controllers/consultant/updateVisit.controller";
+import { getUserAdmin } from "../../controllers/user/getUserAdmin.controller";
 
 import PopupCancelVisit from "../consultant/popupCancelVisit";
 import PopupReschedulingVisit from "../consultant/popupReschedulingVisit";
@@ -47,8 +48,9 @@ function getCurrentLocation(): Promise<{ lat: number; lng: number }> {
 
 type TScheduling = {
     id: number,
-	collegeId: number,
-	creatorId: number,
+		collegeId: number,
+		creatorId: number,
+    creatorName?: string,
     institutionProfile: string,
     visitType: string,
 	collegeName: string,
@@ -110,7 +112,22 @@ function ViewSchedulingForm(props: {
         async function getVisitData() {
             try {
                 const visitData = await findVisit(props.visitId);
-                setSchedulingData(visitData);
+                const creatorId = Number(visitData?.creatorId);
+                let creatorName = String(visitData?.creatorName || "").trim();
+
+                if (!creatorName && Number.isFinite(creatorId) && creatorId > 0) {
+                    try {
+                        const creator = await getUserAdmin(creatorId);
+                        creatorName = `${String(creator?.firstName || "").trim()} ${String(creator?.lastName || "").trim()}`.trim();
+                    } catch (error) {
+                        console.error("Error fetching consultant name:", error);
+                    }
+                }
+
+                setSchedulingData({
+                    ...visitData,
+                    creatorName,
+                });
             } catch (error) {
                 console.error("Error fetching visit data:", error);
             }
@@ -195,6 +212,15 @@ function ViewSchedulingForm(props: {
                     </div>
 
                     <div className="scheduling-body">
+                        <div className="form-wrapper">
+                            <label htmlFor="creatorName">Consultor</label>
+                            <input
+                              type="text"
+                              id="creatorName"
+                              value={String(schedulingData.creatorName || "").trim() || (schedulingData.creatorId ? `Consultor #${schedulingData.creatorId}` : "")}
+                              disabled
+                            />
+                        </div>
                         <div className="form-wrapper">
                             <label htmlFor="collegeId">Selecione a Escola</label>
                             <input type="text" id="collegeId" value={schedulingData.collegeName} disabled />

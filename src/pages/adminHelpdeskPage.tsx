@@ -102,6 +102,7 @@ function AdminHelpdeskPage() {
           </div>
           <div className="ahd-filters">
             <input
+              type="search"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Buscar por título, usuário ou categoria"

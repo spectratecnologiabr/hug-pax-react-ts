@@ -6,7 +6,7 @@ export interface ILessonData {
     title: string;
     subTitle?: string;
     slug: string;
-    type: "video" | "pdf" | "attachment";
+    type: "video" | "audio" | "pdf" | "attachment";
     extUrl?: string;
     code?: string;
     cover?: string;

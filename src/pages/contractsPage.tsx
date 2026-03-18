@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import AdminMenubar from "../components/admin/menubar";
 import CoordinatorMenubar from "../components/coordinator/menubar";
 import ConsultantMenubar from "../components/consultant/menubar";
@@ -12,6 +12,7 @@ import { listConsultants } from "../controllers/user/listConsultants.controller"
 import { listUsersAdmin } from "../controllers/user/listUsersAdmin.controller";
 import { findUser } from "../controllers/user/findUser.controller";
 import { getOverviewData } from "../controllers/dash/overview.controller";
+import { importContractsAdmin, type IImportContractsAdminResponse, type ImportContractsMode } from "../controllers/contract/importContractsAdmin.controller";
 
 import "../style/adminDash.css";
 import "../style/contractsPage.css";
@@ -132,11 +133,19 @@ function ContractsPage() {
   const [form, setForm] = useState<TContractForm>(emptyForm());
 
   const [toast, setToast] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const importFileRef = useRef<HTMLInputElement | null>(null);
   const [schoolSearchTerm, setSchoolSearchTerm] = useState("");
   const [schoolSearchLoading, setSchoolSearchLoading] = useState(false);
   const [schoolSearchResults, setSchoolSearchResults] = useState<TSchoolSearchItem[]>([]);
   const [bindingSchoolId, setBindingSchoolId] = useState<number | null>(null);
   const [bindSchoolsModalOpen, setBindSchoolsModalOpen] = useState(false);
+  const [importModalOpen, setImportModalOpen] = useState(false);
+  const [importContractsBuffer, setImportContractsBuffer] = useState<Array<Record<string, unknown>>>([]);
+  const [importFileName, setImportFileName] = useState("");
+  const [importMode, setImportMode] = useState<ImportContractsMode>("upsert");
+  const [importSubmitting, setImportSubmitting] = useState(false);
+  const [importResult, setImportResult] = useState<IImportContractsAdminResponse | null>(null);
+  const [importError, setImportError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!toast) return;
@@ -344,6 +353,93 @@ function ContractsPage() {
     setBindSchoolsModalOpen(false);
   }
 
+  function openImportModal() {
+    setImportModalOpen(true);
+    setImportContractsBuffer([]);
+    setImportFileName("");
+    setImportMode("upsert");
+    setImportSubmitting(false);
+    setImportResult(null);
+    setImportError(null);
+  }
+
+  function closeImportModal() {
+    if (importSubmitting) return;
+    setImportModalOpen(false);
+    setImportContractsBuffer([]);
+    setImportFileName("");
+    setImportResult(null);
+    setImportError(null);
+  }
+
+  function triggerImportFileSelect() {
+    importFileRef.current?.click();
+  }
+
+  async function handleImportFileChange(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+
+    setImportError(null);
+    setImportResult(null);
+
+    try {
+      const parsedContracts = await parseContractsImportFile(file);
+      if (!parsedContracts.length) {
+        setImportContractsBuffer([]);
+        setImportFileName(file.name);
+        setImportError("Arquivo sem linhas válidas para importação.");
+        return;
+      }
+
+      setImportContractsBuffer(parsedContracts);
+      setImportFileName(file.name);
+    } catch (error: any) {
+      setImportContractsBuffer([]);
+      setImportFileName(file.name);
+      setImportError(String(error?.message ?? "Falha ao ler o arquivo de importação."));
+    }
+  }
+
+  async function handleImportSubmit() {
+    if (!importContractsBuffer.length) {
+      setImportError("Selecione um arquivo CSV ou JSON com contratos antes de importar.");
+      return;
+    }
+
+    setImportSubmitting(true);
+    setImportError(null);
+
+    try {
+      const result = await importContractsAdmin({ contracts: importContractsBuffer, mode: importMode });
+      setImportResult(result);
+      await loadData();
+    } catch (error: any) {
+      const message = error?.response?.data?.message ?? "Não foi possível concluir a importação.";
+      setImportError(String(message));
+    } finally {
+      setImportSubmitting(false);
+    }
+  }
+
+  function handleDownloadContractsTemplateCsv() {
+    const csvTemplate = [
+      "id;nome;cnpj;endereco;cep;telefone;coordinatorId;consultantIds;studentsCount;teachersCount;booksCount",
+      ";Contrato Rede Norte 2026;12.345.678/0001-90;Rua Exemplo, 123;57000-000;(82) 99999-9999;15;21,22;1200;80;3000",
+      "42;Contrato Rede Sul 2026;98.765.432/0001-11;Av. Central, 456;01000-000;(11) 98888-7777;18;31,35;900;60;1800"
+    ].join("\n");
+
+    const blob = new Blob([csvTemplate], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = "modelo-importacao-contratos.csv";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(link.href);
+  }
+
   function toggleConsultant(consultantId: number) {
     setForm((prev) => {
       const exists = prev.consultantIds.includes(consultantId);
@@ -516,9 +612,16 @@ function ContractsPage() {
               <b>Contratos</b>
               <span>Gestão centralizada de coordenador e consultores por contrato.</span>
             </div>
-            <button type="button" className="contracts-new-button" onClick={openCreate}>
-              Novo contrato
-            </button>
+            <div className="contracts-header-actions">
+              {isAdminPanel ? (
+                <button type="button" className="contracts-ghost-button" onClick={openImportModal}>
+                  Importar contratos
+                </button>
+              ) : null}
+              <button type="button" className="contracts-new-button" onClick={openCreate}>
+                Novo contrato
+              </button>
+            </div>
           </div>
 
           <div className="contracts-card">
@@ -863,9 +966,227 @@ function ContractsPage() {
         </div>
       ) : null}
 
+      {importModalOpen ? (
+        <div className="contracts-modal-overlay" onClick={closeImportModal}>
+          <div className="contracts-modal-card contracts-import-modal-card" onClick={(e) => e.stopPropagation()}>
+            <div className="contracts-modal-header">
+              <div>
+                <b>Importação em massa de contratos</b>
+                <span>Envie um arquivo CSV ou JSON para criar ou atualizar contratos.</span>
+              </div>
+              <button type="button" className="contracts-close-button" onClick={closeImportModal}>×</button>
+            </div>
+            <div className="contracts-modal-body">
+              <label className="contracts-field" style={{ maxWidth: 360 }}>
+                <span>Modo de importação</span>
+                <select
+                  value={importMode}
+                  onChange={(e) => setImportMode(e.target.value as ImportContractsMode)}
+                  disabled={importSubmitting}
+                >
+                  <option value="upsert">Criar e atualizar (upsert)</option>
+                  <option value="create">Somente criar novos</option>
+                  <option value="update">Somente atualizar existentes</option>
+                </select>
+              </label>
+
+              <div className="contracts-import-hint">
+                Colunas suportadas: `id`, `nome`/`name`, `cnpj`, `endereco`, `cep`, `telefone`,
+                `coordinatorId`/`coordinatorEmail`, `consultantIds`/`consultantEmails`,
+                `studentsCount`, `teachersCount`, `booksCount`.
+              </div>
+
+              <input
+                ref={importFileRef}
+                type="file"
+                accept=".csv,.json,text/csv,application/json"
+                style={{ display: "none" }}
+                onChange={handleImportFileChange}
+              />
+
+              <div className="contracts-import-actions">
+                <button type="button" className="contracts-ghost-button" onClick={triggerImportFileSelect} disabled={importSubmitting}>
+                  Selecionar arquivo
+                </button>
+                <button type="button" className="contracts-ghost-button" onClick={handleDownloadContractsTemplateCsv} disabled={importSubmitting}>
+                  Baixar modelo CSV
+                </button>
+              </div>
+
+              {importFileName ? (
+                <div className="contracts-import-meta">
+                  <b>Arquivo:</b> {importFileName}
+                </div>
+              ) : null}
+
+              {importContractsBuffer.length > 0 ? (
+                <div className="contracts-import-meta">
+                  <b>Linhas prontas para importar:</b> {importContractsBuffer.length}
+                </div>
+              ) : null}
+
+              {importError ? <div className="contracts-inline-error">{importError}</div> : null}
+
+              {importResult ? (
+                <div className="contracts-import-result">
+                  <div className="contracts-import-summary">
+                    <span>Total: {importResult.summary.total}</span>
+                    <span>Criados: {importResult.summary.created}</span>
+                    <span>Atualizados: {importResult.summary.updated}</span>
+                    <span>Falhas: {importResult.summary.failed}</span>
+                  </div>
+
+                  {importResult.summary.failed > 0 ? (
+                    <div className="contracts-import-failures">
+                      {importResult.results
+                        .filter((item) => !item.success)
+                        .slice(0, 10)
+                        .map((item) => (
+                          <div key={`${item.row}-${item.name ?? "sem-nome"}`} className="contracts-import-failure-row">
+                            Linha {item.row} ({item.name ?? "sem nome"}): {item.message ?? "Erro"}
+                          </div>
+                        ))}
+                    </div>
+                  ) : null}
+                </div>
+              ) : null}
+            </div>
+            <div className="contracts-modal-footer">
+              <button type="button" className="contracts-ghost-button" onClick={closeImportModal} disabled={importSubmitting}>
+                Fechar
+              </button>
+              <button
+                type="button"
+                className="contracts-primary-button"
+                onClick={() => void handleImportSubmit()}
+                disabled={importSubmitting || importContractsBuffer.length === 0}
+              >
+                {importSubmitting ? "Importando..." : "Importar agora"}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
       {toast ? <div className={`contracts-toast ${toast.type}`}>{toast.text}</div> : null}
     </>
   );
 }
 
 export default ContractsPage;
+
+async function parseContractsImportFile(file: File): Promise<Array<Record<string, unknown>>> {
+  const ext = file.name.toLowerCase().split(".").pop() ?? "";
+  const text = await file.text();
+  if (!text.trim()) throw new Error("Arquivo vazio.");
+
+  if (ext === "json") {
+    const parsed = JSON.parse(text);
+    const contracts = Array.isArray(parsed) ? parsed : Array.isArray(parsed?.contracts) ? parsed.contracts : [];
+    if (!Array.isArray(contracts)) throw new Error("JSON inválido. Esperado array de contratos.");
+    return contracts as Array<Record<string, unknown>>;
+  }
+
+  if (ext !== "csv" && ext !== "txt") {
+    throw new Error("Formato inválido. Use arquivo .csv ou .json.");
+  }
+
+  return parseCsvContracts(text);
+}
+
+function parseCsvContracts(text: string): Array<Record<string, unknown>> {
+  const lines = text
+    .split(/\r?\n/)
+    .map((line) => line.replace(/\r/g, ""))
+    .filter((line) => line.trim().length > 0);
+
+  if (lines.length < 2) throw new Error("CSV inválido. Informe cabeçalho + pelo menos uma linha.");
+
+  const headerLine = lines[0].replace(/^\uFEFF/, "");
+  const separator = detectCsvSeparator(headerLine);
+  const headers = parseCsvLine(headerLine, separator).map(normalizeContractImportHeader);
+
+  if (!headers.length) throw new Error("Cabeçalho do CSV inválido.");
+
+  const contracts: Array<Record<string, unknown>> = [];
+
+  for (let i = 1; i < lines.length; i++) {
+    const values = parseCsvLine(lines[i], separator);
+    const row: Record<string, unknown> = {};
+
+    headers.forEach((header, index) => {
+      if (!header) return;
+      row[header] = String(values[index] ?? "").trim();
+    });
+
+    const hasValue = Object.values(row).some((value) => String(value ?? "").trim().length > 0);
+    if (hasValue) contracts.push(row);
+  }
+
+  return contracts;
+}
+
+function detectCsvSeparator(line: string): "," | ";" {
+  const semicolonCount = (line.match(/;/g) ?? []).length;
+  const commaCount = (line.match(/,/g) ?? []).length;
+  return semicolonCount > commaCount ? ";" : ",";
+}
+
+function parseCsvLine(line: string, separator: "," | ";"): string[] {
+  const values: string[] = [];
+  let current = "";
+  let inQuotes = false;
+
+  for (let i = 0; i < line.length; i++) {
+    const char = line[i];
+    const nextChar = line[i + 1];
+
+    if (char === "\"") {
+      if (inQuotes && nextChar === "\"") {
+        current += "\"";
+        i += 1;
+      } else {
+        inQuotes = !inQuotes;
+      }
+      continue;
+    }
+
+    if (!inQuotes && char === separator) {
+      values.push(current.trim());
+      current = "";
+      continue;
+    }
+
+    current += char;
+  }
+
+  values.push(current.trim());
+  return values;
+}
+
+function normalizeContractImportHeader(rawHeader: string): string {
+  const cleaned = rawHeader.replace(/^\uFEFF/, "").trim();
+  if (!cleaned) return "";
+
+  const normalized = cleaned
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, "");
+
+  if (normalized === "id" || normalized === "contratoid" || normalized === "contractid") return "id";
+  if (normalized === "nome" || normalized === "name") return "name";
+  if (normalized === "cnpj") return "cnpj";
+  if (normalized === "endereco" || normalized === "address") return "address";
+  if (normalized === "cep" || normalized === "zipcode") return "zipCode";
+  if (normalized === "telefone" || normalized === "phone") return "phone";
+  if (normalized === "coordinatorid" || normalized === "coordenadorid") return "coordinatorId";
+  if (normalized === "coordinatoremail" || normalized === "coordenadoremail" || normalized === "emailcoordenador") return "coordinatorEmail";
+  if (normalized === "consultantids" || normalized === "consultorids" || normalized === "consultoresids") return "consultantIds";
+  if (normalized === "consultantemails" || normalized === "consultoresemails" || normalized === "emailsconsultores") return "consultantEmails";
+  if (normalized === "studentscount" || normalized === "students" || normalized === "alunos") return "studentsCount";
+  if (normalized === "teacherscount" || normalized === "teachers" || normalized === "professores") return "teachersCount";
+  if (normalized === "bookscount" || normalized === "books" || normalized === "livros") return "booksCount";
+
+  return cleaned;
+}

@@ -4,7 +4,7 @@ import { getCookies } from "../misc/cookies.controller"
 interface UpdatePlaybackPayload {
   courseId: number
   lessonId: number
-  type: "video" | "pdf"
+  type: "video" | "audio" | "pdf"
   position: number
   duration?: number
 }

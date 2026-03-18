@@ -118,6 +118,7 @@ function AdminCertificatesPage() {
               >
                 <IconSearch className="acp-top-search-icon" aria-hidden="true" />
                 <input
+                  type="search"
                   placeholder="Buscar alunos, cursos, comunicações..."
                   value={topSearch}
                   onChange={e => setTopSearch(e.target.value)}

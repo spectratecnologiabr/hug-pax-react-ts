@@ -510,7 +510,7 @@ function AdminCommunicationTemplatesPage() {
 
         <div className="atp-filters">
           <div className="sap-input sap-input-wide">
-            <input placeholder="Buscar por slug, nome..." value={q} onChange={event => setQ(event.target.value)} />
+            <input type="search" placeholder="Buscar por slug, nome..." value={q} onChange={event => setQ(event.target.value)} />
           </div>
           <div className="sap-select">
             <select value={status} onChange={event => setStatus(event.target.value)}>

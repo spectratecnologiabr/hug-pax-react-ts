@@ -6,6 +6,7 @@ import { getCookies } from "../../misc/cookies.controller";
 export type CreateFilePayload = {
   lessonId: number;
   courseId: number;
+  title?: string;
   fileKey: string;
   fileType: string;
   mimeType?: string;

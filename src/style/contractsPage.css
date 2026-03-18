@@ -12,6 +12,14 @@
   gap: 14px;
 }
 
+.contracts-header-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
 .admin-dashboard-wrapper.contracts-page .contracts-header b {
   display: block;
   color: #000;
@@ -189,6 +197,10 @@
   border-radius: 14px;
 }
 
+.contracts-import-modal-card {
+  width: min(720px, calc(100vw - 40px));
+}
+
 .contracts-modal-header,
 .contracts-modal-footer {
   padding: 14px 18px;
@@ -250,6 +262,82 @@
 
 .contracts-modal-body > * + * {
   margin-top: 14px;
+}
+
+.contracts-import-hint {
+  padding: 12px 14px;
+  border: 1px solid #e6ebf2;
+  border-radius: 10px;
+  background: #f8fafc;
+  color: #475467;
+  font-size: 13px;
+  line-height: 1.5;
+  font-family: "SF UI Display", "Segoe UI", sans-serif;
+}
+
+.contracts-import-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.contracts-import-meta {
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #f8fafc;
+  border: 1px solid #e6ebf2;
+  font-size: 13px;
+  color: #475467;
+  font-family: "SF UI Display", "Segoe UI", sans-serif;
+}
+
+.contracts-inline-error {
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid #fecdd3;
+  background: #fff1f2;
+  color: #be123c;
+  font-size: 13px;
+  line-height: 1.45;
+  font-family: "SF UI Display Medium", "SF UI Display", "Segoe UI", sans-serif;
+}
+
+.contracts-import-result {
+  padding: 12px;
+  border: 1px solid #e6ebf2;
+  border-radius: 12px;
+  background: #ffffff;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.contracts-import-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 16px;
+  font-size: 13px;
+  color: #344054;
+  font-family: "SF UI Display Medium", "SF UI Display", "Segoe UI", sans-serif;
+}
+
+.contracts-import-failures {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 220px;
+  overflow: auto;
+}
+
+.contracts-import-failure-row {
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #fff7ed;
+  border: 1px solid #fed7aa;
+  color: #9a3412;
+  font-size: 13px;
+  line-height: 1.45;
+  font-family: "SF UI Display", "Segoe UI", sans-serif;
 }
 
 .contracts-form-grid {
@@ -563,6 +651,15 @@
     align-items: flex-start;
   }
 
+  .contracts-header-actions {
+    width: 100%;
+    justify-content: stretch;
+  }
+
+  .contracts-header-actions > button {
+    width: 100%;
+  }
+
   .contracts-card {
     margin: 0;
   }
@@ -599,6 +696,14 @@
   }
 
   .contracts-new-button {
+    width: 100%;
+  }
+
+  .contracts-import-actions {
+    flex-direction: column;
+  }
+
+  .contracts-import-actions button {
     width: 100%;
   }
 

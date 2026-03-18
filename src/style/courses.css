@@ -4,6 +4,18 @@
   font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Helvetica Neue", Arial, sans-serif;
 }
 
+.library-page .admin-dashboard-wrapper {
+  padding-bottom: 104px;
+}
+
+.library-page .admin-header-wrapper,
+.library-page .library-toolbar,
+.library-page .library-feedback,
+.library-page .library-grid {
+  margin-left: 0;
+  margin-right: 0;
+}
+
 .buttons-wrapper {
   display: flex;
   justify-content: flex-end;
@@ -33,12 +45,11 @@
   border: 1px solid #e5e7eb;
   border-radius: 10px;
   padding: 12px;
-  margin: 0 20px;
   margin-bottom: 20px;
 }
 
 .library-feedback {
-  margin: 0 20px 14px;
+  margin: 0 0 14px;
   padding: 10px 12px;
   border-radius: 10px;
   font-size: 13px;
@@ -61,6 +72,7 @@
 
 .library-search {
   flex: 1;
+  min-width: 0;
   border: none;
   outline: none;
   font-size: 13px;
@@ -74,6 +86,8 @@
   font-size: 12px;
   background: #f9fafb;
   cursor: pointer;
+  min-width: 180px;
+  box-sizing: border-box;
 }
 
 /* Grid */
@@ -81,7 +95,6 @@
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 20px;
-  margin: 0 20px;
 }
 
 /* Card */
@@ -146,6 +159,8 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
   font-size: 12px;
 }
 
@@ -178,12 +193,114 @@
 
 /* Responsive */
 @media (max-width: 768px) {
-  .library-toolbar {
-    flex-wrap: wrap;
+  .library-page .admin-header-wrapper {
+    align-items: flex-start;
   }
 
+  .buttons-wrapper {
+    width: 100%;
+    margin-bottom: 0;
+  }
+
+  .new-course-button {
+    width: 100%;
+    text-align: center;
+  }
+
+  .library-toolbar {
+    flex-wrap: wrap;
+    align-items: stretch;
+  }
+
+  .library-search,
   .library-filter {
     width: 100%;
+    min-width: 0;
+  }
+
+  .library-grid {
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 16px;
+  }
+
+  .library-cover {
+    height: 240px;
+  }
+
+  .library-card-title-row {
+    align-items: flex-start;
+  }
+
+  .library-card-actions {
+    flex-shrink: 0;
+  }
+}
+
+@media (max-width: 640px) {
+  .library-page .admin-dashboard-wrapper {
+    padding-bottom: 120px;
+  }
+
+  .library-toolbar {
+    padding: 14px;
+    gap: 10px;
+  }
+
+  .library-grid {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .library-card {
+    border-radius: 12px;
+  }
+
+  .library-cover {
+    height: 220px;
+  }
+
+  .library-card-body {
+    padding: 14px;
+  }
+
+  .library-card-title-row {
+    gap: 12px;
+    align-items: flex-start;
+  }
+
+  .library-card-body h3 {
+    font-size: 16px;
+  }
+
+  .library-card-body p {
+    font-size: 13px;
+  }
+
+  .library-card-actions {
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+    margin-right: 6px;
+  }
+
+  .library-edit-button,
+  .library-delete-button {
+    min-height: 34px;
+  }
+
+  .library-edit-button {
+    min-width: 34px;
+    border: 1px solid #e5e7eb;
+    background: #ffffff;
+  }
+
+  .library-delete-button {
+    padding: 0 10px;
+  }
+
+  .library-meta {
+    flex-direction: column;
+    align-items: flex-start;
   }
 }
 

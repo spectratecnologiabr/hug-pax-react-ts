@@ -5,6 +5,7 @@ import { listColleges } from "../controllers/college/listColleges.controller";
 import { findCollege } from "../controllers/college/findCollege.controller";
 import { createCollege } from "../controllers/college/createCollege.controller";
 import { updateCollege } from "../controllers/college/updateCollege.controller";
+import { deleteCollege } from "../controllers/college/deleteCollege.controller";
 import { listContracts, type TContractItem } from "../controllers/contract/listContracts.controller";
 import {
   importCollegesAdmin,
@@ -13,6 +14,12 @@ import {
 import { checkSession } from "../controllers/user/checkSession.controller";
 import { listTeachingModalitiesAdmin } from "../controllers/education/listTeachingModalitiesAdmin.controller";
 import { listTeachingGradesAdmin } from "../controllers/education/listTeachingGradesAdmin.controller";
+import {
+  getSchoolFinalReport,
+  type ISchoolFinalReportResponse,
+} from "../controllers/consultant/getSchoolFinalReport.controller";
+import NewSchedulingForm from "../components/consultant/NewSchedulingForm";
+import ViewSchedulingForm from "../components/consultant/ViewSchedulingForm";
 
 import ConsultantMenubar from "../components/consultant/menubar";
 import AdminMenubar from "../components/admin/menubar";
@@ -336,6 +343,30 @@ function emptyForm(): TCollegeForm {
   };
 }
 
+function formatVisitDate(value: string | null | undefined): string {
+  const raw = String(value ?? "").trim();
+  if (!raw) return "-";
+
+  const match = raw.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (match) {
+    const [, year, month, day] = match;
+    return `${day}/${month}/${year}`;
+  }
+
+  const date = new Date(raw);
+  if (Number.isNaN(date.getTime())) return raw;
+  return date.toLocaleDateString("pt-BR");
+}
+
+function getVisitStatusLabel(status: string | null | undefined): string {
+  const normalized = String(status ?? "").trim().toLowerCase();
+  if (normalized === "completed") return "Realizada";
+  if (normalized === "scheduled") return "Agendada";
+  if (normalized === "cancelled") return "Cancelada";
+  if (normalized === "rescheduled") return "Reagendada";
+  return String(status ?? "").trim() || "-";
+}
+
 function CollegesPage() {
   const isAdminPanel = window.location.pathname.startsWith("/admin");
   const isCoordinatorPanel = window.location.pathname.startsWith("/coordinator");
@@ -347,9 +378,13 @@ function CollegesPage() {
 
   const [overviewData, setOverviewData] = useState<TOverviewData | null>(null);
   const [colleges, setColleges] = useState<TCollege[]>([]);
+  const [collegesFilterCatalog, setCollegesFilterCatalog] = useState<TCollege[]>([]);
   const [userRole, setUserRole] = useState<TRole | null>(null);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [cityFilter, setCityFilter] = useState<string>("all");
+  const [contractFilter, setContractFilter] = useState<string>("all");
+  const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("all");
   const [pagination, setPagination] = useState({ page: 1, pageSize: 50, total: 0 });
 
   const [modalOpen, setModalOpen] = useState(false);
@@ -365,6 +400,12 @@ function CollegesPage() {
   const [seriesBySegment, setSeriesBySegment] = useState<Record<string, Array<{ value: string; label: string }>>>({});
   const [segmentsOpen, setSegmentsOpen] = useState(false);
   const [seriesOpen, setSeriesOpen] = useState(false);
+  const [schoolFinalReport, setSchoolFinalReport] = useState<ISchoolFinalReportResponse | null>(null);
+  const [schoolFinalReportError, setSchoolFinalReportError] = useState<string | null>(null);
+  const [newSchedulingFormOpened, setNewSchedulingFormOpened] = useState(false);
+  const [schedulingCollegeId, setSchedulingCollegeId] = useState<number>(0);
+  const [viewSchedulingFormOpened, setViewSchedulingFormOpened] = useState(false);
+  const [openedVisitId, setOpenedVisitId] = useState<number>(0);
 
   const [toast, setToast] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [openActionsCollegeId, setOpenActionsCollegeId] = useState<number | null>(null);
@@ -395,15 +436,58 @@ function CollegesPage() {
     return Math.max(1, Math.ceil(pagination.total / pagination.pageSize));
   }, [pagination.total, pagination.pageSize]);
 
-  async function loadColleges(params?: { page?: number; search?: string; pageSize?: number }) {
+  const cityOptions = useMemo(() => {
+    return Array.from(new Set(
+      collegesFilterCatalog
+        .map((college) => String(college.city || "").trim())
+        .filter(Boolean)
+    )).sort((a, b) => a.localeCompare(b, "pt-BR"));
+  }, [collegesFilterCatalog]);
+
+  const contractOptions = useMemo(() => {
+    const ids = Array.from(
+      new Set(
+        collegesFilterCatalog
+          .map((college) => Number(college.contractId ?? college.contract_id))
+          .filter((id) => Number.isFinite(id) && id > 0)
+      )
+    ).sort((a, b) => a - b);
+
+    return ids.map((id) => {
+      const contract = contracts.find((item) => Number(item.id) === Number(id));
+      return {
+        id,
+        name: contract?.name || `Contrato #${id}`,
+      };
+    });
+  }, [collegesFilterCatalog, contracts]);
+
+  async function loadColleges(params?: {
+    page?: number;
+    search?: string;
+    pageSize?: number;
+    city?: string;
+    contractId?: string;
+    status?: "all" | "active" | "inactive";
+  }) {
     setLoading(true);
     try {
       const requestedPage = Math.max(1, Number(params?.page ?? pagination.page));
       const requestedSearch = String(params?.search ?? search).trim();
       const requestedPageSize = Math.max(1, Number(params?.pageSize ?? pagination.pageSize));
+      const requestedCity = String(params?.city ?? cityFilter).trim();
+      const requestedContractId = String(params?.contractId ?? contractFilter).trim();
+      const requestedStatus = params?.status ?? statusFilter;
 
       const response: any = await listColleges({
         search: requestedSearch || undefined,
+        city: requestedCity && requestedCity !== "all" ? requestedCity : undefined,
+        contractId: requestedContractId === "none"
+          ? 0
+          : requestedContractId && requestedContractId !== "all"
+            ? Number(requestedContractId)
+            : undefined,
+        status: requestedStatus !== "all" ? requestedStatus : undefined,
         page: requestedPage,
         pageSize: requestedPageSize,
       });
@@ -469,6 +553,17 @@ function CollegesPage() {
     }
   }
 
+  async function loadCollegesFilterCatalog() {
+    try {
+      const response = await listColleges();
+      const rows = Array.isArray(response) ? response.map(normalizeCollegeRecord) : [];
+      setCollegesFilterCatalog(rows);
+    } catch (error) {
+      console.error("Error fetching colleges filter catalog:", error);
+      setCollegesFilterCatalog([]);
+    }
+  }
+
   useEffect(() => {
     async function bootstrap() {
       try {
@@ -478,7 +573,7 @@ function CollegesPage() {
       } catch (error) {
         console.error("Bootstrap colleges page error:", error);
       }
-      await Promise.all([loadColleges({ page: 1, search: "" }), loadContracts()]);
+      await Promise.all([loadColleges({ page: 1, search: "" }), loadContracts(), loadCollegesFilterCatalog()]);
     }
     void bootstrap();
   }, []);
@@ -641,18 +736,35 @@ function mapCollegeToForm(college: any): TCollegeForm {
     setSeriesOpen(false);
     setManagerDraft({ name: "", role: "", email: "", phone: "" });
     setSpecialNeedDraft({ description: "", individuals: "" });
+    setSchoolFinalReport(null);
+    setSchoolFinalReportError(null);
     setFormLoading(true);
 
     try {
       await ensureFormDependencies();
 
       if ((mode === "view" || mode === "edit") && collegeId) {
-        const collegeData = await findCollege(String(collegeId));
+        const [collegeData, reportData] = await Promise.all([
+          findCollege(String(collegeId)),
+          mode === "view"
+            ? getSchoolFinalReport({ collegeId }).catch((error) => {
+                const apiMessage =
+                  (error as any)?.response?.data?.message ||
+                  (error as any)?.response?.data?.error ||
+                  (error as any)?.message;
+                setSchoolFinalReportError(
+                  apiMessage ? String(apiMessage) : "Não foi possível carregar os agendamentos e visitas desta escola."
+                );
+                return null;
+              })
+            : Promise.resolve(null),
+        ]);
         const fromList = colleges.find((item) => Number(item.id) === Number(collegeId));
         const rawPayload = unwrapCollegePayload(collegeData);
         const mergedPayload = { ...(fromList || {}), ...(rawPayload || {}) };
         const normalizedCollege = normalizeCollegeRecord(mergedPayload);
         setCollegeForm(mapCollegeToForm(normalizedCollege));
+        setSchoolFinalReport(reportData);
       } else {
         setCollegeForm(emptyForm());
       }
@@ -666,6 +778,19 @@ function mapCollegeToForm(college: any): TCollegeForm {
     setCollegeForm(emptyForm());
     setManagerDraft({ name: "", role: "", email: "", phone: "" });
     setSpecialNeedDraft({ description: "", individuals: "" });
+    setSchoolFinalReport(null);
+    setSchoolFinalReportError(null);
+  }
+
+  function handleVisitRowAction(visitId: number, status?: string | null) {
+    const normalizedStatus = String(status ?? "").trim().toLowerCase();
+    if (normalizedStatus === "completed") {
+      window.location.href = `/consultant/visits/${visitId}/report-preview`;
+      return;
+    }
+
+    setOpenedVisitId(visitId);
+    setViewSchedulingFormOpened(true);
   }
 
   function toggleSegment(value: string) {
@@ -797,6 +922,37 @@ function mapCollegeToForm(college: any): TCollegeForm {
     }
   }
 
+  async function handleDeleteCollege(college: TCollege) {
+    const confirmed = window.confirm(`Excluir a escola "${college.name}"? Ela será desativada e deixará de aparecer nas listagens.`);
+    if (!confirmed) return;
+
+    setOpenActionsCollegeId(null);
+
+    try {
+      const response = await deleteCollege(Number(college.id));
+      const apiMessage = String(response?.message || "");
+
+      setToast({
+        type: "success",
+        text: apiMessage === "College deactivated" ? "Escola desativada com sucesso." : (apiMessage || "Escola desativada com sucesso."),
+      });
+
+      setColleges((prev) => prev.filter((item) => Number(item.id) !== Number(college.id)));
+      setPagination((prev) => ({ ...prev, total: Math.max(0, prev.total - 1) }));
+      await loadColleges();
+    } catch (error: any) {
+      const apiMessage =
+        error?.response?.data?.message ||
+        error?.response?.data?.error ||
+        error?.message;
+
+      setToast({
+        type: "error",
+        text: apiMessage ? String(apiMessage) : "Não foi possível excluir a escola.",
+      });
+    }
+  }
+
   function openImportModal() {
     setImportModalOpen(true);
     setImportCollegesBuffer([]);
@@ -868,9 +1024,9 @@ function mapCollegeToForm(college: any): TCollegeForm {
 
   function handleDownloadCollegeTemplateCsv() {
     const csvTemplate = [
-      "codigo_escola;data_inicio;nome;parceiro;endereco;numero;estado;cidade;gerencia;gee;comercial;contrato;segmentos;series_contratadas;alunos_com_deficiencia;deficiencias;status",
-      "1001;2026-01-15;Escola Exemplo;Grupo Exemplo;Rua Alfa;123;SP;Sao Paulo;Rede 1;GEE Recife Norte;Joao Comercial;Contrato Rede 1;Ensino Fundamental I;1º Ano,2º Ano;sim;[{\"description\":\"Deficiência auditiva\",\"individuals\":2}];active",
-      "1002;15/02/2026;Escola Modelo;Grupo Modelo;Rua Beta;45;RJ;Rio de Janeiro;Rede 2;GEE Rio Centro;Maria Comercial;Contrato Rede 2;Ensino Médio;1ª Série;nao;;inactive"
+      "codigo_escola;data_inicio;nome;parceiro;endereco;numero;estado;cidade;gerencia;gee;comercial;contractId;segmentos;series_contratadas;alunos_com_deficiencia;deficiencias;status",
+      "1001;2026-01-15;Escola Exemplo;Grupo Exemplo;Rua Alfa;123;SP;Sao Paulo;Rede 1;GEE Recife Norte;Joao Comercial;12;Ensino Fundamental I;1º Ano,2º Ano;sim;[{\"description\":\"Deficiência auditiva\",\"individuals\":2}];active",
+      "1002;15/02/2026;Escola Modelo;Grupo Modelo;Rua Beta;45;RJ;Rio de Janeiro;Rede 2;GEE Rio Centro;Maria Comercial;15;Ensino Médio;1ª Série;nao;;inactive"
     ]
       .join(String.fromCharCode(10))
       .replace(/\\n/g, "\n");
@@ -919,13 +1075,87 @@ function mapCollegeToForm(college: any): TCollegeForm {
           <div className="colleges-card">
             <div className="colleges-card-header">
               <b>Lista de Escolas</b>
-              <input
-                className="colleges-search-input"
-                type="text"
-                value={search}
-                onChange={(e) => handleSearchChange(e.target.value)}
-                placeholder="Buscar por nome, cidade, parceiro..."
-              />
+              <div className="colleges-card-filters">
+                <input
+                  className="colleges-search-input"
+                  type="search"
+                  value={search}
+                  onChange={(e) => handleSearchChange(e.target.value)}
+                  placeholder="Buscar por nome, cidade, parceiro..."
+                />
+                <select
+                  className="colleges-filter-select"
+                  value={cityFilter}
+                  onChange={(e) => {
+                    setCityFilter(e.target.value);
+                    setPagination((prev) => ({ ...prev, page: 1 }));
+                    void loadColleges({ page: 1, city: e.target.value });
+                  }}
+                  aria-label="Filtrar por cidade"
+                >
+                  <option value="all">Todas as cidades</option>
+                  {cityOptions.map((city) => (
+                    <option key={city} value={city}>
+                      {city}
+                    </option>
+                  ))}
+                </select>
+                <select
+                  className="colleges-filter-select"
+                  value={contractFilter}
+                  onChange={(e) => {
+                    setContractFilter(e.target.value);
+                    setPagination((prev) => ({ ...prev, page: 1 }));
+                    void loadColleges({ page: 1, contractId: e.target.value });
+                  }}
+                  aria-label="Filtrar por contrato"
+                >
+                  <option value="all">Todos os contratos</option>
+                  <option value="none">Sem contrato</option>
+                  {contractOptions.map((contract) => (
+                    <option key={contract.id} value={String(contract.id)}>
+                      {contract.name}
+                    </option>
+                  ))}
+                </select>
+                <select
+                  className="colleges-filter-select"
+                  value={statusFilter}
+                  onChange={(e) => {
+                    const nextStatus = e.target.value as typeof statusFilter;
+                    setStatusFilter(nextStatus);
+                    setPagination((prev) => ({ ...prev, page: 1 }));
+                    void loadColleges({ page: 1, status: nextStatus });
+                  }}
+                  aria-label="Filtrar por status da escola"
+                >
+                  <option value="all">Todos os status</option>
+                  <option value="active">Ativas</option>
+                  <option value="inactive">Inativas</option>
+                </select>
+                {(search || cityFilter !== "all" || contractFilter !== "all" || statusFilter !== "all") ? (
+                  <button
+                    type="button"
+                    className="colleges-filter-reset"
+                    onClick={() => {
+                      setSearch("");
+                      setCityFilter("all");
+                      setContractFilter("all");
+                      setStatusFilter("all");
+                      setPagination((prev) => ({ ...prev, page: 1 }));
+                      void loadColleges({
+                        page: 1,
+                        search: "",
+                        city: "all",
+                        contractId: "all",
+                        status: "all",
+                      });
+                    }}
+                  >
+                    Limpar filtros
+                  </button>
+                ) : null}
+              </div>
             </div>
 
             {loading ? (
@@ -1339,6 +1569,60 @@ function mapCollegeToForm(college: any): TCollegeForm {
                     </div>
                   ) : null}
                 </div>
+
+                {isViewMode && userRole === "consultant" ? (
+                  <div className="colleges-managers-card">
+                    <div className="colleges-managers-head">
+                      <b>Agendamentos e visitas da escola</b>
+                    </div>
+                    <div className="colleges-managers-table-wrap">
+                      <table className="colleges-managers-table colleges-school-visits-table">
+                        <thead>
+                          <tr>
+                            <th>Data</th>
+                            <th>Consultor</th>
+                            <th>Perfil da instituição</th>
+                            <th>Tipo de visita</th>
+                            <th>Status</th>
+                            <th>Ação</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {schoolFinalReportError ? (
+                            <tr>
+                              <td colSpan={6}>{schoolFinalReportError}</td>
+                            </tr>
+                          ) : schoolFinalReport?.visits?.length ? (
+                            schoolFinalReport.visits.map((visit) => (
+                              <tr key={visit.id}>
+                                <td>{formatVisitDate(visit.visitDate)}</td>
+                                <td>{visit.creatorName || (visit.creatorId ? `Consultor #${visit.creatorId}` : "-")}</td>
+                                <td>{visit.institutionProfile || "-"}</td>
+                                <td>{visit.visitType || "-"}</td>
+                                <td>{getVisitStatusLabel(visit.status)}</td>
+                                <td>
+                                  <button
+                                    type="button"
+                                    className="colleges-row-link-button"
+                                    onClick={() => handleVisitRowAction(visit.id, visit.status)}
+                                  >
+                                    {String(visit.status || "").trim().toLowerCase() === "completed"
+                                      ? "Abrir relatório"
+                                      : "Abrir agendamento"}
+                                  </button>
+                                </td>
+                              </tr>
+                            ))
+                          ) : (
+                            <tr>
+                              <td colSpan={6}>Nenhum agendamento ou visita encontrado para esta escola.</td>
+                            </tr>
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                ) : null}
               </div>
             )}
 
@@ -1355,6 +1639,36 @@ function mapCollegeToForm(college: any): TCollegeForm {
       ) : null}
 
       {toast ? <div className={`colleges-toast ${toast.type}`}>{toast.text}</div> : null}
+      <NewSchedulingForm
+        opened={newSchedulingFormOpened}
+        onClose={() => {
+          setNewSchedulingFormOpened(false);
+          setSchedulingCollegeId(0);
+        }}
+        initialCollegeId={schedulingCollegeId || undefined}
+      />
+      <ViewSchedulingForm
+        opened={viewSchedulingFormOpened}
+        onClose={() => {
+          setViewSchedulingFormOpened(false);
+          setOpenedVisitId(0);
+        }}
+        onCancelled={() => {
+          setViewSchedulingFormOpened(false);
+          setOpenedVisitId(0);
+          if (collegeForm.id) {
+            void getSchoolFinalReport({ collegeId: collegeForm.id }).then(setSchoolFinalReport).catch(() => null);
+          }
+        }}
+        onRescheduled={() => {
+          setViewSchedulingFormOpened(false);
+          setOpenedVisitId(0);
+          if (collegeForm.id) {
+            void getSchoolFinalReport({ collegeId: collegeForm.id }).then(setSchoolFinalReport).catch(() => null);
+          }
+        }}
+        visitId={openedVisitId}
+      />
       {importModalOpen ? (
         <div className="colleges-modal-overlay" onClick={closeImportModal}>
           <div className="colleges-modal-card colleges-import-modal-card" onClick={(e) => e.stopPropagation()}>
@@ -1479,6 +1793,22 @@ function mapCollegeToForm(college: any): TCollegeForm {
                   Ficha escolar
                 </button>
               ) : null}
+              {userRole !== "consultant" ? (
+                <button
+                  type="button"
+                  className="colleges-actions-item"
+                  onClick={() => {
+                    const college = colleges.find((item) => Number(item.id) === Number(openActionsCollegeId));
+                    if (!college) {
+                      setOpenActionsCollegeId(null);
+                      return;
+                    }
+                    void handleDeleteCollege(college);
+                  }}
+                >
+                  Excluir
+                </button>
+              ) : null}
             </div>,
             document.body
           )
@@ -1489,7 +1819,7 @@ function mapCollegeToForm(college: any): TCollegeForm {
 
 async function parseCollegesImportFile(file: File): Promise<Array<Record<string, unknown>>> {
   const ext = file.name.toLowerCase().split(".").pop() ?? "";
-  const text = await file.text();
+  const text = await readImportFileText(file);
   if (!text.trim()) throw new Error("Arquivo vazio.");
 
   if (ext === "json") {
@@ -1504,6 +1834,27 @@ async function parseCollegesImportFile(file: File): Promise<Array<Record<string,
   }
 
   return parseCsvColleges(text);
+}
+
+async function readImportFileText(file: File): Promise<string> {
+  const buffer = await file.arrayBuffer();
+  const bytes = new Uint8Array(buffer);
+  try {
+    return new TextDecoder("utf-8", { fatal: true }).decode(bytes);
+  } catch {
+    const windows1252Text = new TextDecoder("windows-1252").decode(bytes);
+    const macintoshText = new TextDecoder("macintosh").decode(bytes);
+    return scoreDecodedText(macintoshText) < scoreDecodedText(windows1252Text)
+      ? macintoshText
+      : windows1252Text;
+  }
+}
+
+function scoreDecodedText(text: string): number {
+  const replacementChars = (text.match(/\uFFFD/g) ?? []).length * 10;
+  const mojibakeChars = (text.match(/[ÃÂâ€œâ€\u009d\u009c\u0094™œžŽ]/g) ?? []).length * 3;
+  const suspiciousOrdinals = (text.match(/\d[»ºª]/g) ?? []).length * 4;
+  return replacementChars + mojibakeChars + suspiciousOrdinals;
 }
 
 function parseCsvColleges(text: string): Array<Record<string, unknown>> {
@@ -1597,8 +1948,8 @@ function normalizeCollegeImportHeader(rawHeader: string): string {
   if (normalized === "gerencia" || normalized === "regional" || normalized === "management" || normalized === "rede") return "management";
   if (normalized === "gee" || normalized === "gerenciaregionaleducacao") return "gee";
   if (normalized === "comercial" || normalized === "salesmanager") return "salesManager";
-  if (normalized === "contractid" || normalized === "contratoid") return "contractId";
-  if (normalized === "contractname" || normalized === "contrato" || normalized === "nomecontrato") return "contractName";
+  if (normalized === "contractid" || normalized === "contratoid" || normalized === "contrato") return "contractId";
+  if (normalized === "contractname" || normalized === "nomecontrato") return "contractName";
   if (normalized === "consultorid" || normalized === "consultorresponsavelid") return "consultorId";
   if (normalized === "consultoremail" || normalized === "emailconsultor" || normalized === "consultorresponsavelemail") return "consultorEmail";
   if (normalized === "consultornome" || normalized === "consultorname" || normalized === "consultorresponsavelnome") return "consultorNome";

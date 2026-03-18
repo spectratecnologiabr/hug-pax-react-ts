@@ -73,6 +73,22 @@ type TLesson = {
     moduleId: number,
     isActive: boolean,
     allowDownload?: boolean,
+    file?: {
+        id: number,
+        title?: string | null,
+        fileKey: string,
+        fileType: string,
+        mimeType?: string | null,
+        size?: number | null
+    } | null,
+    attachments?: Array<{
+        id: number,
+        title?: string | null,
+        fileKey: string,
+        fileType: string,
+        mimeType?: string | null,
+        size?: number | null
+    }>,
     createdAt: string,
     updatedAt: string
 }
@@ -155,7 +171,7 @@ function Course() {
     }, [])
 
     type PlaybackLast = {
-        type: "video" | "pdf"
+        type: "video" | "audio" | "pdf"
         lessonId: number
         position: number
         duration: number
@@ -167,10 +183,12 @@ function Course() {
     }
 
     const [videoSrc, setVideoSrc] = React.useState<string>();
+    const [audioSrc, setAudioSrc] = React.useState<string>();
     const [playbackMemory, setPlaybackMemory] = React.useState<PlaybackMemory | null>(null)
     const [numPages, setNumPages] = React.useState(0);
     const [pageNumber, setPageNumber] = React.useState(1);
     const videoRef = React.useRef<HTMLVideoElement | null>(null);
+    const audioRef = React.useRef<HTMLAudioElement | null>(null);
     const [isPlaying, setIsPlaying] = React.useState(false);
     const [progress, setProgress] = React.useState(0);
     const [videoProgress, setVideoProgress] = React.useState(0);
@@ -223,6 +241,16 @@ function Course() {
         }
 
         return true;
+    }
+
+    function resolvePrimaryMediaKey(lessonLike?: any): string {
+        const extUrl = String(lessonLike?.extUrl || "").trim();
+        if (extUrl) return extUrl;
+
+        const fileKey = String(lessonLike?.file?.fileKey || "").trim();
+        if (fileKey) return fileKey;
+
+        return "";
     }
 
     function toApiStreamUrl(rawKeyOrUrl: string): string {
@@ -474,6 +502,9 @@ function Course() {
         if (videoRef.current) {
             videoRef.current.volume = volume;
         }
+        if (audioRef.current) {
+            audioRef.current.volume = volume;
+        }
     }, [volume]);
 
     React.useEffect(() => {
@@ -625,7 +656,7 @@ function Course() {
 
         if (typeof seekPosition === "undefined") return
 
-        if (lessionData.type === "video") {
+        if (lessionData.type === "video" || lessionData.type === "audio") {
             setPendingSeek(seekPosition)
         }
     }, [playbackMemory, lessionData?.id])
@@ -678,7 +709,7 @@ function Course() {
     }, [pageNumber, numPages]);
 
     React.useEffect(() => {
-        if (lessionData?.type !== "video") return;
+        if (lessionData?.type !== "video" && lessionData?.type !== "audio") return;
         if (!progress) return;
 
         const id = setTimeout(() => {
@@ -925,21 +956,23 @@ function Course() {
 
     React.useEffect(() => {
         if (!lessonId) return;
-        if (lessionData?.type !== "video") return;
-        if (!videoRef.current) return;
+        if (lessionData?.type !== "video" && lessionData?.type !== "audio") return;
+
+        const mediaElement = lessionData?.type === "audio" ? audioRef.current : videoRef.current;
+        if (!mediaElement) return;
 
         const id = setTimeout(() => {
             updatePlayback({
                 courseId: Number(courseData?.id),
                 lessonId: Number(lessonId),
-                type: "video",
-                position: videoRef.current!.currentTime,
-                duration: videoRef.current!.duration
+                type: lessionData?.type === "audio" ? "audio" : "video",
+                position: mediaElement.currentTime,
+                duration: mediaElement.duration
             });
         }, 5000);
 
         return () => clearTimeout(id);
-    }, [currentTime]);
+    }, [currentTime, lessonId, lessionData?.type, courseData?.id]);
 
     React.useEffect(() => {
         if (!lessonId) return;
@@ -981,22 +1014,23 @@ function Course() {
 
     React.useEffect(() => {
         if (pendingSeek === null) return
-        if (!videoRef.current) return
+        const mediaElement = lessionData?.type === "audio" ? audioRef.current : videoRef.current
+        if (!mediaElement) return
         if (initializedRef.current) return
 
-        const video = videoRef.current
+        const media = mediaElement
 
         const applySeek = () => {
             if (initializedRef.current) return
-            video.currentTime = pendingSeek
+            media.currentTime = pendingSeek
             initializedRef.current = true
             setPendingSeek(null)
         }
 
         // 🚑 Se os eventos já passaram, aplica direto
-        if (video.readyState >= 1) {
-            if (pendingSeek > video.duration && video.duration > 0) {
-                setPendingSeek(video.duration - 0.5)
+        if (media.readyState >= 1) {
+            if (pendingSeek > media.duration && media.duration > 0) {
+                setPendingSeek(media.duration - 0.5)
                 return
             }
 
@@ -1004,14 +1038,14 @@ function Course() {
             return
         }
 
-        video.addEventListener("loadedmetadata", applySeek)
-        video.addEventListener("canplay", applySeek)
+        media.addEventListener("loadedmetadata", applySeek)
+        media.addEventListener("canplay", applySeek)
 
         return () => {
-            video.removeEventListener("loadedmetadata", applySeek)
-            video.removeEventListener("canplay", applySeek)
+            media.removeEventListener("loadedmetadata", applySeek)
+            media.removeEventListener("canplay", applySeek)
         }
-    }, [pendingSeek, lessionData?.id])
+    }, [pendingSeek, lessionData?.id, lessionData?.type])
 
     async function forceDownload(url: string, filename?: string, allowDownload?: boolean) {
         try {
@@ -1049,19 +1083,67 @@ function Course() {
     }
 
     React.useEffect(() => {
-        async function getVideo() {
-            if (!lessionData?.extUrl) return;
+        let active = true;
+        let objectUrl: string | null = null;
 
-            const streamUrl = toApiStreamUrl(lessionData.extUrl);
-            const res = await fetch(streamUrl, {
-                headers: buildStreamHeaders(streamUrl)
-            });
+        async function loadMedia() {
+            const mediaKey = resolvePrimaryMediaKey(lessionData);
+            if (!mediaKey) {
+                setAudioSrc(undefined);
+                setVideoSrc(undefined);
+                return;
+            }
 
-            const blob = await res.blob();
-            setVideoSrc(URL.createObjectURL(blob));
+            if (lessionData?.type !== "video" && lessionData?.type !== "audio") {
+                setAudioSrc(undefined);
+                setVideoSrc(undefined);
+                return;
+            }
+
+            try {
+                const streamUrl = toApiStreamUrl(mediaKey);
+                const res = await fetch(streamUrl, {
+                    headers: buildStreamHeaders(streamUrl)
+                });
+
+                if (!res.ok) {
+                    throw new Error(`Erro ao carregar mídia (${res.status})`);
+                }
+
+                const blob = await res.blob();
+                objectUrl = URL.createObjectURL(blob);
+
+                if (!active) {
+                    URL.revokeObjectURL(objectUrl);
+                    objectUrl = null;
+                    return;
+                }
+
+                if (lessionData.type === "audio") {
+                    setAudioSrc(objectUrl);
+                    setVideoSrc(undefined);
+                } else {
+                    setVideoSrc(objectUrl);
+                    setAudioSrc(undefined);
+                }
+            } catch (error) {
+                console.error("Erro ao carregar mídia da aula:", error);
+                if (!active) return;
+                setAudioSrc(undefined);
+                setVideoSrc(undefined);
+                handleModalMessage({ isError: true, message: "Não foi possível carregar a mídia desta aula" });
+            }
         }
-        getVideo();
-    }, [lessionData?.extUrl]);
+
+        loadMedia();
+
+        return () => {
+            active = false;
+            if (objectUrl) {
+                URL.revokeObjectURL(objectUrl);
+            }
+        };
+    }, [lessionData?.id, lessionData?.type, lessionData?.extUrl, lessionData?.file?.fileKey]);
 
     return (
         <React.Fragment>
@@ -1175,11 +1257,11 @@ function Course() {
                                                         </div>
 
                                                         <div className="right-controls">
-                                                            {lessionData?.allowDownload && lessionData?.extUrl && (
+                                                            {lessionData?.allowDownload && resolvePrimaryMediaKey(lessionData) && (
                                                                 <button
                                                                     type="button"
                                                                     className="control-btn download-btn"
-                                                                    onClick={() => forceDownload(lessionData.extUrl, `${lessionData.title || "video"}.mp4`, lessionData.allowDownload)}
+                                                                    onClick={() => forceDownload(resolvePrimaryMediaKey(lessionData), `${lessionData.title || "video"}.mp4`, lessionData.allowDownload)}
                                                                     title="Baixar vídeo"
                                                                 >
                                                                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
@@ -1196,6 +1278,51 @@ function Course() {
 
                                                     </div>
                                                 </div>
+                                            </div>
+                                        </div>) : ""
+                                }
+                                {
+                                    (lessionData.type === "audio") ?
+                                        (<div className="lesson-audio-wrapper active">
+                                            <div className="lesson-audio-card">
+                                                <div className="lesson-audio-meta">
+                                                    <span className="lesson-audio-badge">Audio</span>
+                                                    <b>{lessionData.title}</b>
+                                                    {lessionData.subTitle && <span>{lessionData.subTitle}</span>}
+                                                </div>
+                                                <audio
+                                                    ref={audioRef}
+                                                    src={audioSrc}
+                                                    controls
+                                                    controlsList={lessionData?.allowDownload ? undefined : "nodownload"}
+                                                    onPlay={() => setIsPlaying(true)}
+                                                    onPause={() => setIsPlaying(false)}
+                                                    onLoadedMetadata={(e) => setDuration(e.currentTarget.duration)}
+                                                    onTimeUpdate={(e) => {
+                                                        const current = e.currentTarget.currentTime
+                                                        const total = e.currentTarget.duration || 0
+
+                                                        setCurrentTime(current)
+
+                                                        if (total > 0 && duration === 0) {
+                                                            setDuration(total)
+                                                        }
+
+                                                        if (total > 0) {
+                                                            const percent = (current / total) * 100
+                                                            setProgress(percent)
+                                                        }
+                                                    }}
+                                                />
+                                                {lessionData?.allowDownload && resolvePrimaryMediaKey(lessionData) && (
+                                                    <button
+                                                        type="button"
+                                                        className="lesson-audio-download"
+                                                        onClick={() => forceDownload(resolvePrimaryMediaKey(lessionData), `${lessionData.title || "audio"}.mp3`, lessionData.allowDownload)}
+                                                    >
+                                                        Baixar audio
+                                                    </button>
+                                                )}
                                             </div>
                                         </div>) : ""
                                 }
@@ -1243,11 +1370,11 @@ function Course() {
 
                                                 <div className="right">
                                                     <span>{pageNumber} / {numPages}</span>
-                                                      {lessionData?.allowDownload && lessionData?.extUrl && (
+                                                      {lessionData?.allowDownload && resolvePrimaryMediaKey(lessionData) && (
                                                         <button
                                                             type="button"
                                                             className="download-btn"
-                                                            onClick={() => forceDownload(lessionData.extUrl, `${lessionData.title || "arquivo"}.pdf`, lessionData.allowDownload)}
+                                                            onClick={() => forceDownload(resolvePrimaryMediaKey(lessionData), `${lessionData.title || "arquivo"}.pdf`, lessionData.allowDownload)}
                                                             title="Baixar PDF"
                                                         >
                                                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
@@ -1270,8 +1397,42 @@ function Course() {
                                         </div>
                                     ) : ""
                                 }
-                                
 
+                                {!!lessionData?.attachments?.length && (
+                                    <section className="lesson-attachments-panel" aria-label="Anexos da aula">
+                                        <div className="lesson-attachments-header">
+                                            <div>
+                                                <span className="lesson-attachments-eyebrow">Materiais complementares</span>
+                                                <b>Anexos da aula</b>
+                                            </div>
+                                            <span className="lesson-attachments-count">
+                                                {lessionData.attachments.length} item{lessionData.attachments.length > 1 ? "s" : ""}
+                                            </span>
+                                        </div>
+
+                                        <div className="lesson-attachments-list">
+                                            {lessionData.attachments.map((attachment) => (
+                                                <article className="lesson-attachment-card" key={attachment.id}>
+                                                    <div className="lesson-attachment-icon" aria-hidden="true">PDF</div>
+                                                    <div className="lesson-attachment-content">
+                                                        <b>{attachment.title || "Anexo"}</b>
+                                                        <span>
+                                                            {attachment.mimeType || "Arquivo disponível para download"}
+                                                        </span>
+                                                    </div>
+                                                    <button
+                                                        type="button"
+                                                        className="lesson-attachment-button"
+                                                        onClick={() => forceDownload(attachment.fileKey, attachment.title || "anexo")}
+                                                    >
+                                                        Baixar
+                                                    </button>
+                                                </article>
+                                            ))}
+                                        </div>
+                                    </section>
+                                )}
+                                
                                 <div className="avaliation-wrapper">
                                     <div className="avaliation-title">
                                         Avalie este conteúdo
@@ -1290,16 +1451,18 @@ function Course() {
                                     </div>
                                 </div>
 
-                                {(lessionData.type === "video" || lessionData.type === "pdf") && (
+                                {(lessionData.type === "video" || lessionData.type === "audio" || lessionData.type === "pdf") && (
                                     <div className="media-accessibility-panel" aria-live="polite">
                                         <b>
                                             {lessionData.type === "video"
                                                 ? "Texto para tradução em Libras (aula em vídeo)"
+                                                : lessionData.type === "audio"
+                                                ? "Texto para tradução em Libras (aula em áudio)"
                                                 : "Texto para tradução em Libras (PDF)"}
                                         </b>
-                                        {lessionData.type === "video" ? (
+                                        {(lessionData.type === "video" || lessionData.type === "audio") ? (
                                             <>
-                                                <p>{`Aula em vídeo: ${lessionData.title}.`}</p>
+                                                <p>{`${lessionData.type === "audio" ? "Aula em áudio" : "Aula em vídeo"}: ${lessionData.title}.`}</p>
                                                 {lessionData.subTitle && <p>{`Subtítulo: ${lessionData.subTitle}.`}</p>}
                                                 {(() => {
                                                     const transcriptChunks = splitAccessibleText(htmlToPlainText(lessionData.code));
@@ -1464,7 +1627,7 @@ function Course() {
                                                         ) : (
                                                             <button
                                                                 type="button"
-                                                                onClick={() => forceDownload(lesson.extUrl, lesson.title, lesson.allowDownload)}
+                                                                onClick={() => forceDownload(resolvePrimaryMediaKey(lesson), lesson.title, lesson.allowDownload)}
                                                                 className="lesson-action-link"
                                                             >
                                                                 Baixar
@@ -1475,7 +1638,7 @@ function Course() {
                                                             href={`/course/${courseSlug}/lesson/${lesson.id}`}
                                                             className="lesson-action-link"
                                                         >
-                                                            {lesson.type === "video" ? "Assistir" : "Ler"}
+                                                            {lesson.type === "video" ? "Assistir" : lesson.type === "audio" ? "Ouvir" : "Ler"}
                                                         </a>
                                                     )}
                                                 </div>

@@ -10,7 +10,9 @@ import Menubar from "../components/admin/menubar";
 import "../style/adminDash.css";
 import { uploadLessonFileController } from "../controllers/course/admin/uploadFile.controller";
 import { createFile } from "../controllers/course/admin/createFile.controller";
-import { updateLessonAllowDownload, updateLessonCode, updateLessonExtUrl } from "../controllers/course/admin/updateLesson.controller";
+import { deleteFile } from "../controllers/course/admin/deleteFile.controller";
+import { updateLessonAllowDownload, updateLessonCode, updateLessonDetails, updateLessonExtUrl } from "../controllers/course/admin/updateLesson.controller";
+import { updateModule } from "../controllers/course/admin/updateModule.controller";
 import { updateCourse } from "../controllers/course/admin/updateCourse.controller";
 import { deleteLesson } from "../controllers/course/admin/deleteLesson.controller";
 import { transcribeLesson } from "../controllers/course/admin/transcribeLesson.controller";
@@ -25,8 +27,17 @@ type TOverviewData = {
     unreadNotifications: number
 }
 
+type LessonAttachment = {
+  id: number;
+  title?: string | null;
+  fileKey: string;
+  fileType: string;
+  mimeType?: string | null;
+  size?: number | null;
+};
 type LessonInList = ILessonData & {
   id?: number;
+  attachments?: LessonAttachment[];
 };
 type ModuleInList = IModuleData & { id?: number; lessons?: LessonInList[] };
 
@@ -84,13 +95,20 @@ function EditCoursePage() {
     const [modules, setModules] = useState<ModuleInList[]>([]);
     const [showModuleForm, setShowModuleForm] = useState(false);
     const [showLessonFormForModuleIndex, setShowLessonFormForModuleIndex] = useState<number | null>(null);
+    const [editModuleIndex, setEditModuleIndex] = useState<number | null>(null);
+    const [editLessonTarget, setEditLessonTarget] = useState<{ moduleIndex: number; lessonIndex: number } | null>(null);
     const [newModuleData, setNewModuleData] = useState<IModuleData>({
         title: "",
         description: "",
         courseId: 0,
         order: 1,
     });
-    const [newLessonData, setNewLessonData] = useState<ILessonData & { file?: File; mimeType?: string; size?: number; fileName?: string }>({
+    const [editModuleData, setEditModuleData] = useState<{ title: string; description: string; order: number }>({
+        title: "",
+        description: "",
+        order: 1,
+    });
+    const [newLessonData, setNewLessonData] = useState<ILessonData & { file?: File; mimeType?: string; size?: number; fileName?: string; attachmentFiles?: File[] }>({
         moduleId: 0,
         title: "",
         slug: "",
@@ -101,11 +119,17 @@ function EditCoursePage() {
         isActive: 1,
         allowDownload: true,
         file: undefined,
+        attachmentFiles: [],
         mimeType: undefined,
         size: undefined,
         fileName: undefined,
     });
+    const [editLessonData, setEditLessonData] = useState<{ title: string; subTitle: string }>({
+        title: "",
+        subTitle: "",
+    });
     const [lessonFileUploading, setLessonFileUploading] = useState(false);
+    const [attachmentUploadingKey, setAttachmentUploadingKey] = useState<string | null>(null);
     const [transcribingLessonId, setTranscribingLessonId] = useState<number | null>(null);
     const [transcriptionLoadingOpen, setTranscriptionLoadingOpen] = useState(false);
     const [savingTranscriptionReview, setSavingTranscriptionReview] = useState(false);
@@ -148,6 +172,8 @@ function EditCoursePage() {
     const [isGradesOpen, setIsGradesOpen] = useState(false);
     const [segmentsTouched, setSegmentsTouched] = useState(false);
     const [seriesHydrated, setSeriesHydrated] = useState(false);
+    const [savingModuleKey, setSavingModuleKey] = useState<number | null>(null);
+    const [savingLessonKey, setSavingLessonKey] = useState<string | null>(null);
     
     function handleModalMessage(data: { isError: boolean; message: string }) {
         const messageElement = document.getElementById("warning-message") as HTMLSpanElement;
@@ -161,6 +187,126 @@ function EditCoursePage() {
         setModalErrorOpen(true);
 
         setTimeout(() => setModalErrorOpen(false), 5000);
+    }
+
+    function getApiErrorMessage(error: any, fallback: string) {
+        return String(
+            error?.response?.data?.message ||
+            error?.message ||
+            fallback
+        );
+    }
+
+    function openEditModuleModal(moduleIndex: number) {
+        const module = modules[moduleIndex];
+        if (!module) return;
+        setEditModuleIndex(moduleIndex);
+        setEditModuleData({
+            title: String(module.title || ""),
+            description: String(module.description || ""),
+            order: Number(module.order) || moduleIndex + 1,
+        });
+    }
+
+    function openEditLessonModal(moduleIndex: number, lessonIndex: number) {
+        const lesson = modules[moduleIndex]?.lessons?.[lessonIndex];
+        if (!lesson) return;
+        setEditLessonTarget({ moduleIndex, lessonIndex });
+        setEditLessonData({
+            title: String(lesson.title || ""),
+            subTitle: String(lesson.subTitle || ""),
+        });
+    }
+
+    async function handleSaveModuleDetails() {
+        if (editModuleIndex == null) return;
+        const module = modules[editModuleIndex];
+        if (!module?.id) return;
+        if (!String(editModuleData.title || "").trim()) {
+            handleModalMessage({ isError: true, message: "Informe o nome do módulo." });
+            return;
+        }
+
+        setSavingModuleKey(editModuleIndex);
+        try {
+            const response = await updateModule(module.id, {
+                title: String(editModuleData.title || "").trim(),
+                description: String(editModuleData.description || "").trim(),
+                order: Number(editModuleData.order) || editModuleIndex + 1,
+            });
+
+            if (response?.success === false) {
+                throw new Error(response?.message || "Erro ao atualizar módulo.");
+            }
+
+            setModules(prev =>
+                prev.map((item, index) =>
+                    index === editModuleIndex
+                        ? {
+                            ...item,
+                            title: String(editModuleData.title || "").trim(),
+                            description: String(editModuleData.description || "").trim(),
+                            order: Number(editModuleData.order) || editModuleIndex + 1,
+                        }
+                        : item
+                )
+            );
+            setEditModuleIndex(null);
+            handleModalMessage({ isError: false, message: "Módulo atualizado com sucesso." });
+        } catch (error: any) {
+            handleModalMessage({ isError: true, message: getApiErrorMessage(error, "Erro ao atualizar módulo.") });
+        } finally {
+            setSavingModuleKey(null);
+        }
+    }
+
+    async function handleSaveLessonDetails() {
+        if (!editLessonTarget) return;
+        const { moduleIndex, lessonIndex } = editLessonTarget;
+        const lesson = modules[moduleIndex]?.lessons?.[lessonIndex];
+        if (!lesson?.id) return;
+        if (!String(editLessonData.title || "").trim()) {
+            handleModalMessage({ isError: true, message: "Informe o título da aula." });
+            return;
+        }
+
+        const lessonKey = `${moduleIndex}-${lessonIndex}`;
+        setSavingLessonKey(lessonKey);
+        try {
+            const response = await updateLessonDetails(lesson.id, {
+                title: String(editLessonData.title || "").trim(),
+                subTitle: String(editLessonData.subTitle || "").trim() || undefined,
+            });
+
+            if (response?.success === false) {
+                throw new Error(response?.message || "Erro ao atualizar aula.");
+            }
+
+            setModules(prev =>
+                prev.map((moduleItem, currentModuleIndex) =>
+                    currentModuleIndex !== moduleIndex
+                        ? moduleItem
+                        : {
+                            ...moduleItem,
+                            lessons: (moduleItem.lessons ?? []).map((lessonItem, currentLessonIndex) =>
+                                currentLessonIndex === lessonIndex
+                                    ? {
+                                        ...lessonItem,
+                                        title: String(editLessonData.title || "").trim(),
+                                        subTitle: String(editLessonData.subTitle || "").trim() || undefined,
+                                    }
+                                    : lessonItem
+                            ),
+                        }
+                )
+            );
+            setEditLessonTarget(null);
+            handleModalMessage({ isError: false, message: "Aula atualizada com sucesso." });
+        } catch (error: any) {
+            handleModalMessage({ isError: true, message: getApiErrorMessage(error, "Erro ao atualizar aula.") });
+        } finally {
+            setSavingLessonKey(null);
+        }
     }
     useEffect(() => {
         function handleClickOutside(event: MouseEvent) {
@@ -409,6 +555,100 @@ function EditCoursePage() {
             .replace(/-+/g, "-");
     };
 
+    async function uploadAttachmentsForLesson(lessonId: number, files: File[]) {
+        if (!createdCourseId || !files.length) return [];
+
+        const uploaded: LessonAttachment[] = [];
+        for (const file of files) {
+            const fileMeta = await uploadLessonFileController(file);
+            const created = await createFile({
+                lessonId,
+                courseId: createdCourseId,
+                title: file.name,
+                fileKey: fileMeta.id,
+                fileType: "attachment",
+                mimeType: file.type,
+                size: file.size,
+            });
+
+            uploaded.push({
+                id: Number(created.id),
+                title: created.title ?? file.name,
+                fileKey: created.fileKey ?? fileMeta.id,
+                fileType: created.fileType ?? "attachment",
+                mimeType: created.mimeType ?? file.type,
+                size: created.size ?? file.size,
+            });
+        }
+
+        return uploaded;
+    }
+
+    async function handleUploadAttachments(moduleIndex: number, lessonIndex: number, files: FileList | null) {
+        const selectedFiles = Array.from(files ?? []);
+        const lesson = modules[moduleIndex]?.lessons?.[lessonIndex];
+        if (!lesson?.id || !selectedFiles.length) return;
+
+        const uploadKey = `${moduleIndex}-${lessonIndex}`;
+        setAttachmentUploadingKey(uploadKey);
+        try {
+            const uploaded = await uploadAttachmentsForLesson(lesson.id, selectedFiles);
+            if (!uploaded.length) return;
+
+            setModules(prev =>
+                prev.map((module, mi) =>
+                    mi !== moduleIndex
+                        ? module
+                        : {
+                              ...module,
+                              lessons: (module.lessons ?? []).map((currentLesson, li) =>
+                                  li !== lessonIndex
+                                      ? currentLesson
+                                      : {
+                                            ...currentLesson,
+                                            attachments: [...(currentLesson.attachments ?? []), ...uploaded],
+                                        }
+                              ),
+                          }
+                )
+            );
+
+            handleModalMessage({ isError: false, message: "Anexos adicionados com sucesso." });
+        } catch (error) {
+            console.error("Erro ao adicionar anexos:", error);
+            handleModalMessage({ isError: true, message: getApiErrorMessage(error, "Erro ao adicionar anexos.") });
+        } finally {
+            setAttachmentUploadingKey(null);
+        }
+    }
+
+    async function handleDeleteAttachment(moduleIndex: number, lessonIndex: number, attachmentId: number) {
+        try {
+            await deleteFile(attachmentId);
+            setModules(prev =>
+                prev.map((module, mi) =>
+                    mi !== moduleIndex
+                        ? module
+                        : {
+                              ...module,
+                              lessons: (module.lessons ?? []).map((lesson, li) =>
+                                  li !== lessonIndex
+                                      ? lesson
+                                      : {
+                                            ...lesson,
+                                            attachments: (lesson.attachments ?? []).filter((attachment) => attachment.id !== attachmentId),
+                                        }
+                              ),
+                          }
+                )
+            );
+            handleModalMessage({ isError: false, message: "Anexo removido com sucesso." });
+        } catch (error) {
+            console.error("Erro ao remover anexo:", error);
+            handleModalMessage({ isError: true, message: getApiErrorMessage(error, "Erro ao remover anexo.") });
+        }
+    }
+
     async function handleCreateTagCategory() {
         if (!newTagCategoryName.trim()) {
             handleModalMessage({ isError: true, message: "Informe o nome da categoria." });
@@ -555,8 +795,8 @@ function EditCoursePage() {
             return;
         }
 
-        if (String(lesson.type).toLowerCase() !== "video") {
-            handleModalMessage({ isError: true, message: "Apenas aulas de vídeo podem ser transcritas." });
+        if (!["video", "audio"].includes(String(lesson.type).toLowerCase())) {
+            handleModalMessage({ isError: true, message: "Apenas aulas de vídeo ou áudio podem ser transcritas." });
             return;
         }
 
@@ -824,6 +1064,8 @@ function EditCoursePage() {
                 extUrlFromFileId = fileMeta.id;
             }
 
+            const uploadedAttachments = await uploadAttachmentsForLesson(lessonId, newLessonData.attachmentFiles ?? []);
+
             // Atualiza o estado dos módulos, usando extUrl = id do CDN se houver arquivo
             setModules(prev =>
             prev.map((m, i) =>
@@ -836,6 +1078,7 @@ function EditCoursePage() {
                         ...lessonPayload,
                         id: lessonId,
                         extUrl: extUrlFromFileId,
+                        attachments: uploadedAttachments,
                         },
                     ],
                     }
@@ -855,6 +1098,7 @@ function EditCoursePage() {
                 isActive: 1,
                 allowDownload: true,
                 file: undefined,
+                attachmentFiles: [],
                 mimeType: undefined,
                 size: undefined,
                 fileName: undefined,
@@ -862,7 +1106,7 @@ function EditCoursePage() {
             setShowLessonFormForModuleIndex(null);
         } catch (error) {
             console.error("Erro ao criar aula:", error);
-            handleModalMessage({ isError: true, message: "Erro ao criar a aula" });
+            handleModalMessage({ isError: true, message: getApiErrorMessage(error, "Erro ao criar a aula") });
         } finally {
             setLessonFileUploading(false);
         }
@@ -903,16 +1147,16 @@ function EditCoursePage() {
 
     return (
         <React.Fragment>
-            <div className="admin-dashboard-container">
+            <div className="admin-dashboard-container course-builder-page">
                 <Menubar />
                 <div className="admin-dashboard-wrapper">
-                    <div className="form-container">
-                        <div className="title-wrapper">
+                    <div className="form-container course-builder-container">
+                        <div className="title-wrapper course-builder-header">
                             <b>Editar trilha</b>
-                            <button onClick={() => {window.history.back()}}>Voltar</button>
+                            <button className="course-builder-back-button" onClick={() => {window.history.back()}}>Voltar</button>
                         </div>
-                        <div className="form-wrapper">
-                            <div className="title-wrapper">
+                        <div className="form-wrapper course-builder-section">
+                            <div className="title-wrapper course-builder-section-header">
                                 <b>Informações gerais da trilha</b>
                                 <button className="action-button" onClick={handleSaveCourse}>
                                     Salvar alterações
@@ -1061,10 +1305,10 @@ function EditCoursePage() {
                                 </div>
                             </div>
                         </div>
-                        <div className="form-wrapper">
-                            <div className="title-wrapper">
+                        <div className="form-wrapper course-builder-section">
+                            <div className="title-wrapper course-builder-section-header">
                                 <b>Tags da trilha</b>
-                                <div style={{ display: "flex", gap: 8 }}>
+                                <div className="course-inline-actions">
                                     <button className="action-button" type="button" onClick={() => setShowCreateTagCategoryModal(true)}>
                                         Nova categoria
                                     </button>
@@ -1084,22 +1328,14 @@ function EditCoursePage() {
                             {availableLessonTags.length > 0 ? (
                                 <div className="input-wrapper">
                                     <label>Tags padrão da trilha:</label>
-                                    <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 6 }}>
+                                    <div className="course-tags-list">
                                         {availableLessonTags.map(tag => {
                                             const tagId = Number(tag.id);
                                             const checked = courseDefaultTagIds.includes(tagId);
                                             return (
                                                 <label
                                                     key={`edit-default-course-tag-${tagId}`}
-                                                    style={{
-                                                        display: "inline-flex",
-                                                        alignItems: "center",
-                                                        gap: 6,
-                                                        border: "1px solid #d9dde3",
-                                                        borderRadius: 999,
-                                                        padding: "6px 10px",
-                                                        background: checked ? "#eef7fd" : "#fff",
-                                                    }}
+                                                    className={`course-tag-pill${checked ? " is-selected" : ""}`}
                                                 >
                                                     <input
                                                         type="checkbox"
@@ -1110,13 +1346,7 @@ function EditCoursePage() {
                                                                 : prev.filter((id) => id !== tagId));
                                                         }}
                                                     />
-                                                    <span style={{
-                                                        color: "#fff",
-                                                        background: tag.categoryColor || "#3696D3",
-                                                        borderRadius: 999,
-                                                        padding: "2px 8px",
-                                                        fontSize: 12,
-                                                    }}>
+                                                    <span className="course-tag-name" style={{ background: tag.categoryColor || "#3696D3" }}>
                                                         {tag.name}
                                                     </span>
                                                 </label>
@@ -1130,8 +1360,8 @@ function EditCoursePage() {
                         </div>
                         {/* Listagem de módulos: sempre visível */}
                         {createdCourseId != null && (
-                            <div className="form-wrapper">
-                                <div className="title-wrapper">
+                            <div className="form-wrapper course-builder-section">
+                                <div className="title-wrapper course-builder-section-header">
                                     <b>Módulos cadastrados</b>
                                     <button className="action-button add-module" onClick={() => setShowModuleForm(true)}>Adicionar módulo</button>
                                 </div>
@@ -1147,6 +1377,13 @@ function EditCoursePage() {
                                                         {module.description && <p>{module.description}</p>}
                                                     </div>
                                                     <div className="module-item-actions">
+                                                        <button
+                                                            type="button"
+                                                            className="action-button"
+                                                            onClick={() => openEditModuleModal(index)}
+                                                        >
+                                                            Editar módulo
+                                                        </button>
                                                         <button
                                                             type="button"
                                                             className="action-button add-lesson"
@@ -1188,6 +1425,7 @@ function EditCoursePage() {
                                                               <div className={`lesson-thumbnail-fallback ${lesson.type}`}>
                                                                 {lesson.type === 'pdf' && <span>📄</span>}
                                                                 {lesson.type === 'attachment' && <span>📎</span>}
+                                                                {lesson.type === 'audio' && <span>🎧</span>}
                                                                 {lesson.type === 'video' && <span>🎬</span>}
                                                               </div>
                                                             </div>
@@ -1195,6 +1433,51 @@ function EditCoursePage() {
                                                             <div className="lesson-card-body">
                                                               <strong>{lesson.title}</strong>
                                                               {lesson.subTitle && <p>{lesson.subTitle}</p>}
+                                                              <div style={{ marginTop: 8 }}>
+                                                                <small>{(lesson.attachments ?? []).length} anexo(s)</small>
+                                                              </div>
+                                                              {(lesson.attachments ?? []).length > 0 && (
+                                                                <div style={{ marginTop: 8, display: "grid", gap: 6 }}>
+                                                                  {(lesson.attachments ?? []).map((attachment) => (
+                                                                    <div key={attachment.id} style={{ display: "flex", justifyContent: "space-between", gap: 8, alignItems: "center" }}>
+                                                                      <small style={{ overflow: "hidden", textOverflow: "ellipsis" }}>
+                                                                        {attachment.title || attachment.fileKey}
+                                                                      </small>
+                                                                      <button
+                                                                        type="button"
+                                                                        className="action-button remove-lesson"
+                                                                        onClick={() => handleDeleteAttachment(index, lessonIndex, attachment.id)}
+                                                                        title="Remover anexo"
+                                                                        aria-label="Remover anexo"
+                                                                      >
+                                                                        🗑️
+                                                                      </button>
+                                                                    </div>
+                                                                  ))}
+                                                                </div>
+                                                              )}
+                                                              {lesson.id && (
+                                                                <div style={{ marginTop: 10 }}>
+                                                                  <input
+                                                                    type="file"
+                                                                    multiple
+                                                                    id={`edit-lesson-attachments-${index}-${lessonIndex}`}
+                                                                    style={{ display: "none" }}
+                                                                    onChange={(e) => {
+                                                                        void handleUploadAttachments(index, lessonIndex, e.target.files);
+                                                                        e.currentTarget.value = "";
+                                                                    }}
+                                                                  />
+                                                                  <button
+                                                                    type="button"
+                                                                    className="secondary-button"
+                                                                    disabled={attachmentUploadingKey === `${index}-${lessonIndex}`}
+                                                                    onClick={() => document.getElementById(`edit-lesson-attachments-${index}-${lessonIndex}`)?.click()}
+                                                                  >
+                                                                    {attachmentUploadingKey === `${index}-${lessonIndex}` ? "Enviando..." : "Adicionar anexos"}
+                                                                  </button>
+                                                                </div>
+                                                              )}
                                                             </div>
 
                                                             <div className="lesson-card-footer">
@@ -1207,15 +1490,24 @@ function EditCoursePage() {
                                                                 <span className="lesson-toggle-switch" aria-hidden="true" />
                                                                 <span>Download</span>
                                                               </label>
-                                                              {lesson.type === "video" && (
+                                                              <button
+                                                                type="button"
+                                                                className="secondary-button lesson-icon-button"
+                                                                onClick={() => openEditLessonModal(index, lessonIndex)}
+                                                                title="Editar aula"
+                                                                aria-label="Editar aula"
+                                                              >
+                                                                ✏️
+                                                              </button>
+                                                              {["video", "audio"].includes(String(lesson.type).toLowerCase()) && (
                                                                 (() => {
                                                                   const isTranscribing = transcribingLessonId === lesson.id;
                                                                   const hasTranscript = Boolean(String(lesson.code || "").trim());
                                                                   const title = isTranscribing
-                                                                    ? "Transcrevendo vídeo"
+                                                                    ? "Transcrevendo mídia"
                                                                     : hasTranscript
                                                                       ? "Editar transcrição"
-                                                                      : "Transcrever vídeo";
+                                                                      : "Transcrever mídia";
                                                                   return (
                                                                 <button
                                                                   type="button"
@@ -1470,6 +1762,53 @@ function EditCoursePage() {
                             </div>
                         )}
 
+                        {editModuleIndex !== null && (
+                            <div className="modal-overlay">
+                                <div className="modal-content">
+                                    <div className="title-wrapper">
+                                        <b>Editar módulo</b>
+                                    </div>
+                                    <div className="form-grid">
+                                        <div className="input-wrapper">
+                                            <label htmlFor="editModuleTitle">Nome do módulo:*</label>
+                                            <input
+                                                type="text"
+                                                id="editModuleTitle"
+                                                value={editModuleData.title}
+                                                onChange={e => setEditModuleData(prev => ({ ...prev, title: e.target.value }))}
+                                            />
+                                        </div>
+                                        <div className="input-wrapper">
+                                            <label htmlFor="editModuleDescription">Descrição do módulo:</label>
+                                            <input
+                                                type="text"
+                                                id="editModuleDescription"
+                                                value={editModuleData.description}
+                                                onChange={e => setEditModuleData(prev => ({ ...prev, description: e.target.value }))}
+                                            />
+                                        </div>
+                                        <div className="input-wrapper">
+                                            <label htmlFor="editModuleOrder">Ordem:*</label>
+                                            <input
+                                                type="number"
+                                                id="editModuleOrder"
+                                                value={editModuleData.order}
+                                                onChange={e => setEditModuleData(prev => ({ ...prev, order: Number(e.target.value) || 1 }))}
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className="button-wrapper">
+                                        <button className="submit-button" type="button" disabled={savingModuleKey === editModuleIndex} onClick={() => { void handleSaveModuleDetails(); }}>
+                                            {savingModuleKey === editModuleIndex ? "Salvando..." : "Salvar alterações"}
+                                        </button>
+                                        <button className="secondary-button" type="button" onClick={() => setEditModuleIndex(null)}>
+                                            Fechar
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
                         {showLessonFormForModuleIndex !== null && (
                             <div className="modal-overlay modal-overlay-lesson" role="dialog" aria-modal="true" aria-labelledby="lesson-modal-title">
                                 <div className="modal-content">
@@ -1512,7 +1851,7 @@ function EditCoursePage() {
                                                 onChange={e =>
                                                     setNewLessonData(prev => ({
                                                         ...prev,
-                                                        type: e.target.value as "video" | "pdf" | "attachment",
+                                                        type: e.target.value as "video" | "audio" | "pdf" | "attachment",
                                                         extUrl: undefined,
                                                         code: undefined,
                                                         cover: undefined,
@@ -1521,16 +1860,19 @@ function EditCoursePage() {
                                                 }
                                             >
                                                 <option value="video">Vídeo</option>
+                                                <option value="audio">Áudio</option>
                                                 <option value="pdf">PDF</option>
                                                 <option value="attachment">Anexo</option>
                                             </select>
                                         </div>
-                                        {(newLessonData.type === "pdf" || newLessonData.type === "attachment" || newLessonData.type === "video") && (
+                                        {(newLessonData.type === "pdf" || newLessonData.type === "attachment" || newLessonData.type === "video" || newLessonData.type === "audio") && (
                                             <div className="input-wrapper">
                                                 <label htmlFor="lessonFile">
                                                     Arquivo (
                                                     {newLessonData.type === "pdf"
                                                         ? "PDF"
+                                                        : newLessonData.type === "audio"
+                                                        ? "Áudio"
                                                         : newLessonData.type === "attachment"
                                                         ? "Anexo"
                                                         : "Vídeo"}
@@ -1542,6 +1884,8 @@ function EditCoursePage() {
                                                     accept={
                                                         newLessonData.type === "pdf"
                                                             ? "application/pdf"
+                                                            : newLessonData.type === "audio"
+                                                            ? "audio/*"
                                                             : newLessonData.type === "video"
                                                             ? "video/*"
                                                             : "*"
@@ -1563,6 +1907,26 @@ function EditCoursePage() {
                                                 )}
                                             </div>
                                         )}
+                                        <div className="input-wrapper">
+                                            <label htmlFor="editLessonAttachments">Anexos da aula (opcional):</label>
+                                            <input
+                                                type="file"
+                                                id="editLessonAttachments"
+                                                multiple
+                                                disabled={lessonFileUploading}
+                                                onChange={e => {
+                                                    setNewLessonData(prev => ({
+                                                        ...prev,
+                                                        attachmentFiles: Array.from(e.target.files ?? []),
+                                                    }));
+                                                }}
+                                            />
+                                            {!!newLessonData.attachmentFiles?.length && (
+                                                <div style={{ marginTop: 4 }}>
+                                                    {newLessonData.attachmentFiles.length} anexo(s) selecionado(s)
+                                                </div>
+                                            )}
+                                        </div>
                                     </div>
                                     <div className="button-wrapper">
                                         <button
@@ -1592,12 +1956,51 @@ function EditCoursePage() {
                 isActive: 1,
                 allowDownload: true,
                 file: undefined,
+                attachmentFiles: [],
                 mimeType: undefined,
                 size: undefined,
                 fileName: undefined,
             }));
                                             }}
                                         >
+                                            Fechar
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {editLessonTarget !== null && (
+                            <div className="modal-overlay modal-overlay-lesson" role="dialog" aria-modal="true" aria-labelledby="edit-lesson-modal-title">
+                                <div className="modal-content">
+                                    <div className="title-wrapper">
+                                        <b id="edit-lesson-modal-title">Editar aula</b>
+                                    </div>
+                                    <div className="form-grid">
+                                        <div className="input-wrapper">
+                                            <label htmlFor="editLessonTitle">Título da aula:*</label>
+                                            <input
+                                                type="text"
+                                                id="editLessonTitle"
+                                                value={editLessonData.title}
+                                                onChange={e => setEditLessonData(prev => ({ ...prev, title: e.target.value }))}
+                                            />
+                                        </div>
+                                        <div className="input-wrapper">
+                                            <label htmlFor="editLessonSubTitle">Subtítulo (opcional):</label>
+                                            <input
+                                                type="text"
+                                                id="editLessonSubTitle"
+                                                value={editLessonData.subTitle}
+                                                onChange={e => setEditLessonData(prev => ({ ...prev, subTitle: e.target.value }))}
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className="button-wrapper">
+                                        <button className="submit-button" type="button" disabled={savingLessonKey === `${editLessonTarget.moduleIndex}-${editLessonTarget.lessonIndex}`} onClick={() => { void handleSaveLessonDetails(); }}>
+                                            {savingLessonKey === `${editLessonTarget.moduleIndex}-${editLessonTarget.lessonIndex}` ? "Salvando..." : "Salvar alterações"}
+                                        </button>
+                                        <button className="secondary-button" type="button" onClick={() => setEditLessonTarget(null)}>
                                             Fechar
                                         </button>
                                     </div>

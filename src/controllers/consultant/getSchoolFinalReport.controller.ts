@@ -55,6 +55,15 @@ export interface ISchoolFinalReportResponse {
     audienceReception: { high: number; medium: number; low: number }
     practiceEvidence: { reports: number; noneOnly: number }
   }
+  visits: Array<{
+    id: number
+    creatorId: number | null
+    creatorName: string | null
+    status: string | null
+    institutionProfile: string | null
+    visitType: string | null
+    visitDate: string | null
+  }>
   consolidated: {
     index: number
     note: string

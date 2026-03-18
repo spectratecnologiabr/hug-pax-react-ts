@@ -359,6 +359,7 @@ function AdminReportsCenterPage() {
           <label>
             <span>Buscar unidade escolar</span>
             <input
+              type="search"
               value={schoolSearch}
               onChange={(event) => setSchoolSearch(event.target.value)}
               placeholder="Digite nome da escola"

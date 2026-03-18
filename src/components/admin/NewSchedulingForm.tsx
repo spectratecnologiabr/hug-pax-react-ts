@@ -159,7 +159,29 @@ function NewSchedulingForm(props: { opened: boolean; onClose: () => void }) {
     }
 
     async function handleSubmit() {
-        if (!selectedCollege) return;
+        if (!selectedCollege) {
+            handleModalMessage({
+                isError: true,
+                message: "Selecione uma escola para criar o agendamento."
+            })
+            return;
+        }
+
+        if (!String(schedulingData.institutionProfile || "").trim()) {
+            handleModalMessage({
+                isError: true,
+                message: "Perfil da instituição é obrigatório."
+            })
+            return;
+        }
+
+        if (!String(schedulingData.visitType || "").trim()) {
+            handleModalMessage({
+                isError: true,
+                message: "Tipo da visita é obrigatório."
+            })
+            return;
+        }
 
         const payload: TScheduling = {
             collegeId: selectedCollege.id,
@@ -258,7 +280,7 @@ function NewSchedulingForm(props: { opened: boolean; onClose: () => void }) {
                         </div>
                         <div className="form-wrapper">
                             <label htmlFor="institutionProfile">Perfil da Instituição</label>
-                            <select name="institutionProfile" id="institutionProfile" onChange={handleSchedulingData}>
+                            <select name="institutionProfile" id="institutionProfile" onChange={handleSchedulingData} required>
                                 <option value="">Selecione um tipo</option>
                                 <option value="Implantação">Implantação (Ano 1)</option>
                                 <option value="Veterana">Veterana (Ano 2+)</option>
@@ -266,7 +288,7 @@ function NewSchedulingForm(props: { opened: boolean; onClose: () => void }) {
                         </div>
                         <div className="form-wrapper">
                             <label htmlFor="visitType">Tipo da Visita</label>
-                            <select name="visitType" id="visitType" onChange={handleSchedulingData}>
+                            <select name="visitType" id="visitType" onChange={handleSchedulingData} required>
                                 <option value="">Selecione um tipo</option>
                                 <option value="Visita Inicial">Visita Inicial</option>
                                 <option value="Acompanhamento">Acompanhamento</option>
