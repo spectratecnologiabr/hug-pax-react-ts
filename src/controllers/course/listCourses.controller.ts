@@ -1,10 +1,19 @@
 import axios from "axios";
 import { getCookies } from "../misc/cookies.controller";
 
-export async function listCourses() {
+type ListCoursesQuery = {
+    page?: number
+    pageSize?: number
+    search?: string
+    status?: string
+    order?: string
+}
+
+export async function listCourses(query?: ListCoursesQuery) {
     const response = await axios.get(
         `${process.env.REACT_APP_API_URL}/courses/with-progress`,
         {
+            params: query,
             headers: {
                 Authorization: `Bearer ${getCookies("authToken")}`
             }

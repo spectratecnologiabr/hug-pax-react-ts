@@ -176,15 +176,16 @@
 
     .aside-menu-shell {
         display: none;
-        width: fit-content;
-        max-width: calc(100vw - 32px);
+        width: 100%;
+        max-width: 100%;
         height: auto;
         background-color: #3696D3;
         border-radius: 18px;
         padding: 12px;
         box-sizing: border-box;
         box-shadow: 0 12px 28px rgba(26, 87, 146, 0.22);
-        align-self: flex-end;
+        align-self: stretch;
+        overflow: visible;
     }
 
     .aside-container.mobile-open .aside-menu-shell {
@@ -193,7 +194,7 @@
 
     .aside-container .menu-wrapper {
         flex-direction: column;
-        width: auto;
+        width: 100%;
         flex: 0 0 auto;
         justify-content: flex-start;
         gap: 8px;
@@ -207,9 +208,9 @@
 
     .aside-container .menu-wrapper .menu-item,
     .aside-container button {
-        width: 220px;
-        max-width: calc(100vw - 56px);
-        min-width: 220px;
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
         height: 46px;
         flex: 0 0 auto;
     }
@@ -244,13 +245,13 @@
 
     .aside-container .page-selector {
         flex: 0 0 auto;
-        width: auto;
+        width: 100%;
     }
 
     .aside-container .page-selector .page-selector-btn {
-        width: 220px;
-        max-width: calc(100vw - 56px);
-        min-width: 220px;
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
         height: 46px;
         padding: 0 14px;
         border-radius: 14px;

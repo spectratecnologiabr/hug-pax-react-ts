@@ -81,7 +81,7 @@
   border: 1px solid #e0e5eb;
   border-radius: 12px;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-  overflow: hidden;
+  overflow: visible;
 }
 
 .admin-dashboard-wrapper.colleges-page .colleges-card-header {
@@ -91,6 +91,8 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+  position: relative;
+  z-index: 3;
 }
 
 .admin-dashboard-wrapper.colleges-page .colleges-card-header b {
@@ -151,6 +153,45 @@
 .admin-dashboard-wrapper.colleges-page .colleges-filter-select:focus {
   border-color: #2b8ccf;
   box-shadow: 0 0 0 3px rgba(43, 140, 207, 0.14);
+}
+
+.admin-dashboard-wrapper.colleges-page .colleges-filter-searchable {
+  min-width: 220px;
+  width: 220px;
+  flex: 0 0 220px;
+  border: none;
+  background: transparent;
+  padding: 0;
+  height: auto;
+}
+
+.admin-dashboard-wrapper.colleges-page .colleges-filter-searchable .searchable-single-select-trigger {
+  min-height: 38px;
+  height: 38px;
+  border: 1px solid #d5dee8;
+  border-radius: 10px;
+  background: #ffffff;
+  padding: 0 12px;
+  font-size: 13px;
+  color: #1e293b;
+  box-shadow: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 38px;
+}
+
+.admin-dashboard-wrapper.colleges-page .colleges-filter-searchable .searchable-single-select-trigger:hover,
+.admin-dashboard-wrapper.colleges-page .colleges-filter-searchable .searchable-single-select-trigger.is-open,
+.admin-dashboard-wrapper.colleges-page .colleges-filter-searchable .searchable-single-select-trigger:focus {
+  border-color: #2b8ccf;
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(43, 140, 207, 0.14);
+}
+
+.admin-dashboard-wrapper.colleges-page .colleges-filter-searchable .searchable-single-select-popup {
+  min-width: 220px;
+  z-index: 1200;
 }
 
 .admin-dashboard-wrapper.colleges-page .colleges-filter-reset {
@@ -300,6 +341,11 @@
     width: 100%;
   }
 
+  .admin-dashboard-wrapper.colleges-page .colleges-filter-searchable {
+    width: 100%;
+    flex: 1 1 100%;
+  }
+
   .admin-dashboard-wrapper.colleges-page .colleges-card {
     margin: 0;
   }
@@ -326,22 +372,28 @@
 
   .admin-dashboard-wrapper.colleges-page .colleges-card-header {
     padding: 14px;
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-    gap: 10px;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+    gap: 12px;
   }
 
   .admin-dashboard-wrapper.colleges-page .colleges-card-header b {
     flex: 0 0 auto;
+    width: 100%;
     font-size: 15px;
     line-height: 1.2;
+  }
+
+  .admin-dashboard-wrapper.colleges-page .colleges-card-filters {
+    width: 100%;
+    justify-content: stretch;
   }
 
   .admin-dashboard-wrapper.colleges-page .colleges-search-input {
     flex: 1 1 auto;
     min-width: 0;
-    width: auto;
+    width: 100%;
   }
 
   .admin-dashboard-wrapper.colleges-page .colleges-table-wrap {

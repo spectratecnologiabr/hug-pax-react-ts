@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import axios from "axios";
 import { checkSession } from "../../controllers/user/checkSession.controller";
 import { listColleges } from "../../controllers/college/listColleges.controller";
 import { listConsultants } from "../../controllers/user/listConsultants.controller";
 import { createScheduling } from "../../controllers/consultant/createScheduling.controller";
+import SearchableSingleSelect from "../SearchableSingleSelect";
 
 import "../../style/schedulingForm.css";
 
@@ -53,6 +54,11 @@ function NewSchedulingForm(props: { opened: boolean; onClose: () => void; initia
     const [isError, setIsError] = useState(false);
     const [modalErrorOpen, setModalErrorOpen] = useState(false);
     const [message, setMessage] = useState("");
+
+    const collegeOptions = useMemo(
+        () => colleges.map((college) => ({ value: String(college.id), label: college.name })),
+        [colleges]
+    );
 
     function handleModalMessage(data: { isError: boolean; message: string }) {
         const messageElement = document.getElementById("warning-message") as HTMLSpanElement;
@@ -128,8 +134,8 @@ function NewSchedulingForm(props: { opened: boolean; onClose: () => void; initia
         return [];
     }
 
-    function handleCollegeChange(event: React.ChangeEvent<HTMLSelectElement>) {
-        const collegeId = Number(event.target.value);
+    function handleCollegeChange(value: string) {
+        const collegeId = Number(value);
         const college = colleges.find(c => c.id === collegeId) || null;
         setSelectedCollege(college);
     }
@@ -232,12 +238,17 @@ function NewSchedulingForm(props: { opened: boolean; onClose: () => void; initia
                     <div className="scheduling-body">
                     <div className="form-wrapper">
                         <label htmlFor="collegeId">Selecione a Escola</label>
-                        <select id="collegeId" className="collegeId" onChange={handleCollegeChange} value={selectedCollege?.id || ""}>
-                            <option value="">Selecione uma escola</option>
-                            {colleges.map((college) => (
-                                <option key={college.id} value={college.id}>{college.name}</option>
-                            ))}
-                        </select>
+                        <SearchableSingleSelect
+                            value={selectedCollege?.id ? String(selectedCollege.id) : ""}
+                            options={[
+                                { value: "", label: "Selecione uma escola" },
+                                ...collegeOptions,
+                            ]}
+                            placeholder="Selecione uma escola"
+                            searchPlaceholder="Buscar escola..."
+                            emptyMessage="Nenhuma escola encontrada"
+                            onChange={handleCollegeChange}
+                        />
                     </div>
                     <div className="form-wrapper">
                         <label htmlFor="collegeAddress">Endereço</label>

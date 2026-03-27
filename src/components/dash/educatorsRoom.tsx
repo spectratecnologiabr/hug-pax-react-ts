@@ -25,6 +25,8 @@ function EducatorsRoom(coursesProp: TCourseProps) {
     const [statusFilter, setStatusFilter] = useState("");
     const [orderFilter, setOrderFilter] = useState("");
     const [search, setSearch] = useState("");
+    const [page, setPage] = useState(1);
+    const [pageSize, setPageSize] = useState(8);
 
 
     function handleCourseStatusFilter(e: React.ChangeEvent<HTMLSelectElement>) {
@@ -60,6 +62,19 @@ function EducatorsRoom(coursesProp: TCourseProps) {
             return 0;
         });
 
+    const totalPages = Math.max(1, Math.ceil(filteredCourses.length / pageSize));
+    const paginatedCourses = filteredCourses.slice((page - 1) * pageSize, page * pageSize);
+
+    useEffect(() => {
+        setPage(1);
+    }, [statusFilter, orderFilter, search]);
+
+    useEffect(() => {
+        if (page > totalPages) {
+            setPage(totalPages);
+        }
+    }, [page, totalPages]);
+
 
     return (
         <div className="educators-room-element">
@@ -94,34 +109,80 @@ function EducatorsRoom(coursesProp: TCourseProps) {
 
             <div className="grid-wrapper">
                 {
-                    filteredCourses.map(course => {
+                    paginatedCourses.map(course => {
                         return (
-                            <div className="course-item">
-                                <img loading="lazy" src={course.cover} className="course-img" />
-                                <div className="description">
-                                    <span>{course.title}</span>
-                                    <div style={{ height: "100%", display: "flex", alignItems: "center" }}>
-                                        <CircularProgressbar
-                                            styles={buildStyles({
-                                                pathColor: '#90C040',
-                                                textColor: '#000000',
-                                                trailColor: '#d7d7da',
-                                                backgroundColor: '#3e98c7'
-                                            })}
-                                            value={course.progressPercentage}
-                                            text={course.progressPercentage + "%"}
-                                            className="course-progress"/>
+                            <a className="course-card-link" href={coursesProp.getCourseLink(course)} key={course.id}>
+                                <div className="course-item">
+                                    <img loading="lazy" src={course.cover} className="course-img" />
+                                    <div className="description">
+                                        <span>{course.title}</span>
+                                        <div style={{ height: "100%", display: "flex", alignItems: "center" }}>
+                                            <CircularProgressbar
+                                                styles={buildStyles({
+                                                    pathColor: '#90C040',
+                                                    textColor: '#000000',
+                                                    trailColor: '#d7d7da',
+                                                    backgroundColor: '#3e98c7'
+                                                })}
+                                                value={course.progressPercentage}
+                                                text={course.progressPercentage + "%"}
+                                                className="course-progress"/>
+                                        </div>
+                                    </div>
+                                    <div className="course-action">
+                                        {course.progressPercentage > 0 ? 'Continuar' : 'Iniciar'}
                                     </div>
                                 </div>
-                                <a href={coursesProp.getCourseLink(course)}>
-                                    {course.progressPercentage > 0 ? 'Continuar' : 'Iniciar'}
-                                </a>
-                            </div>
+                            </a>
                         )
                     })
                 }
+            </div>
 
-                
+            <div className="pagination-wrapper">
+                <span className="pagination-info">
+                    {filteredCourses.length > 0
+                        ? `${Math.min((page - 1) * pageSize + 1, filteredCourses.length)}-${Math.min(page * pageSize, filteredCourses.length)} de ${filteredCourses.length}`
+                        : "0 resultados"}
+                </span>
+
+                <div className="pagination-controls">
+                    <label className="pagination-size">
+                        <span>Por página</span>
+                        <select
+                            value={String(pageSize)}
+                            onChange={(e) => {
+                                const nextPageSize = Math.max(1, Number(e.currentTarget.value) || 8);
+                                setPageSize(nextPageSize);
+                                setPage(1);
+                            }}
+                        >
+                            <option value="4">4</option>
+                            <option value="8">8</option>
+                            <option value="12">12</option>
+                        </select>
+                    </label>
+
+                    <button
+                        type="button"
+                        className="pagination-button"
+                        onClick={() => setPage(prev => Math.max(1, prev - 1))}
+                        disabled={page <= 1}
+                    >
+                        Anterior
+                    </button>
+
+                    <span className="pagination-page">Página {page} de {totalPages}</span>
+
+                    <button
+                        type="button"
+                        className="pagination-button"
+                        onClick={() => setPage(prev => Math.min(totalPages, prev + 1))}
+                        disabled={page >= totalPages}
+                    >
+                        Próxima
+                    </button>
+                </div>
             </div>
         </div>
     )

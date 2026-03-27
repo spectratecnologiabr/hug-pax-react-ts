@@ -4,7 +4,50 @@ import { checkSession } from "../controllers/user/checkSession.controller";
 
 import "../style/pageSelector.css";
 
-type TRole = 'consultant' | 'coordinator' | 'specialist_consultant' | 'admin'
+type TRole = "educator" | "consultant" | "coordinator" | "specialist_consultant" | "admin";
+type TModuleKey = "educator" | "consultant" | "coordinator" | "admin";
+
+const MODULE_OPTIONS: Array<{
+    key: TModuleKey;
+    label: string;
+    description: string;
+    icon: string;
+    path: string;
+    allowedRoles: TRole[];
+}> = [
+    {
+        key: "educator",
+        label: "AVA",
+        description: "Ambiente do educador",
+        icon: "🎓",
+        path: "/dashboard",
+        allowedRoles: ["consultant", "coordinator", "specialist_consultant", "admin"]
+    },
+    {
+        key: "consultant",
+        label: "Painel Consultor",
+        description: "Acompanhamento de rede e educadores",
+        icon: "🧭",
+        path: "/consultant",
+        allowedRoles: ["consultant", "coordinator", "specialist_consultant", "admin"]
+    },
+    {
+        key: "coordinator",
+        label: "Painel Coordenador",
+        description: "Visao consolidada da coordenacao",
+        icon: "📊",
+        path: "/coordinator",
+        allowedRoles: ["coordinator", "specialist_consultant", "admin"]
+    },
+    {
+        key: "admin",
+        label: "Painel Administrador",
+        description: "Configuracoes e operacao da plataforma",
+        icon: "🛠️",
+        path: "/admin",
+        allowedRoles: ["admin"]
+    }
+];
 
 function PageSelector(props: {title?: boolean}) {
     const user = getCookies("userData");
@@ -12,6 +55,8 @@ function PageSelector(props: {title?: boolean}) {
     const containerRef = useRef<HTMLDivElement>(null);
     const popupRef = useRef<HTMLDivElement>(null);
     const [popupAlign, setPopupAlign] = useState<"left" | "right">("left");
+    const [popupVerticalAlign, setPopupVerticalAlign] = useState<"top" | "bottom">("bottom");
+    const [mobilePopupStyle, setMobilePopupStyle] = useState<React.CSSProperties>({});
     const [ userRole, setUserRole ] = useState<TRole | null>(null);
 
     useEffect(() => {
@@ -42,48 +87,68 @@ function PageSelector(props: {title?: boolean}) {
         if (!open) return;
 
         function adjustPopupAlignment() {
+            const container = containerRef.current;
             const popup = popupRef.current;
-            if (!popup) return;
+            if (!container || !popup) return;
 
+            const containerRect = container.getBoundingClientRect();
             const rect = popup.getBoundingClientRect();
             const viewportPadding = 12;
+            const gap = 8;
+            const isMobile = window.innerWidth <= 769;
 
-            if (rect.right > window.innerWidth - viewportPadding) {
+            const popupHeight = popup.offsetHeight || rect.height || 0;
+            const shouldOpenTop =
+                containerRect.bottom + gap + popupHeight > window.innerHeight - viewportPadding
+                && containerRect.top - gap - popupHeight >= viewportPadding;
+
+            if (!isMobile && rect.right > window.innerWidth - viewportPadding) {
                 setPopupAlign("right");
+            } else if (!isMobile && rect.left < viewportPadding) {
+                setPopupAlign("left");
+            }
+
+            setPopupVerticalAlign(shouldOpenTop ? "top" : "bottom");
+
+            if (isMobile) {
+                const popupWidth = Math.min(containerRect.width, window.innerWidth - viewportPadding * 2);
+                const left = Math.min(
+                    Math.max(viewportPadding, containerRect.left),
+                    window.innerWidth - popupWidth - viewportPadding
+                );
+                const top = shouldOpenTop
+                    ? Math.max(viewportPadding, containerRect.top - popupHeight - gap)
+                    : Math.min(window.innerHeight - popupHeight - viewportPadding, containerRect.bottom + gap);
+
+                setMobilePopupStyle({
+                    position: "fixed",
+                    left: `${left}px`,
+                    top: `${top}px`,
+                    width: `${popupWidth}px`,
+                    maxWidth: `${popupWidth}px`
+                });
                 return;
             }
 
-            if (rect.left < viewportPadding) {
-                setPopupAlign("left");
-                return;
-            }
+            setMobilePopupStyle({});
         }
 
         adjustPopupAlignment();
         window.addEventListener("resize", adjustPopupAlignment);
-        return () => window.removeEventListener("resize", adjustPopupAlignment);
+        window.addEventListener("scroll", adjustPopupAlignment, true);
+        return () => {
+            window.removeEventListener("resize", adjustPopupAlignment);
+            window.removeEventListener("scroll", adjustPopupAlignment, true);
+        };
     }, [open]);
 
-    function handleRedirect(target: "ava" | "admin") {
-        if (target === "ava") {
-        window.location.href = "/dashboard";
-        }
+    const activeRole = (userRole ?? user?.role) as TRole | undefined;
+    const availableModules = MODULE_OPTIONS.filter(option =>
+        activeRole ? option.allowedRoles.includes(activeRole) : false
+    );
 
-        if (target === "admin") {
-            switch(userRole) {
-                case "consultant":
-                     window.location.href = "/consultant";
-                     break;
-                case "coordinator":
-                case "specialist_consultant":
-                     window.location.href = "/coordinator";
-                     break;
-                default:
-                    window.location.href = "/admin";
-                    break;
-
-            }
-        }
+    function handleRedirect(path: string) {
+        window.location.href = path;
     }
 
     return (
@@ -100,16 +165,21 @@ function PageSelector(props: {title?: boolean}) {
                 {props.title ? <span>Mudar Módulo</span> : null}
             </button>
 
-            <div ref={popupRef} className={`page-selector-popup ${open ? "active" : ""} ${popupAlign === "right" ? "align-right" : "align-left"}`}>
-                <div className="popup-option" onClick={() => handleRedirect("ava")}>
-                    🎓 AVA
-                    <span>Ambiente do aluno</span>
-                </div>
-
-                <div className="popup-option" onClick={() => handleRedirect("admin")}>
-                    🛠️ Painel {userRole === "consultant" ? "Consultor" : userRole === "coordinator" ? "Coordenador" : userRole === "specialist_consultant" ? "Consultor especialista" : userRole === "admin" ? "Administrador" : ""}
-                    <span>Área administrativa</span>
-                </div>
+            <div
+                ref={popupRef}
+                className={`page-selector-popup ${open ? "active" : ""} ${popupAlign === "right" ? "align-right" : "align-left"} ${popupVerticalAlign === "top" ? "align-top" : "align-bottom"}`}
+                style={mobilePopupStyle}
+            >
+                {availableModules.map(option => (
+                    <div
+                        key={option.key}
+                        className="popup-option"
+                        onClick={() => handleRedirect(option.path)}
+                    >
+                        {option.icon} {option.label}
+                        <span>{option.description}</span>
+                    </div>
+                ))}
             </div>
         </div> : null
     )

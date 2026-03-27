@@ -39,12 +39,15 @@ function Login() {
                     if (data.success) {
                         console.log("Login successful:", data);
                         const { profilePic, ...userWithoutPic } = data.user;
-
-                        console.log(profilePic)
                         
                         setCookie({ name: "authToken", value: data.token });
                         setCookie({ name: "userData", value: JSON.stringify(userWithoutPic) });
-                        localStorage.setItem("profilePic", profilePic);
+
+                        if (typeof profilePic === "string" && profilePic.trim() && profilePic !== "null" && profilePic !== "undefined") {
+                            localStorage.setItem("profilePic", profilePic);
+                        } else {
+                            localStorage.removeItem("profilePic");
+                        }
 
                         if (userWithoutPic?.mustChangePassword) {
                             window.location.href = "/profile?forcePassword=1";

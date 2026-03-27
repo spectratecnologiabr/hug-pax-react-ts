@@ -1645,23 +1645,32 @@
 .lesson-card-footer {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: space-between;
   gap: 10px;
   padding-top: 6px;
   border-top: 1px solid #eef2f7;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
 }
 
 .lesson-download-toggle {
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  margin-right: auto;
   font-family: "SF UI Display Medium";
   font-size: 12px;
   color: #475569;
   user-select: none;
   white-space: nowrap;
+  min-width: 0;
+}
+
+.lesson-card-actions {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-left: auto;
+  flex-wrap: wrap;
 }
 
 .lesson-download-toggle input {
@@ -1791,6 +1800,21 @@
   justify-content: center;
   flex-shrink: 0;
   font-size: 16px;
+}
+
+@media (max-width: 768px) {
+  .lesson-card-footer {
+    align-items: stretch;
+  }
+
+  .lesson-download-toggle,
+  .lesson-card-actions {
+    width: 100%;
+  }
+
+  .lesson-card-actions {
+    justify-content: flex-start;
+  }
 }
 
 .lesson-thumbnail {

@@ -7,24 +7,18 @@ import PageSelector from "../pageSelector";
 
 import paxIconWhite from "../../img/pax-icon-white.svg";
 import homeIcon from "../../img/menu/home.svg";
-import hatIcon from "../../img/menu/hat.svg";
 import personIcon from "../../img/menu/person.svg";
 
 import "../../style/menubar.css";
-
-type TRole = 'consultant' | 'coordinator' | 'admin'
-
 function Menubar(props: {notificationCount: number}) {
     const userName = (getCookies("userData")).firstName;
     const pathname = window.location.pathname;
-    const [ userRole, setUserRole ] = useState<TRole | null>(null);
     const [mobileOpen, setMobileOpen] = useState(false);
 
     useEffect(() => {
         async function fetchUserRole() {
             try {
-                const sessionData = await checkSession();
-                setUserRole(sessionData.session.role);
+                await checkSession();
             } catch (error: any) {
                 const code = String(error?.response?.data?.code ?? "");
                 if (code === "VACATION_MODE") {
@@ -100,26 +94,6 @@ function Menubar(props: {notificationCount: number}) {
                          <img src={personIcon} alt="" />
                         <span>Educadores</span>
                     </a>
-
-                    {(userRole !== "consultant") ? (
-                        <React.Fragment>
-                            <a href="/consultant/courses" className={pathname.includes("/consultant/courses") ? "menu-link selected" : "menu-link"}>
-                                <img src={hatIcon} alt="" />
-                                <span>Cursos</span>
-                            </a>
-
-                            <a href="#" className={pathname.includes("/consultant/reports") ? "menu-link selected" : "menu-link"}>
-                                <svg width="16" height="20" viewBox="0 0 16 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <path d="M5 3H3C2.46957 3 1.96086 3.21071 1.58579 3.58579C1.21071 3.96086 1 4.46957 1 5V17C1 17.5304 1.21071 18.0391 1.58579 18.4142C1.96086 18.7893 2.46957 19 3 19H13C13.5304 19 14.0391 18.7893 14.4142 18.4142C14.7893 18.0391 15 17.5304 15 17V5C15 4.46957 14.7893 3.96086 14.4142 3.58579C14.0391 3.21071 13.5304 3 13 3H11" stroke="#FFFFFF" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                                    <path d="M9 1H7C5.89543 1 5 1.89543 5 3C5 4.10457 5.89543 5 7 5H9C10.1046 5 11 4.10457 11 3C11 1.89543 10.1046 1 9 1Z" stroke="#FFFFFF" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                                    <path d="M5 15V10" stroke="#FFFFFF" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                                    <path d="M8 15V14" stroke="#FFFFFF" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                                    <path d="M11 15V12" stroke="#FFFFFF" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                                </svg>
-                                <span>Relatórios</span>
-                            </a>
-                        </React.Fragment>
-                    ) : ""}
 
                     <PageSelector />
                     

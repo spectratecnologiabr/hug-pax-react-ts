@@ -22,6 +22,13 @@ type TCourse = {
     progressPercentage: number
 }
 
+type TPagination = {
+    page: number
+    pageSize: number
+    total: number
+    totalPages: number
+}
+
 type TOverviewData = {
     completedCourses: number,
     inProgressCourses: number,
@@ -49,8 +56,11 @@ function EducatorsRoom() {
     const [statusFilter, setStatusFilter] = useState("");
     const [orderFilter, setOrderFilter] = useState("");
     const [search, setSearch] = useState("");
+    const [page, setPage] = useState(1);
+    const [pageSize, setPageSize] = useState(12);
     const [ overviewData, setOverviewData ] = useState<TOverviewData | null>(null);
     const [courses, setCourses] = useState<TCourse[]>([]);
+    const [pagination, setPagination] = useState<TPagination>({ page: 1, pageSize: 12, total: 0, totalPages: 1 });
     const userData = getCookies("userData") as unknown as TUser;
 
     useEffect(() => {
@@ -62,17 +72,44 @@ function EducatorsRoom() {
                 console.error("Error fetching overview data:", error);
             }
         }
+        fetchOverviewData();
+    }, []);
+
+    useEffect(() => {
         async function fetchCourses() {
             try {
-                const coursesList = await listCourses();
-                setCourses(coursesList);
+                const coursesList: any = await listCourses({
+                    page,
+                    pageSize,
+                    search,
+                    status: statusFilter,
+                    order: orderFilter
+                });
+
+                if (Array.isArray(coursesList)) {
+                    setCourses(coursesList);
+                    setPagination({
+                        page,
+                        pageSize,
+                        total: coursesList.length,
+                        totalPages: Math.max(1, Math.ceil(coursesList.length / pageSize))
+                    });
+                    return;
+                }
+
+                setCourses(Array.isArray(coursesList?.items) ? coursesList.items : []);
+                setPagination({
+                    page: Math.max(1, Number(coursesList?.pagination?.page ?? page)),
+                    pageSize: Math.max(1, Number(coursesList?.pagination?.pageSize ?? pageSize)),
+                    total: Math.max(0, Number(coursesList?.pagination?.total ?? 0)),
+                    totalPages: Math.max(1, Number(coursesList?.pagination?.totalPages ?? 1))
+                });
             } catch (error) {
                 console.error("Error fetching courses:", error);
             }
         }
-        fetchOverviewData();
         fetchCourses();
-    }, []);
+    }, [orderFilter, page, pageSize, search, statusFilter]);
 
     function handleCourseStatusFilter(e: React.ChangeEvent<HTMLSelectElement>) {
         setStatusFilter(e.currentTarget.value);
@@ -97,27 +134,9 @@ function EducatorsRoom() {
             : `/course/${course.slug}`
     }
 
-    const filteredCourses = courses
-        .filter(course => {
-            if (!statusFilter) return true;
-            if (statusFilter === "notInitiated") return course.progressPercentage === 0;
-            if (statusFilter === "inProgress") return course.progressPercentage > 0 && course.progressPercentage < 100;
-            if (statusFilter === "finshed") return course.progressPercentage === 100;
-            return true;
-        })
-        .filter(course => {
-            if (!search) return true;
-            return (
-                course.title.toLowerCase().includes(search.toLowerCase()) ||
-                course.subTitle?.toLowerCase().includes(search.toLowerCase())
-            );
-        })
-        .sort((a, b) => {
-            if (orderFilter === "crescent") return a.title.localeCompare(b.title);
-            if (orderFilter === "decrescent") return b.title.localeCompare(a.title);
-            if (orderFilter === "progress") return b.progressPercentage - a.progressPercentage;
-            return 0;
-        });
+    useEffect(() => {
+        setPage(1);
+    }, [statusFilter, orderFilter, search]);
 
     return (
         <React.Fragment>
@@ -153,40 +172,86 @@ function EducatorsRoom() {
                             </div>
                         </div>
 
-                        <div className="grid-wrapper">
+                            <div className="grid-wrapper">
                             {
-                                filteredCourses.map(course => {
+                                courses.map(course => {
                                     return (
-                                        <div className="course-item" key={course.id}>
-                                            <img loading="lazy" src={course.cover} className="course-img" />
-                                            <div className="description">
-                                                <span>{course.title}</span>
-                                                <div style={{ height: "100%", display: "flex", alignItems: "center" }}>
-                                                    <CircularProgressbar
-                                                        styles={buildStyles({
-                                                            pathColor: '#90C040',
-                                                            textColor: '#000000',
-                                                            trailColor: '#d7d7da',
-                                                            backgroundColor: '#3e98c7'
-                                                        })}
-                                                        value={course.progressPercentage}
-                                                        text={course.progressPercentage + "%"}
-                                                        className="course-progress"/>
+                                        <a className="course-card-link" href={getCourseLink(course)} key={course.id}>
+                                            <div className="course-item">
+                                                <img loading="lazy" src={course.cover} className="course-img" />
+                                                <div className="description">
+                                                    <span>{course.title}</span>
+                                                    <div style={{ height: "100%", display: "flex", alignItems: "center" }}>
+                                                        <CircularProgressbar
+                                                            styles={buildStyles({
+                                                                pathColor: '#90C040',
+                                                                textColor: '#000000',
+                                                                trailColor: '#d7d7da',
+                                                                backgroundColor: '#3e98c7'
+                                                            })}
+                                                            value={course.progressPercentage}
+                                                            text={course.progressPercentage + "%"}
+                                                            className="course-progress"/>
+                                                    </div>
+                                                </div>
+                                                <div className="course-action">
+                                                    {course.progressPercentage > 0 ? 'Continuar' : 'Iniciar'}
                                                 </div>
                                             </div>
-                                            <a href={getCourseLink(course)}>
-                                                {course.progressPercentage > 0 ? 'Continuar' : 'Iniciar'}
-                                            </a>
-                                        </div>
+                                        </a>
                                     )
                                 })
                             }
                         </div>
+
+                        <div className="pagination-wrapper">
+                            <span className="pagination-info">
+                                {pagination.total > 0
+                                    ? `${Math.min((pagination.page - 1) * pagination.pageSize + 1, pagination.total)}-${Math.min(pagination.page * pagination.pageSize, pagination.total)} de ${pagination.total}`
+                                    : "0 resultados"}
+                            </span>
+
+                            <div className="pagination-controls">
+                                <label className="pagination-size">
+                                    <span>Por página</span>
+                                    <select
+                                        value={String(pageSize)}
+                                        onChange={(e) => {
+                                            const nextPageSize = Math.max(1, Number(e.currentTarget.value) || 12);
+                                            setPageSize(nextPageSize);
+                                            setPage(1);
+                                        }}
+                                    >
+                                        <option value="8">8</option>
+                                        <option value="12">12</option>
+                                        <option value="16">16</option>
+                                    </select>
+                                </label>
+
+                                <button
+                                    type="button"
+                                    className="pagination-button"
+                                    onClick={() => setPage(prev => Math.max(1, prev - 1))}
+                                    disabled={page <= 1}
+                                >
+                                    Anterior
+                                </button>
+
+                                <span className="pagination-page">Página {pagination.page} de {pagination.totalPages}</span>
+
+                                <button
+                                    type="button"
+                                    className="pagination-button"
+                                    onClick={() => setPage(prev => Math.min(pagination.totalPages, prev + 1))}
+                                    disabled={page >= pagination.totalPages}
+                                >
+                                    Próxima
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
-
-            <PageSelector />
             <Footer />
         </React.Fragment>
     )

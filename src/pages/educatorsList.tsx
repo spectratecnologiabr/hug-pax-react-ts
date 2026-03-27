@@ -10,6 +10,7 @@ import { checkSession } from "../controllers/user/checkSession.controller";
 
 import Menubar from "../components/consultant/menubar";
 import CoordinatorMenubar from "../components/coordinator/menubar";
+import SearchableSingleSelect from "../components/SearchableSingleSelect";
 import iconDots from "../img/adminUsers/dots-vertical.svg";
 
 import "../style/adminDash.css";
@@ -134,6 +135,13 @@ function EducatorsList() {
   const educatorCollegeOptions = useMemo(() => {
     return [...colleges].sort((a, b) => a.name.localeCompare(b.name, "pt-BR"));
   }, [colleges]);
+
+  const educatorCollegeSelectOptions = useMemo(() => {
+    return educatorCollegeOptions.map((college) => ({
+      value: String(college.id),
+      label: college.name,
+    }));
+  }, [educatorCollegeOptions]);
 
   useEffect(() => {
     async function bootstrap() {
@@ -415,20 +423,20 @@ function EducatorsList() {
                   <option value="active">Ativos</option>
                   <option value="inactive">Inativos</option>
                 </select>
-                <select
-                  className="colleges-filter-select"
-                  value={collegeFilter}
-                  onChange={(event) => setCollegeFilter(event.target.value)}
-                  aria-label="Filtrar por escola"
-                >
-                  <option value="all">Todas as escolas</option>
-                  <option value="none">Sem escola</option>
-                  {educatorCollegeOptions.map((college) => (
-                    <option key={college.id} value={String(college.id)}>
-                      {college.name}
-                    </option>
-                  ))}
-                </select>
+                <div className="colleges-filter-select colleges-filter-searchable">
+                  <SearchableSingleSelect
+                    value={collegeFilter}
+                    options={[
+                      { value: "all", label: "Todas as escolas" },
+                      { value: "none", label: "Sem escola" },
+                      ...educatorCollegeSelectOptions,
+                    ]}
+                    placeholder="Filtrar por escola"
+                    searchPlaceholder="Buscar escola..."
+                    emptyMessage="Nenhuma escola encontrada"
+                    onChange={setCollegeFilter}
+                  />
+                </div>
                 {(searchTerm || statusFilter !== "all" || collegeFilter !== "all") ? (
                   <button
                     type="button"
@@ -636,17 +644,18 @@ function EducatorsList() {
                   </label>
                   <label htmlFor="collegeId">
                     <span>Escola</span>
-                  <select
-                    id="collegeId"
+                  <SearchableSingleSelect
                     value={educatorForm.collegeId === "" ? "" : String(educatorForm.collegeId)}
+                    options={[
+                      { value: "", label: "Selecione uma escola" },
+                      ...educatorCollegeSelectOptions,
+                    ]}
+                    placeholder="Selecione uma escola"
+                    searchPlaceholder="Buscar escola..."
+                    emptyMessage="Nenhuma escola encontrada"
                     disabled={isViewMode}
-                    onChange={(event) => updateField("collegeId", event.target.value === "" ? "" : Number(event.target.value))}
-                  >
-                    <option value="">Selecione uma escola</option>
-                    {colleges.map((college) => (
-                      <option key={college.id} value={college.id}>{college.name}</option>
-                    ))}
-                  </select>
+                    onChange={(value) => updateField("collegeId", value === "" ? "" : Number(value))}
+                  />
                   </label>
                   {modalMode !== "create" ? (
                     <label htmlFor="isActive">

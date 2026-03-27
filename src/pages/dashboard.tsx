@@ -12,7 +12,6 @@ import Feed from "../components/dash/feed";
 import EducatorsRoom from "../components/dash/educatorsRoom";
 
 import alunoImage from "../img/dash/aluno.svg";
-import alunoIcon from "../img/dash/aluno-icon.svg";
 
 import "../style/dash.css";
 import Footer from "../components/footer";
@@ -107,10 +106,21 @@ function Dashboard() {
     );
     const [courses, setCourses] = useState<TCourse[]>([]);
     const [ overviewData, setOverviewData ] = useState<TOverviewData | null>(null);
-    const profilePic = localStorage.getItem("profilePic") || alunoIcon;
+    const storedProfilePic = localStorage.getItem("profilePic");
     const [search, setSearch] = useState("");
     const [isSearching, setIsSearching] = useState(false);
     const [searchResult, setSearchResult] = useState<TSearchResult>()
+
+    const profilePic = storedProfilePic &&
+        !["null", "undefined", ""].includes(storedProfilePic.trim())
+            ? storedProfilePic
+            : null;
+
+    const profileInitials = [userData?.firstName, userData?.lastName]
+        .filter(Boolean)
+        .map(name => name.trim().charAt(0).toUpperCase())
+        .join("")
+        .slice(0, 2) || "U";
 
     useEffect(() => {
         async function fetchOverviewData() {
@@ -226,57 +236,75 @@ function Dashboard() {
                             <b id="percentage">0%</b>
                         </div>
                     </div>
-                    <div className="search-wrapper">
-                        <div className="search-box">
-                            <button disabled>
-                                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 21 21" fill="none">
-                                    <path d="M13.6999 2.34726C10.5702 -0.782421 5.47644 -0.782421 2.34675 2.34726C-0.782251 5.47762 -0.782251 10.5707 2.34675 13.7011C5.13382 16.4875 9.47453 16.786 12.6022 14.6102C12.668 14.9216 12.8186 15.2188 13.0608 15.461L17.6186 20.0188C18.2828 20.6817 19.3561 20.6817 20.0169 20.0188C20.6805 19.3553 20.6805 18.282 20.0169 17.6205L15.4591 13.0613C15.2183 12.8212 14.9204 12.6699 14.609 12.604C16.7862 9.47572 16.4877 5.13569 13.6999 2.34726ZM12.2609 12.2621C9.92435 14.5987 6.12164 14.5987 3.78574 12.2621C1.45052 9.92553 1.45052 6.12351 3.78574 3.78693C6.12164 1.45103 9.92435 1.45103 12.2609 3.78693C14.5975 6.12351 14.5975 9.92553 12.2609 12.2621Z" fill="black"/>
+                    <div className="right-dashboard-column">
+                        <div className="search-wrapper">
+                            <div className="search-box">
+                                <button disabled>
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 21 21" fill="none">
+                                        <path d="M13.6999 2.34726C10.5702 -0.782421 5.47644 -0.782421 2.34675 2.34726C-0.782251 5.47762 -0.782251 10.5707 2.34675 13.7011C5.13382 16.4875 9.47453 16.786 12.6022 14.6102C12.668 14.9216 12.8186 15.2188 13.0608 15.461L17.6186 20.0188C18.2828 20.6817 19.3561 20.6817 20.0169 20.0188C20.6805 19.3553 20.6805 18.282 20.0169 17.6205L15.4591 13.0613C15.2183 12.8212 14.9204 12.6699 14.609 12.604C16.7862 9.47572 16.4877 5.13569 13.6999 2.34726ZM12.2609 12.2621C9.92435 14.5987 6.12164 14.5987 3.78574 12.2621C1.45052 9.92553 1.45052 6.12351 3.78574 3.78693C6.12164 1.45103 9.92435 1.45103 12.2609 3.78693C14.5975 6.12351 14.5975 9.92553 12.2609 12.2621Z" fill="black"/>
+                                    </svg>
+                                </button>
+                                <input type="search" className="main-search" id="mainSearchInput" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Pesquisar Temas ou Materiais"/>
+
+                                {searchResult && (
+                                    <div className="global-search-results">
+                                        {isSearching && <span>Buscando...</span>}
+
+                                        {searchResult.courses.map(course => (
+                                        <a key={`c-${course.id}`} href={`/course/${course.slug}`} className="search-item">
+                                            📘 {course.title}
+                                        </a>
+                                        ))}
+
+                                        {searchResult.modules.map(module => (
+                                        <a key={`m-${module.id}`} href={`/course/${module.course_slug}`} className="search-item">
+                                            📦 {module.course_title} • {module.title}
+                                        </a>
+                                        ))}
+
+                                        {searchResult.lessons.map(lesson => (
+                                        <a key={`l-${lesson.id}`} href={`/course/${lesson.course_slug}/lesson/${lesson.id}`} className="search-item">
+                                            🎬 {lesson.course_title} • {lesson.module_title} • {lesson.title}
+                                        </a>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                        <div className="profile-wrapper">
+                            <button className="profile-button" onClick={() => window.location.pathname = "/profile"}>
+                                <div
+                                    className={`profile-photo ${profilePic ? "" : "profile-photo-placeholder"}`.trim()}
+                                    style={profilePic ? { backgroundImage: `url("${profilePic}")` } : undefined}
+                                >
+                                    {!profilePic && <span>{profileInitials}</span>}
+                                </div>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="8" height="5" viewBox="0 0 8 5" fill="none">
+                                    <path d="M4.02125 4.02116L6.99829 1.04411C7.17993 0.862473 7.17993 0.567893 6.99829 0.386256C6.81662 0.204581 6.52211 0.204581 6.34044 0.386256L4.15748 2.56921C4.15748 2.56921 3.93782 2.81522 3.69409 2.81006C3.45622 2.80502 3.22716 2.56921 3.22716 2.56921L1.0442 0.38633C0.862523 0.204656 0.568018 0.204656 0.386343 0.38633C0.295581 0.47713 0.250107 0.596212 0.250107 0.715257C0.250107 0.834301 0.295581 0.953347 0.386343 1.04418L3.36339 4.02116C3.54507 4.20283 3.83957 4.20283 4.02125 4.02116Z" fill="black" stroke="black" stroke-width="0.5"/>
                                 </svg>
                             </button>
-                            <input type="search" className="main-search" id="mainSearchInput" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Pesquisar Temas ou Materiais"/>
-
-                            {searchResult && (
-                                <div className="global-search-results">
-                                    {isSearching && <span>Buscando...</span>}
-
-                                    {searchResult.courses.map(course => (
-                                    <a key={`c-${course.id}`} href={`/course/${course.slug}`} className="search-item">
-                                        📘 {course.title}
-                                    </a>
-                                    ))}
-
-                                    {searchResult.modules.map(module => (
-                                    <a key={`m-${module.id}`} href={`/course/${module.course_slug}`} className="search-item">
-                                        📦 {module.course_title} • {module.title}
-                                    </a>
-                                    ))}
-
-                                    {searchResult.lessons.map(lesson => (
-                                    <a key={`l-${lesson.id}`} href={`/course/${lesson.course_slug}/lesson/${lesson.id}`} className="search-item">
-                                        🎬 {lesson.course_title} • {lesson.module_title} • {lesson.title}
-                                    </a>
-                                    ))}
-                                </div>
-                            )}
                         </div>
-                    </div>
-                    <div className="profile-wrapper">
-                        <button className="profile-button" onClick={() => window.location.pathname = "/profile"}>
-                            <div className="profile-photo" style={{ backgroundImage: profilePic ? `url("${profilePic}")` : "none" }}></div>
-                            <svg xmlns="http://www.w3.org/2000/svg" width="8" height="5" viewBox="0 0 8 5" fill="none">
-                                <path d="M4.02125 4.02116L6.99829 1.04411C7.17993 0.862473 7.17993 0.567893 6.99829 0.386256C6.81662 0.204581 6.52211 0.204581 6.34044 0.386256L4.15748 2.56921C4.15748 2.56921 3.93782 2.81522 3.69409 2.81006C3.45622 2.80502 3.22716 2.56921 3.22716 2.56921L1.0442 0.38633C0.862523 0.204656 0.568018 0.204656 0.386343 0.38633C0.295581 0.47713 0.250107 0.596212 0.250107 0.715257C0.250107 0.834301 0.295581 0.953347 0.386343 1.04418L3.36339 4.02116C3.54507 4.20283 3.83957 4.20283 4.02125 4.02116Z" fill="black" stroke="black" stroke-width="0.5"/>
-                            </svg>
-                        </button>
-                    </div>
 
-                    <div className="finshed-courses">
-                        <b>{overviewData?.completedCourses}</b>
-                        <span>Formações <br />Finalizadas</span>
-                    </div>
+                        <div className="learning-section">
+                            <div className="learning-title">
+                                <h2>Meus Aprendizados</h2>
+                            </div>
 
-                    <div className="remaing-courses">
-                        <b>{overviewData?.inProgressCourses}</b>
-                        <span>Formações <br />Em Progresso</span>
+                            <div className="finshed-courses">
+                                <b>{overviewData?.completedCourses}</b>
+                                <span>Formações <br />Finalizadas</span>
+                            </div>
+
+                            <div className="remaing-courses">
+                                <b>{overviewData?.inProgressCourses}</b>
+                                <span>Formações <br />Em Progresso</span>
+                            </div>
+
+                            <div className="finshed-hours">
+                                <b>{formatHours(Number(overviewData?.totalHours) || 0)}</b>
+                                <span>de tempo total em formação</span>
+                            </div>
+                        </div>
                     </div>
 
                     <div className="last-courses" id="last-courses-swiper">
@@ -327,10 +355,6 @@ function Dashboard() {
                         </button>
                     </div>
 
-                    <div className="finshed-hours">
-                        <b>{formatHours(Number(overviewData?.totalHours) || 0)}</b>
-                        <span>de tempo total em formação</span>
-                    </div>
                 </div>
                 <EducatorsRoom courses={courses} getCourseLink={getCourseLink}/>
             </div>

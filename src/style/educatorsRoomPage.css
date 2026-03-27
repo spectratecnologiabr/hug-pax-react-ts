@@ -82,6 +82,13 @@
     gap: 20px;
 }
 
+.educators-page-container .educators-page-wrapper .educators-room-container .grid-wrapper .course-card-link {
+    text-decoration: none;
+    color: inherit;
+    display: flex;
+    width: 100%;
+}
+
 .educators-page-container .educators-page-wrapper .educators-room-container .grid-wrapper .course-item {
     grid-column: span 1;
     background-color: #F5F5F7;
@@ -129,8 +136,7 @@
     font-size: 24px;
 }
 
-.educators-page-container .educators-page-wrapper .educators-room-container .grid-wrapper .course-item a {
-    text-decoration: none;
+.educators-page-container .educators-page-wrapper .educators-room-container .grid-wrapper .course-item .course-action {
     display: flex;
     justify-content: center;
     align-items: center;
@@ -146,8 +152,60 @@
     transition: ease-in-out .3s all;
 }
 
-.educators-page-container .educators-page-wrapper .educators-room-container .grid-wrapper .course-item a:hover {
+.educators-page-container .educators-page-wrapper .educators-room-container .grid-wrapper .course-card-link:hover .course-action {
     background-color: #5CADE0;
+}
+
+.educators-page-container .educators-page-wrapper .educators-room-container .pagination-wrapper {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-top: 6px;
+}
+
+.educators-page-container .educators-page-wrapper .educators-room-container .pagination-info,
+.educators-page-container .educators-page-wrapper .educators-room-container .pagination-page,
+.educators-page-container .educators-page-wrapper .educators-room-container .pagination-size span {
+    font-family: 'SF UI Display Medium';
+    font-size: 14px;
+}
+
+.educators-page-container .educators-page-wrapper .educators-room-container .pagination-controls {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.educators-page-container .educators-page-wrapper .educators-room-container .pagination-size {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.educators-page-container .educators-page-wrapper .educators-room-container .pagination-size select,
+.educators-page-container .educators-page-wrapper .educators-room-container .pagination-button {
+    height: 40px;
+    border-radius: 8px;
+    background-color: #F5F5F7;
+    padding: 0 14px;
+    font-family: 'SF UI Display Medium';
+}
+
+.educators-page-container .educators-page-wrapper .educators-room-container .pagination-button {
+    cursor: pointer;
+    transition: ease-in-out .2s all;
+}
+
+.educators-page-container .educators-page-wrapper .educators-room-container .pagination-button:hover:not(:disabled) {
+    background-color: #e7edf4;
+}
+
+.educators-page-container .educators-page-wrapper .educators-room-container .pagination-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
 }
 
 @media (max-width: 1720px) {
@@ -217,7 +275,7 @@
     }
 
     .educators-page-container .educators-page-wrapper .educators-room-container .grid-wrapper {
-        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 14px;
     }
 
@@ -242,9 +300,19 @@
         height: 34px;
     }
 
-    .educators-page-container .educators-page-wrapper .educators-room-container .grid-wrapper .course-item a {
+    .educators-page-container .educators-page-wrapper .educators-room-container .grid-wrapper .course-item .course-action {
         font-size: 16px;
         padding: 16px;
+    }
+
+    .educators-page-container .educators-page-wrapper .educators-room-container .pagination-wrapper,
+    .educators-page-container .educators-page-wrapper .educators-room-container .pagination-controls,
+    .educators-page-container .educators-page-wrapper .educators-room-container .pagination-size {
+        width: 100%;
+    }
+
+    .educators-page-container .educators-page-wrapper .educators-room-container .pagination-controls {
+        justify-content: space-between;
     }
 }
 
@@ -254,7 +322,7 @@
     }
 
     .educators-page-container .educators-page-wrapper .educators-room-container .grid-wrapper {
-        grid-template-columns: repeat(auto-fill, minmax(132px, 1fr));
+        grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
     .educators-page-container .educators-page-wrapper .educators-room-container .grid-wrapper .course-item .description {
@@ -265,9 +333,19 @@
         font-size: 14px;
     }
 
-    .educators-page-container .educators-page-wrapper .educators-room-container .grid-wrapper .course-item a {
+    .educators-page-container .educators-page-wrapper .educators-room-container .grid-wrapper .course-item .course-action {
         font-size: 14px;
         padding: 14px;
+    }
+}
+
+@media (max-width: 390px) {
+    .educators-page-container .educators-page-wrapper .educators-room-container .header-wrapper b {
+        font-size: 22px;
+    }
+
+    .educators-page-container .educators-page-wrapper .educators-room-container .grid-wrapper {
+        grid-template-columns: 1fr;
     }
 }
 

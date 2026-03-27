@@ -211,10 +211,7 @@ function CoordinatorPerformancePage() {
 
         if (isAdminPath) {
           try {
-            const [adminEducatorsData, logsData] = await Promise.all([
-              listUsersAdmin({ role: "educator", page: 1, pageSize: 5000 }),
-              getAdminLogsTimeline({ limit: 8 }),
-            ]);
+            const adminEducatorsData = await listUsersAdmin({ role: "educator", page: 1, pageSize: 5000 });
 
             if (!cancelled) {
               const educatorItems = Array.isArray((adminEducatorsData as any)?.items)
@@ -224,59 +221,9 @@ function CoordinatorPerformancePage() {
                   : [];
 
               setEducators(educatorItems as TEducator[]);
-
-              const parsedLogs = Array.isArray(logsData)
-                ? logsData
-                : Array.isArray((logsData as any)?.items)
-                  ? (logsData as any).items
-                  : [];
-
-              const normalizedLogs: TAuditEntry[] = parsedLogs
-                .slice(0, 8)
-                .map((item: any, index: number) => ({
-                  id: String(item?.id ?? `log-${index}`),
-                  createdAt: String(item?.createdAt ?? item?.created_at ?? ""),
-                  name: String(item?.name ?? "EVENT"),
-                  message: String(item?.message ?? ""),
-                }));
-              setAuditEntries(normalizedLogs);
             }
           } catch {
-            if (!cancelled) setAuditEntries([]);
-          }
-        } else {
-          try {
-            const scopedConsultants = Array.isArray(consultantsData) ? consultantsData.slice(0, 8) : [];
-            const logResponses = await Promise.all(
-              scopedConsultants.map((consultant: any) =>
-                getLogDashboardList({ userId: Number(consultant?.id), page: 1, limit: 3 }).catch(() => null)
-              )
-            );
-
-            if (!cancelled) {
-              const allEntries: TAuditEntry[] = [];
-              logResponses.forEach((response) => {
-                const items = Array.isArray((response as any)?.items)
-                  ? (response as any).items
-                  : Array.isArray(response)
-                    ? response
-                    : [];
-
-                items.forEach((item: any, index: number) => {
-                  allEntries.push({
-                    id: String(item?.id ?? `${index}-${Math.random()}`),
-                    createdAt: String(item?.createdAt ?? item?.created_at ?? ""),
-                    name: String(item?.name ?? "EVENT"),
-                    message: String(item?.message ?? ""),
-                  });
-                });
-              });
-
-              allEntries.sort((a, b) => (new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
-              setAuditEntries(allEntries.slice(0, 8));
-            }
-          } catch {
-            if (!cancelled) setAuditEntries([]);
+            if (!cancelled) setEducators([]);
           }
         }
       } catch (err) {
@@ -323,10 +270,10 @@ function CoordinatorPerformancePage() {
   }, [colleges]);
 
   const selectedContractId = useMemo(() => {
-    if (!isAdminPath || contractFilter === "all") return null;
+    if (contractFilter === "all") return null;
     const parsed = Number(contractFilter);
     return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
-  }, [isAdminPath, contractFilter]);
+  }, [contractFilter]);
 
   const selectedContractConsultantSet = useMemo(() => {
     if (!selectedContractId) return null;
@@ -370,6 +317,41 @@ function CoordinatorPerformancePage() {
 
   const hasConsultantFilter = consultantFilter !== "all";
 
+  const consultantScopedCollegeSet = useMemo(() => {
+    if (!hasConsultantFilter) return null;
+
+    const set = new Set<number>();
+    const allVisits = [...filteredLast30Visits, ...filteredThisMonthVisits, ...filteredThisWeekVisits];
+
+    allVisits.forEach((visit) => {
+      const consultantId = toInt(visit.creatorId ?? visit.creator_id);
+      if (consultantId !== consultantFilter) return;
+
+      const collegeId = toInt(visit.collegeId ?? visit.college_id);
+      if (collegeId <= 0) return;
+
+      if (selectedContractId) {
+        const contractByCollege = collegeContractById.get(collegeId);
+        if (contractByCollege !== selectedContractId && !selectedContractCollegeSet?.has(collegeId)) {
+          return;
+        }
+      }
+
+      set.add(collegeId);
+    });
+
+    return set;
+  }, [
+    hasConsultantFilter,
+    consultantFilter,
+    filteredLast30Visits,
+    filteredThisMonthVisits,
+    filteredThisWeekVisits,
+    selectedContractId,
+    selectedContractCollegeSet,
+    collegeContractById,
+  ]);
+
   const contractScopedConsultants = useMemo(() => {
     return consultants.filter((item) => {
       const consultantId = toInt(item.id);
@@ -389,9 +371,10 @@ function CoordinatorPerformancePage() {
       const collegeId = toInt(item.id);
       if (collegeId <= 0) return false;
       if (selectedContractCollegeSet && !selectedContractCollegeSet.has(collegeId)) return false;
+      if (consultantScopedCollegeSet && !consultantScopedCollegeSet.has(collegeId)) return false;
       return true;
     });
-  }, [colleges, selectedContractCollegeSet]);
+  }, [colleges, selectedContractCollegeSet, consultantScopedCollegeSet]);
 
   const collegesScopedSet = useMemo(() => {
     const set = new Set<number>();
@@ -403,20 +386,20 @@ function CoordinatorPerformancePage() {
   }, [collegesScoped]);
 
   const educatorsScoped = useMemo(() => {
-    if (!selectedContractId) return educators;
+    if (!selectedContractId && !hasConsultantFilter) return educators;
 
     return educators.filter((item) => {
       const collegeId = toInt(item.collegeId);
       if (collegeId > 0 && collegesScopedSet.has(collegeId)) return true;
 
       const explicitContractId = toInt((item as any).contractId ?? (item as any).contract_id);
-      if (explicitContractId > 0) {
+      if (!hasConsultantFilter && explicitContractId > 0) {
         return explicitContractId === selectedContractId;
       }
 
       return false;
     });
-  }, [educators, collegesScopedSet, selectedContractId]);
+  }, [educators, collegesScopedSet, selectedContractId, hasConsultantFilter]);
 
   const consultantsScopeSet = useMemo(() => {
     const set = new Set<number>();
@@ -743,6 +726,78 @@ function CoordinatorPerformancePage() {
     return recs.slice(0, 4);
   }, [summary.weekCancellationRate, summary.schoolsWithoutRecentVisit, accessMetrics.inactive14d]);
 
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadAuditEntries() {
+      if (isAdminPath) {
+        try {
+          const logsData = await getAdminLogsTimeline({ limit: 8 });
+          if (cancelled) return;
+
+          const parsedLogs = Array.isArray(logsData)
+            ? logsData
+            : Array.isArray((logsData as any)?.items)
+              ? (logsData as any).items
+              : [];
+
+          const normalizedLogs: TAuditEntry[] = parsedLogs
+            .slice(0, 8)
+            .map((item: any, index: number) => ({
+              id: String(item?.id ?? `log-${index}`),
+              createdAt: String(item?.createdAt ?? item?.created_at ?? ""),
+              name: String(item?.name ?? "EVENT"),
+              message: String(item?.message ?? ""),
+            }));
+
+          setAuditEntries(normalizedLogs);
+        } catch {
+          if (!cancelled) setAuditEntries([]);
+        }
+        return;
+      }
+
+      try {
+        const scopedConsultants = consultantsScoped.slice(0, 8);
+        const logResponses = await Promise.all(
+          scopedConsultants.map((consultant: any) =>
+            getLogDashboardList({ userId: Number(consultant?.id), page: 1, limit: 3 }).catch(() => null)
+          )
+        );
+
+        if (cancelled) return;
+
+        const allEntries: TAuditEntry[] = [];
+        logResponses.forEach((response) => {
+          const items = Array.isArray((response as any)?.items)
+            ? (response as any).items
+            : Array.isArray(response)
+              ? response
+              : [];
+
+          items.forEach((item: any, index: number) => {
+            allEntries.push({
+              id: String(item?.id ?? `${index}-${Math.random()}`),
+              createdAt: String(item?.createdAt ?? item?.created_at ?? ""),
+              name: String(item?.name ?? "EVENT"),
+              message: String(item?.message ?? ""),
+            });
+          });
+        });
+
+        allEntries.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        setAuditEntries(allEntries.slice(0, 8));
+      } catch {
+        if (!cancelled) setAuditEntries([]);
+      }
+    }
+
+    void loadAuditEntries();
+    return () => {
+      cancelled = true;
+    };
+  }, [isAdminPath, consultantsScoped]);
+
   function exportPerformanceCsv() {
     const lines: string[] = [];
     lines.push("secao;chave;valor");
@@ -819,7 +874,7 @@ function CoordinatorPerformancePage() {
             <span>Visão operacional com ranking de consultores, distribuição de visitas e alertas acionáveis.</span>
           </div>
           <div className="cpf-header-actions">
-            {isAdminPath && (
+            {contractOptions.length > 0 && (
               <div className="cpf-filter">
                 <label htmlFor="contractFilter">Contrato</label>
                 <select

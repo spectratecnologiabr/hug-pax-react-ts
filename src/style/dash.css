@@ -63,7 +63,17 @@
     font-size: 65px;
 }
 
-.dashboard-container .main-dash-wrapper .search-wrapper {
+.dashboard-container .main-dash-wrapper .right-dashboard-column {
+    grid-column: span 4;
+    grid-row: span 5;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    grid-auto-rows: 40px;
+    gap: 25px;
+    align-content: start;
+}
+
+.dashboard-container .main-dash-wrapper .right-dashboard-column .search-wrapper {
     grid-column: span 3;
     display: flex;
     align-items: center;
@@ -91,13 +101,43 @@
     margin-left: 5px;
 }
 
-.dashboard-container .main-dash-wrapper .profile-wrapper {
+.dashboard-container .main-dash-wrapper .right-dashboard-column .profile-wrapper {
     grid-column: span 1;
     display: flex;
     justify-content: space-between;
 }
 
-.dashboard-container .main-dash-wrapper .profile-wrapper .notitications-button {
+.dashboard-container .main-dash-wrapper .right-dashboard-column .learning-section {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 25px;
+    align-content: start;
+}
+
+.dashboard-container .main-dash-wrapper .learning-title {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: end;
+}
+
+.dashboard-container .main-dash-wrapper .learning-title h2 {
+    margin: 0;
+    font-family: 'SF UI Display Bold';
+    font-size: 28px;
+    line-height: 1.1;
+}
+
+.dashboard-container .main-dash-wrapper .learning-section .finshed-courses,
+.dashboard-container .main-dash-wrapper .learning-section .remaing-courses {
+    grid-column: span 2;
+}
+
+.dashboard-container .main-dash-wrapper .learning-section .finshed-hours {
+    grid-column: 1 / -1;
+}
+
+.dashboard-container .main-dash-wrapper .right-dashboard-column .profile-wrapper .notitications-button {
     padding: 5px;
     width: 40px;
     border-radius: 8px;
@@ -106,11 +146,11 @@
     transition: ease-in-out .3s all;
 }
 
-.dashboard-container .main-dash-wrapper .profile-wrapper .notitications-button:hover {
+.dashboard-container .main-dash-wrapper .right-dashboard-column .profile-wrapper .notitications-button:hover {
     background-color: #F5F5F7;
 }
 
-.dashboard-container .main-dash-wrapper .profile-wrapper .profile-button {
+.dashboard-container .main-dash-wrapper .right-dashboard-column .profile-wrapper .profile-button {
     display: flex;
     gap: 10px;
     align-items: center;
@@ -118,12 +158,25 @@
     cursor: pointer;
 }
 
-.dashboard-container .main-dash-wrapper .profile-wrapper .profile-button .profile-photo {
+.dashboard-container .main-dash-wrapper .right-dashboard-column .profile-wrapper .profile-button .profile-photo {
     border-radius: 8px;
     width: 40px;
     height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     background-size: cover;
     background-position: center;
+    background-color: #f1f5f9;
+    flex-shrink: 0;
+}
+
+.dashboard-container .main-dash-wrapper .right-dashboard-column .profile-wrapper .profile-button .profile-photo.profile-photo-placeholder {
+    border: 1px solid #dbe7f3;
+    color: #1d4e89;
+    font-family: 'SF UI Display Bold';
+    font-size: 14px;
+    letter-spacing: 0.03em;
 }
 
 .dashboard-container .main-dash-wrapper .finshed-courses, .dashboard-container .main-dash-wrapper .remaing-courses {
@@ -340,11 +393,16 @@
         font-size: 50px;
     }
 
-    .dashboard-container .main-dash-wrapper .search-wrapper {
+    .dashboard-container .main-dash-wrapper .right-dashboard-column {
+        grid-column: span 6;
+        grid-template-columns: repeat(6, 1fr);
+    }
+
+    .dashboard-container .main-dash-wrapper .right-dashboard-column .search-wrapper {
         grid-column: span 4;
     }
 
-    .dashboard-container .main-dash-wrapper .profile-wrapper {
+    .dashboard-container .main-dash-wrapper .right-dashboard-column .profile-wrapper {
         grid-column: span 2;
     }
 
@@ -381,11 +439,16 @@
         grid-column: span 7;
     }
 
-    .dashboard-container .main-dash-wrapper .search-wrapper {
-        grid-column: span 4;
+    .dashboard-container .main-dash-wrapper .right-dashboard-column {
+        grid-column: span 6;
+        grid-template-columns: repeat(6, 1fr);
     }
 
-    .dashboard-container .main-dash-wrapper .profile-wrapper {
+    .dashboard-container .main-dash-wrapper .right-dashboard-column .search-wrapper {
+        grid-column: span 5;
+    }
+
+    .dashboard-container .main-dash-wrapper .right-dashboard-column .profile-wrapper {
         grid-column: span 1;
     }
 
@@ -420,11 +483,16 @@
         grid-column: span 12;
     }
 
-    .dashboard-container .main-dash-wrapper .search-wrapper {
+    .dashboard-container .main-dash-wrapper .right-dashboard-column {
+        grid-column: span 12;
+        grid-template-columns: repeat(12, 1fr);
+    }
+
+    .dashboard-container .main-dash-wrapper .right-dashboard-column .search-wrapper {
         grid-column: span 9;
     }
 
-    .dashboard-container .main-dash-wrapper .profile-wrapper {
+    .dashboard-container .main-dash-wrapper .right-dashboard-column .profile-wrapper {
         grid-column: span 3;
     }
 
@@ -505,10 +573,43 @@
         display: block;
     }
 
-    .dashboard-container .main-dash-wrapper .search-wrapper,
     .dashboard-container .main-dash-wrapper .last-courses,
     .dashboard-container .main-dash-wrapper .last-courses-controls {
         grid-column: span 12;
+    }
+
+    .dashboard-container .main-dash-wrapper .right-dashboard-column {
+        grid-column: span 12;
+        grid-template-columns: repeat(12, 1fr);
+        grid-auto-rows: minmax(40px, auto);
+    }
+
+    .dashboard-container .main-dash-wrapper .right-dashboard-column .search-wrapper {
+        grid-column: span 12;
+        min-height: 44px;
+    }
+
+    .dashboard-container .main-dash-wrapper .search-wrapper .search-box {
+        min-height: 44px;
+    }
+
+    .dashboard-container .main-dash-wrapper .search-wrapper .main-search {
+        min-height: 44px;
+        padding-left: 34px;
+        border-radius: 12px;
+    }
+
+    .dashboard-container .main-dash-wrapper .search-wrapper button {
+        margin-left: 8px;
+    }
+
+    .dashboard-container .main-dash-wrapper .right-dashboard-column .profile-wrapper {
+        display: none;
+    }
+
+    .dashboard-container .main-dash-wrapper .right-dashboard-column .learning-section {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 14px;
     }
 
     .dashboard-container .main-dash-wrapper .profile-wrapper {
@@ -558,13 +659,50 @@
     }
 
     .dashboard-container .main-dash-wrapper .greatings-card,
-    .dashboard-container .main-dash-wrapper .search-wrapper,
     .dashboard-container .main-dash-wrapper .last-courses,
     .dashboard-container .main-dash-wrapper .last-courses-controls,
+    .dashboard-container .main-dash-wrapper .right-dashboard-column,
     .dashboard-container .main-dash-wrapper .finshed-courses,
     .dashboard-container .main-dash-wrapper .remaing-courses,
     .dashboard-container .main-dash-wrapper .finshed-hours {
         grid-column: span 1;
+    }
+
+    .dashboard-container .main-dash-wrapper .right-dashboard-column {
+        grid-template-columns: 1fr;
+        grid-auto-rows: auto;
+        gap: 14px;
+    }
+
+    .dashboard-container .main-dash-wrapper .right-dashboard-column .search-wrapper {
+        grid-column: span 1;
+        min-height: 44px;
+    }
+
+    .dashboard-container .main-dash-wrapper .right-dashboard-column .learning-section {
+        grid-template-columns: 1fr;
+        gap: 14px;
+    }
+
+    .dashboard-container .main-dash-wrapper .search-wrapper .search-box {
+        min-height: 44px;
+    }
+
+    .dashboard-container .main-dash-wrapper .search-wrapper .main-search {
+        min-height: 44px;
+        padding-left: 34px;
+        border-radius: 12px;
+    }
+
+    .dashboard-container .main-dash-wrapper .learning-title,
+    .dashboard-container .main-dash-wrapper .learning-section .finshed-courses,
+    .dashboard-container .main-dash-wrapper .learning-section .remaing-courses,
+    .dashboard-container .main-dash-wrapper .learning-section .finshed-hours {
+        grid-column: 1 / -1;
+    }
+
+    .dashboard-container .main-dash-wrapper .learning-title h2 {
+        font-size: 24px;
     }
 
     .dashboard-container .main-dash-wrapper .finshed-courses b,

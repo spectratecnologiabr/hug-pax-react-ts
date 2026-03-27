@@ -65,6 +65,13 @@
     gap: 20px;
 }
 
+.educators-room-element .grid-wrapper .course-card-link {
+    text-decoration: none;
+    color: inherit;
+    display: flex;
+    width: 100%;
+}
+
 .educators-room-element .grid-wrapper .course-item {
     grid-column: span 1;
     background-color: #F5F5F7;
@@ -112,8 +119,7 @@
     font-size: 24px;
 }
 
-.educators-room-element .grid-wrapper .course-item a {
-    text-decoration: none;
+.educators-room-element .grid-wrapper .course-item .course-action {
     display: flex;
     justify-content: center;
     align-items: center;
@@ -129,8 +135,60 @@
     transition: ease-in-out .3s all;
 }
 
-.educators-room-element .grid-wrapper .course-item a:hover {
+.educators-room-element .grid-wrapper .course-card-link:hover .course-action {
     background-color: #5CADE0;
+}
+
+.educators-room-element .pagination-wrapper {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-top: 6px;
+}
+
+.educators-room-element .pagination-info,
+.educators-room-element .pagination-page,
+.educators-room-element .pagination-size span {
+    font-family: 'SF UI Display Medium';
+    font-size: 14px;
+}
+
+.educators-room-element .pagination-controls {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.educators-room-element .pagination-size {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.educators-room-element .pagination-size select,
+.educators-room-element .pagination-button {
+    height: 40px;
+    border-radius: 8px;
+    background-color: #F5F5F7;
+    padding: 0 14px;
+    font-family: 'SF UI Display Medium';
+}
+
+.educators-room-element .pagination-button {
+    cursor: pointer;
+    transition: ease-in-out .2s all;
+}
+
+.educators-room-element .pagination-button:hover:not(:disabled) {
+    background-color: #e7edf4;
+}
+
+.educators-room-element .pagination-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
 }
 
 @media (max-width: 769px) {
@@ -140,7 +198,7 @@
     }
 
     .educators-room-element .grid-wrapper {
-        grid-template-columns: repeat(4, minmax(0, 1fr));
+        grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 14px;
     }
 
@@ -192,15 +250,25 @@
         height: 34px;
     }
 
-    .educators-room-element .grid-wrapper .course-item a {
+    .educators-room-element .grid-wrapper .course-item .course-action {
         font-size: 16px;
         padding: 16px;
+    }
+
+    .educators-room-element .pagination-wrapper,
+    .educators-room-element .pagination-controls,
+    .educators-room-element .pagination-size {
+        width: 100%;
+    }
+
+    .educators-room-element .pagination-controls {
+        justify-content: space-between;
     }
 }
 
 @media (max-width: 520px) {
     .educators-room-element .grid-wrapper {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
+        grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
     .educators-room-element .grid-wrapper .course-item .description {
@@ -211,7 +279,7 @@
         font-size: 14px;
     }
 
-    .educators-room-element .grid-wrapper .course-item a {
+    .educators-room-element .grid-wrapper .course-item .course-action {
         font-size: 14px;
         padding: 14px;
     }
@@ -223,6 +291,6 @@
     }
 
     .educators-room-element .grid-wrapper {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-template-columns: 1fr;
     }
 }

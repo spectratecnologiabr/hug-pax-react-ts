@@ -4,6 +4,7 @@ import { getCookies } from "../misc/cookies.controller";
 type ListCollegesQuery = {
     search?: string;
     city?: string;
+    gee?: string;
     contractId?: number;
     status?: string;
     page?: number;

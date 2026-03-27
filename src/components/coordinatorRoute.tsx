@@ -22,7 +22,7 @@ const CoordinatorRoute: React.FC<CoordinatorRouteProps> = ({ children }) => {
     checkSession()
       .then((session) => {
         const role = String(session?.session?.role ?? "");
-        if (role !== "coordinator" && role !== "specialist_consultant") {
+        if (role !== "coordinator" && role !== "specialist_consultant" && role !== "admin") {
           setStatus("forbidden");
           return;
         }

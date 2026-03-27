@@ -121,6 +121,16 @@ function Menubar() {
             <span>Comunicações</span>
           </a>
 
+          <a href="/admin/educator-feed" className={pathname.includes("/admin/educator-feed") ? "menu-link selected" : "menu-link"}>
+            <svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 0 24 24" fill="none">
+              <path d="M4 6.5C4 5.67157 4.67157 5 5.5 5H18.5C19.3284 5 20 5.67157 20 6.5V17.5C20 18.3284 19.3284 19 18.5 19H5.5C4.67157 19 4 18.3284 4 17.5V6.5Z" stroke="white" strokeWidth="1.8"/>
+              <path d="M7.5 9H16.5" stroke="white" strokeWidth="1.8" strokeLinecap="round"/>
+              <path d="M7.5 12.5H13.5" stroke="white" strokeWidth="1.8" strokeLinecap="round"/>
+              <path d="M7.5 16H11" stroke="white" strokeWidth="1.8" strokeLinecap="round"/>
+            </svg>
+            <span>Feed</span>
+          </a>
+
           <a href="/admin/helpdesk" className={pathname.includes("/admin/helpdesk") ? "menu-link selected" : "menu-link"}>
             <svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 0 24 24" fill="none">
               <path d="M8.5 9.5H15.5M8.5 13H12.5M7 20L3.5 21V5.5C3.5 4.67157 4.17157 4 5 4H19C19.8284 4 20.5 4.67157 20.5 5.5V16.5C20.5 17.3284 19.8284 18 19 18H9.5L7 20Z" stroke="white" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>

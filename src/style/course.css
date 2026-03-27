@@ -683,7 +683,14 @@
 .course-container .right-container .steps-list .steps-group .step-button .left .text b {
     font-family: 'SF UI Display Medium';
     font-size: 24px;
-    overflow-wrap: anywhere;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+    line-height: 1.1;
+    max-height: calc(2 * 1.1em);
+    overflow-wrap: break-word;
+    word-break: normal;
     color: #000000;
     -webkit-text-fill-color: #000000;
 }
@@ -701,6 +708,7 @@
     gap: 10px;
     text-align: left;
     flex-shrink: 0;
+    min-width: 76px;
 }
 
 .course-container .right-container .steps-list .steps-group .step-button .right .course-progress {
@@ -1105,6 +1113,8 @@
 
   .course-container .right-container .steps-list .steps-group .step-button .left .text b {
     font-size: 18px;
+    line-height: 1.15;
+    max-height: calc(2 * 1.15em);
   }
 
   .course-container .right-container .steps-list .steps-group .step-button .right .course-progress {
@@ -1291,6 +1301,8 @@
 
   .course-container .right-container .steps-list .steps-group .step-button .left .text b {
     font-size: 16px;
+    line-height: 1.15;
+    max-height: calc(2 * 1.15em);
   }
 
   .course-container .right-container .steps-list .steps-group .step-button .left .text span {

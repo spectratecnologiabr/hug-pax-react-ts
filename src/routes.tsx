@@ -45,6 +45,7 @@ import AdminLegalDocumentsPage from './pages/adminLegalDocumentsPage';
 import SchoolFinalReportPage from './pages/schoolFinalReportPage';
 import AdminReportsCenterPage from './pages/adminReportsCenterPage';
 import EducatorReportPage from './pages/educatorReportPage';
+import AdminEducatorFeedPage from './pages/adminEducatorFeedPage';
 import HelpdeskPage from './pages/helpdeskPage';
 import HelpdeskWidget from './components/helpdeskWidget';
 import AdminHelpdeskPage from './pages/adminHelpdeskPage';
@@ -111,6 +112,7 @@ function MyRoutes() {
                 <Route path='/admin/colleges/:collegeId/final-report' element={<AdminRoute><SchoolFinalReportPage/></AdminRoute>} />
                 <Route path='/admin/series' element={<AdminRoute><SeriesAdminPage/></AdminRoute>} />
                 <Route path='/admin/communications' element={<AdminRoute><AdminCommunicationPage/></AdminRoute>} />
+                <Route path='/admin/educator-feed' element={<AdminRoute><AdminEducatorFeedPage/></AdminRoute>} />
                 <Route path='/admin/communications/templates' element={<AdminRoute><AdminCommunicationTemplatesPage/></AdminRoute>} />
                 <Route path='/admin/communications/retention' element={<AdminRoute><AdminRetentionTriggersPage/></AdminRoute>} />
                 <Route path='/admin/helpdesk' element={<AdminRoute><AdminHelpdeskPage/></AdminRoute>} />

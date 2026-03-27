@@ -1490,53 +1490,55 @@ function EditCoursePage() {
                                                                 <span className="lesson-toggle-switch" aria-hidden="true" />
                                                                 <span>Download</span>
                                                               </label>
-                                                              <button
-                                                                type="button"
-                                                                className="secondary-button lesson-icon-button"
-                                                                onClick={() => openEditLessonModal(index, lessonIndex)}
-                                                                title="Editar aula"
-                                                                aria-label="Editar aula"
-                                                              >
-                                                                ✏️
-                                                              </button>
-                                                              {["video", "audio"].includes(String(lesson.type).toLowerCase()) && (
-                                                                (() => {
-                                                                  const isTranscribing = transcribingLessonId === lesson.id;
-                                                                  const hasTranscript = Boolean(String(lesson.code || "").trim());
-                                                                  const title = isTranscribing
-                                                                    ? "Transcrevendo mídia"
-                                                                    : hasTranscript
-                                                                      ? "Editar transcrição"
-                                                                      : "Transcrever mídia";
-                                                                  return (
+                                                              <div className="lesson-card-actions">
                                                                 <button
                                                                   type="button"
-                                                                  className="action-button add-lesson"
-                                                                  disabled={isTranscribing}
-                                                                  onClick={() =>
-                                                                      hasTranscript
-                                                                          ? openSavedTranscriptionEditor(index, lessonIndex)
-                                                                          : handleTranscribeLesson(index, lessonIndex)
-                                                                  }
-                                                                  title={title}
-                                                                  aria-label={title}
+                                                                  className="secondary-button lesson-icon-button"
+                                                                  onClick={() => openEditLessonModal(index, lessonIndex)}
+                                                                  title="Editar aula"
+                                                                  aria-label="Editar aula"
                                                                 >
-                                                                  {isTranscribing ? "⏳" : hasTranscript ? "✏️" : "📝"}
+                                                                  ✏️
                                                                 </button>
-                                                                  );
-                                                                })()
-                                                              )}
-                                                              <button
-                                                                type="button"
-                                                                className="action-button remove-lesson"
-                                                                onClick={() => openConfirmDelete("lesson", index, lessonIndex)}
-                                                                title="Remover aula"
-                                                                aria-label="Remover aula"
-                                                              >
-                                                                🗑️
-                                                              </button>
+                                                                {["video", "audio"].includes(String(lesson.type).toLowerCase()) && (
+                                                                  (() => {
+                                                                    const isTranscribing = transcribingLessonId === lesson.id;
+                                                                    const hasTranscript = Boolean(String(lesson.code || "").trim());
+                                                                    const title = isTranscribing
+                                                                      ? "Transcrevendo mídia"
+                                                                      : hasTranscript
+                                                                        ? "Editar transcrição"
+                                                                        : "Transcrever mídia";
+                                                                    return (
+                                                                  <button
+                                                                    type="button"
+                                                                    className="action-button add-lesson"
+                                                                    disabled={isTranscribing}
+                                                                    onClick={() =>
+                                                                        hasTranscript
+                                                                            ? openSavedTranscriptionEditor(index, lessonIndex)
+                                                                            : handleTranscribeLesson(index, lessonIndex)
+                                                                    }
+                                                                    title={title}
+                                                                    aria-label={title}
+                                                                  >
+                                                                    {isTranscribing ? "⏳" : hasTranscript ? "✏️" : "📝"}
+                                                                  </button>
+                                                                    );
+                                                                  })()
+                                                                )}
+                                                                <button
+                                                                  type="button"
+                                                                  className="action-button remove-lesson"
+                                                                  onClick={() => openConfirmDelete("lesson", index, lessonIndex)}
+                                                                  title="Remover aula"
+                                                                  aria-label="Remover aula"
+                                                                >
+                                                                  🗑️
+                                                                </button>
+                                                              </div>
                                                             </div>
-                                                        </div>
+                                                          </div>
                                                         ))}
                                                     </div>
                                                 )}

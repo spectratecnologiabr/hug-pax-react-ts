@@ -1,0 +1,249 @@
+.educator-feed-page {
+  gap: 24px;
+}
+
+.educator-feed-page .sap-table {
+  table-layout: fixed;
+}
+
+.educator-feed-page .sap-table th:nth-child(2),
+.educator-feed-page .sap-table td:nth-child(2) {
+  width: 82px;
+}
+
+.educator-feed-page .sap-table th:nth-child(3),
+.educator-feed-page .sap-table td:nth-child(3) {
+  width: 70px;
+}
+
+.educator-feed-page .sap-table th:nth-child(4),
+.educator-feed-page .sap-table td:nth-child(4) {
+  width: 136px;
+}
+
+.educator-feed-page .sap-table th:nth-child(5),
+.educator-feed-page .sap-table td:nth-child(5) {
+  width: 164px;
+}
+
+.feed-admin-alert {
+  border-radius: 14px;
+  padding: 14px 16px;
+  font-family: "SF UI Display Medium";
+}
+
+.feed-admin-alert.error {
+  background: #fff1ef;
+  color: #b93827;
+}
+
+.feed-admin-alert.success {
+  background: #edf9f1;
+  color: #157347;
+}
+
+.feed-admin-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  z-index: 1400;
+}
+
+.feed-admin-modal-card {
+  width: min(920px, 100%);
+  max-height: calc(100vh - 48px);
+  overflow: auto;
+  border-radius: 22px;
+}
+
+.feed-admin-form {
+  background: #ffffff;
+  border: 1px solid #e5eef7;
+  border-radius: 18px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.feed-admin-form-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.feed-admin-form-header b {
+  font-family: "SF UI Display Bold";
+  font-size: 22px;
+}
+
+.feed-admin-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.feed-admin-grid label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.feed-admin-editor-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.feed-admin-grid label span {
+  font-family: "SF UI Display Medium";
+  font-size: 14px;
+}
+
+.feed-admin-field-label {
+  font-family: "SF UI Display Medium";
+  font-size: 14px;
+}
+
+.feed-admin-grid input,
+.feed-admin-grid textarea {
+  border: 1px solid #d8e4f0;
+  border-radius: 12px;
+  padding: 12px 14px;
+  font-family: "SF UI Display Light";
+  font-size: 14px;
+  resize: vertical;
+}
+
+.feed-admin-rich-editor {
+  border: 1px solid #d8e4f0;
+  border-radius: 12px;
+  background: #ffffff;
+  overflow: hidden;
+}
+
+.feed-admin-rich-editor .ProseMirror {
+  min-height: 180px;
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+.feed-admin-rich-editor .tiptap {
+  padding: 14px;
+  font-family: "SF UI Display Light";
+  font-size: 14px;
+  line-height: 1.5;
+  outline: none;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.feed-admin-rich-editor .tiptap p {
+  margin: 0 0 10px;
+}
+
+.feed-admin-rich-editor .tiptap ul,
+.feed-admin-rich-editor .tiptap ol {
+  padding-left: 18px;
+}
+
+.feed-admin-file-hint {
+  font-family: "SF UI Display Light";
+  font-size: 12px;
+  color: #66788a;
+}
+
+.feed-admin-grid-full {
+  grid-column: 1 / -1;
+}
+
+.feed-admin-switch {
+  flex-direction: row !important;
+  align-items: center;
+  gap: 10px !important;
+  align-self: end;
+}
+
+.feed-admin-switch input {
+  width: 18px;
+  height: 18px;
+}
+
+.feed-admin-form-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.feed-admin-actions-cell {
+  white-space: nowrap;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+  text-align: right;
+  vertical-align: middle;
+}
+
+.feed-admin-actions-cell > * + * {
+  margin-left: 8px;
+}
+
+.feed-admin-secondary,
+.feed-admin-danger {
+  border: none;
+  border-radius: 10px;
+  padding: 10px 12px;
+  cursor: pointer;
+  font-family: "SF UI Display Medium";
+  min-width: 68px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle;
+}
+
+.feed-admin-secondary {
+  background: #edf4fb;
+  color: #245a8d;
+}
+
+.feed-admin-danger {
+  background: #fff1ef;
+  color: #b93827;
+}
+
+@media (max-width: 900px) {
+  .feed-admin-modal-overlay {
+    padding: 12px;
+    align-items: flex-end;
+  }
+
+  .feed-admin-modal-card {
+    width: 100%;
+    max-height: calc(100vh - 24px);
+  }
+
+  .feed-admin-rich-editor .ProseMirror {
+    max-height: 220px;
+  }
+
+  .feed-admin-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .feed-admin-form-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .feed-admin-form-actions {
+    justify-content: stretch;
+  }
+
+  .feed-admin-form-actions .sap-primary {
+    width: 100%;
+  }
+}

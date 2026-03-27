@@ -383,6 +383,7 @@ function CollegesPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [cityFilter, setCityFilter] = useState<string>("all");
+  const [geeFilter, setGeeFilter] = useState<string>("all");
   const [contractFilter, setContractFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("all");
   const [pagination, setPagination] = useState({ page: 1, pageSize: 50, total: 0 });
@@ -462,11 +463,20 @@ function CollegesPage() {
     });
   }, [collegesFilterCatalog, contracts]);
 
+  const geeOptions = useMemo(() => {
+    return Array.from(new Set(
+      collegesFilterCatalog
+        .map((college) => String(college.gee || "").trim())
+        .filter(Boolean)
+    )).sort((a, b) => a.localeCompare(b, "pt-BR"));
+  }, [collegesFilterCatalog]);
+
   async function loadColleges(params?: {
     page?: number;
     search?: string;
     pageSize?: number;
     city?: string;
+    gee?: string;
     contractId?: string;
     status?: "all" | "active" | "inactive";
   }) {
@@ -476,12 +486,14 @@ function CollegesPage() {
       const requestedSearch = String(params?.search ?? search).trim();
       const requestedPageSize = Math.max(1, Number(params?.pageSize ?? pagination.pageSize));
       const requestedCity = String(params?.city ?? cityFilter).trim();
+      const requestedGee = String(params?.gee ?? geeFilter).trim();
       const requestedContractId = String(params?.contractId ?? contractFilter).trim();
       const requestedStatus = params?.status ?? statusFilter;
 
       const response: any = await listColleges({
         search: requestedSearch || undefined,
         city: requestedCity && requestedCity !== "all" ? requestedCity : undefined,
+        gee: requestedGee && requestedGee !== "all" ? requestedGee : undefined,
         contractId: requestedContractId === "none"
           ? 0
           : requestedContractId && requestedContractId !== "all"
@@ -521,10 +533,14 @@ function CollegesPage() {
             })
           : fullList;
 
-        total = filtered.length;
+        const filteredByGee = requestedGee && requestedGee !== "all"
+          ? filtered.filter((item) => String(item.gee ?? "").trim() === requestedGee)
+          : filtered;
+
+        total = filteredByGee.length;
         const start = (requestedPage - 1) * requestedPageSize;
         const end = start + requestedPageSize;
-        rows = filtered.slice(start, end);
+        rows = filteredByGee.slice(start, end);
       }
 
       setColleges(rows);
@@ -1102,6 +1118,23 @@ function mapCollegeToForm(college: any): TCollegeForm {
                 </select>
                 <select
                   className="colleges-filter-select"
+                  value={geeFilter}
+                  onChange={(e) => {
+                    setGeeFilter(e.target.value);
+                    setPagination((prev) => ({ ...prev, page: 1 }));
+                    void loadColleges({ page: 1, gee: e.target.value });
+                  }}
+                  aria-label="Filtrar por GEE"
+                >
+                  <option value="all">Todos os GEEs</option>
+                  {geeOptions.map((gee) => (
+                    <option key={gee} value={gee}>
+                      {gee}
+                    </option>
+                  ))}
+                </select>
+                <select
+                  className="colleges-filter-select"
                   value={contractFilter}
                   onChange={(e) => {
                     setContractFilter(e.target.value);
@@ -1133,13 +1166,14 @@ function mapCollegeToForm(college: any): TCollegeForm {
                   <option value="active">Ativas</option>
                   <option value="inactive">Inativas</option>
                 </select>
-                {(search || cityFilter !== "all" || contractFilter !== "all" || statusFilter !== "all") ? (
+                {(search || cityFilter !== "all" || geeFilter !== "all" || contractFilter !== "all" || statusFilter !== "all") ? (
                   <button
                     type="button"
                     className="colleges-filter-reset"
                     onClick={() => {
                       setSearch("");
                       setCityFilter("all");
+                      setGeeFilter("all");
                       setContractFilter("all");
                       setStatusFilter("all");
                       setPagination((prev) => ({ ...prev, page: 1 }));
@@ -1147,6 +1181,7 @@ function mapCollegeToForm(college: any): TCollegeForm {
                         page: 1,
                         search: "",
                         city: "all",
+                        gee: "all",
                         contractId: "all",
                         status: "all",
                       });

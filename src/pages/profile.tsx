@@ -37,7 +37,7 @@ type TOverviewData = {
 
 function Profile() {
     const userData = getCookies("userData") as unknown as TUser;
-    const profilePic = localStorage.getItem("profilePic");
+    const storedProfilePic = localStorage.getItem("profilePic");
     const [updateData, setUpdateData] = useState<TUser>({} as TUser);
     const [oldPassword, setOldPassword] = useState("");
     const [newPassword, setNewPassword] = useState("");
@@ -46,6 +46,20 @@ function Profile() {
     const [isError, setIsError] = useState(false);
     const [modalErrorOpen, setModalErrorOpen] = useState(false);
     const [message, setMessage] = useState("");
+
+    const profilePic = storedProfilePic &&
+        !["null", "undefined", ""].includes(storedProfilePic.trim())
+            ? storedProfilePic
+            : "";
+
+    const profileInitials = [
+        updateData.firstName ?? userData?.firstName,
+        updateData.lastName ?? userData?.lastName
+    ]
+        .filter(Boolean)
+        .map(name => name.trim().charAt(0).toUpperCase())
+        .join("")
+        .slice(0, 2) || "U";
 
     function updateUserDataCookie(nextUserData: TUser) {
         document.cookie = `userData=${encodeURIComponent(JSON.stringify(nextUserData))}; path=/`;
@@ -334,7 +348,12 @@ function Profile() {
                             <div className="data-wrapper">
                                 <span>Foto de perfil</span>
                                 <div>
-                                    <div className="preview" style={{ backgroundImage: previewImage ? `url("${previewImage}")` : "none" }}  />
+                                    <div
+                                        className={`preview ${previewImage ? "" : "preview-placeholder"}`.trim()}
+                                        style={previewImage ? { backgroundImage: `url("${previewImage}")` } : undefined}
+                                    >
+                                        {!previewImage && <span>{profileInitials}</span>}
+                                    </div>
                                     <input type="file" name="profilePic" id="profilePic" onChange={setUpdatedData}/>
                                 </div>
                             </div>

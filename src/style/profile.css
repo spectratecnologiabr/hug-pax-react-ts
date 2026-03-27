@@ -62,9 +62,21 @@
     height: 100px;
     width: 100px;
     margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     background-size: cover;
     background-position: center;
     border-radius: 20px;
+    background-color: #f1f5f9;
+}
+
+.main-profile-container .profile-wrapper .main-data-wrapper .fields-wrapper .data-wrapper .preview.preview-placeholder {
+    border: 1px solid #dbe7f3;
+    color: #1d4e89;
+    font-family: 'SF UI Display Bold';
+    font-size: 28px;
+    letter-spacing: 0.03em;
 }
 
 .main-profile-container .profile-wrapper .main-data-wrapper.password .fields-wrapper .data-wrapper {

@@ -85,7 +85,7 @@ function AsideMenu(props: {notificationCount: number}) {
                             )
                         }
                     </a>
-                    <PageSelector />
+                    <PageSelector title />
                 </div>
 
                 <button className="logout-button" onClick={doLogout}>
