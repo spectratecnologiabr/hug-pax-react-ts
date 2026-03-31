@@ -36,12 +36,34 @@
 
 .notifications-container .notifications-wrapper .notifications-listing .no-content-container {
     display: flex;
+    flex-direction: column;
     justify-content: center;
     align-items: center;
+    text-align: center;
+    gap: 12px;
+    min-height: 220px;
+    padding: 32px 28px;
+    border-radius: 18px;
+    border: 1px solid #dbe7f0;
+    background:
+        radial-gradient(circle at top left, rgba(54, 150, 211, 0.14), transparent 36%),
+        linear-gradient(135deg, #f9fbfd 0%, #f2f6f8 100%);
+    box-shadow: 0 14px 30px rgba(15, 23, 42, 0.05);
+}
+
+.notifications-container .notifications-wrapper .notifications-listing .no-content-container b {
+    font-family: 'SF UI Display Bold';
+    font-size: 28px;
+    line-height: 1.1;
+    color: #16314f;
 }
 
 .notifications-container .notifications-wrapper .notifications-listing .no-content-container span {
-    font-family: 'SF UI Display Light';
+    max-width: 560px;
+    font-family: 'SF UI Display Medium';
+    font-size: 16px;
+    line-height: 1.5;
+    color: #61758a;
 }
 
 .notifications-container .notifications-wrapper .notifications-listing .notification-element {
@@ -115,6 +137,19 @@
 
     .notifications-container .notifications-wrapper .page-title-wrapper b {
         font-size: 30px;
+    }
+
+    .notifications-container .notifications-wrapper .notifications-listing .no-content-container {
+        min-height: 190px;
+        padding: 24px 20px;
+    }
+
+    .notifications-container .notifications-wrapper .notifications-listing .no-content-container b {
+        font-size: 24px;
+    }
+
+    .notifications-container .notifications-wrapper .notifications-listing .no-content-container span {
+        font-size: 15px;
     }
 
     .notifications-container .notifications-wrapper .notifications-listing .notification-element {

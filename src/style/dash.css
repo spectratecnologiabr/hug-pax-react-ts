@@ -121,6 +121,10 @@
     align-items: end;
 }
 
+.dashboard-container .main-dash-wrapper .featured-learning-title {
+    grid-column: span 4;
+}
+
 .dashboard-container .main-dash-wrapper .learning-title h2 {
     margin: 0;
     font-family: 'SF UI Display Bold';
@@ -225,6 +229,10 @@
     overflow: hidden;
 }
 
+.dashboard-container .main-dash-wrapper .last-courses.is-empty {
+    grid-column: span 4;
+}
+
 .dashboard-container .main-dash-wrapper .last-courses .course-item {
     position: absolute;
     inset: 0;
@@ -250,6 +258,37 @@
     transform: translateX(0);
     pointer-events: auto;
     z-index: 1;
+}
+
+.dashboard-container .main-dash-wrapper .last-courses .featured-empty-state {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    gap: 12px;
+    padding: 24px;
+    border-radius: 14px;
+    border: 1px solid #dbe7f0;
+    background:
+        radial-gradient(circle at top left, rgba(54, 150, 211, 0.16), transparent 36%),
+        linear-gradient(135deg, #f9fbfd 0%, #f2f6f8 100%);
+}
+
+.dashboard-container .main-dash-wrapper .last-courses .featured-empty-state b {
+    font-family: 'SF UI Display Bold';
+    font-size: 20px;
+    color: #16314f;
+}
+
+.dashboard-container .main-dash-wrapper .last-courses .featured-empty-state > span {
+    max-width: 420px;
+    font-family: 'SF UI Display Medium';
+    font-size: 15px;
+    line-height: 1.45;
+    color: #61758a;
 }
 
 .dashboard-container .main-dash-wrapper .last-courses .course-item .course-img {
@@ -411,12 +450,20 @@
         gap: 5px;
     }
 
+    .dashboard-container .main-dash-wrapper .featured-learning-title {
+        grid-column: span 6;
+    }
+
     .dashboard-container .main-dash-wrapper .finshed-courses, .dashboard-container .main-dash-wrapper .remaing-courses {
         grid-column: span 3;
     }
 
     .dashboard-container .main-dash-wrapper .last-courses {
         grid-column: span 5;
+    }
+
+    .dashboard-container .main-dash-wrapper .last-courses.is-empty {
+        grid-column: span 6;
     }
 
     .dashboard-container .main-dash-wrapper .finshed-hours {
@@ -465,12 +512,20 @@
         grid-column: span 5;
     }
 
+    .dashboard-container .main-dash-wrapper .last-courses.is-empty {
+        grid-column: span 7;
+    }
+
     .dashboard-container .main-dash-wrapper .last-courses .course-item b {
         display: block;
     }
 
     .dashboard-container .main-dash-wrapper .last-courses-controls {
         grid-column: span 2;
+    }
+
+    .dashboard-container .main-dash-wrapper .featured-learning-title {
+        grid-column: span 7;
     }
 }
 
@@ -509,27 +564,105 @@
         grid-column: span 9;
     }
 
+    .dashboard-container .main-dash-wrapper .last-courses.is-empty {
+        grid-column: span 12;
+    }
+
     .dashboard-container .main-dash-wrapper .last-courses-controls {
         grid-column: span 3;
+    }
+
+    .dashboard-container .main-dash-wrapper .featured-learning-title {
+        grid-column: span 12;
+    }
+}
+
+@media (max-width: 980px) {
+    .dashboard-container {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .dashboard-container .dashboard-wrapper {
+        width: 100%;
+        min-width: 0;
+    }
+
+    .dashboard-container .main-dash-wrapper {
+        grid-template-columns: 1fr;
+        gap: 16px;
+        grid-auto-rows: minmax(40px, auto);
+    }
+
+    .dashboard-container .main-dash-wrapper .greatings-card,
+    .dashboard-container .main-dash-wrapper .right-dashboard-column,
+    .dashboard-container .main-dash-wrapper .featured-learning-title,
+    .dashboard-container .main-dash-wrapper .last-courses,
+    .dashboard-container .main-dash-wrapper .last-courses-controls,
+    .dashboard-container .main-dash-wrapper .finshed-courses,
+    .dashboard-container .main-dash-wrapper .remaing-courses,
+    .dashboard-container .main-dash-wrapper .finshed-hours {
+        grid-column: 1 / -1;
+    }
+
+    .dashboard-container .main-dash-wrapper .right-dashboard-column {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .dashboard-container .main-dash-wrapper .right-dashboard-column .search-wrapper,
+    .dashboard-container .main-dash-wrapper .learning-title {
+        grid-column: 1 / -1;
+    }
+
+    .dashboard-container .main-dash-wrapper .right-dashboard-column .learning-section {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .dashboard-container .main-dash-wrapper .finshed-courses,
+    .dashboard-container .main-dash-wrapper .remaing-courses {
+        grid-column: span 1;
+    }
+
+    .dashboard-container .main-dash-wrapper .finshed-hours {
+        grid-column: 1 / -1;
+    }
+
+    .dashboard-container .main-dash-wrapper .last-courses.is-empty {
+        grid-column: 1 / -1;
     }
 }
 
 @media (max-width: 769px) {
     .dashboard-container {
+        flex-direction: column;
+        align-items: stretch;
         padding: 16px;
         gap: 16px;
-        justify-content: center;
     }
 
     .dashboard-container .dashboard-wrapper {
+        width: 100%;
+        min-width: 0;
         margin-left: unset;
         margin-top: 100px;
         gap: 16px;
     }
 
     .dashboard-container .main-dash-wrapper {
+        grid-template-columns: 1fr;
         gap: 14px;
         grid-auto-rows: minmax(40px, auto);
+    }
+
+    .dashboard-container .main-dash-wrapper .greatings-card,
+    .dashboard-container .main-dash-wrapper .right-dashboard-column,
+    .dashboard-container .main-dash-wrapper .featured-learning-title,
+    .dashboard-container .main-dash-wrapper .last-courses,
+    .dashboard-container .main-dash-wrapper .last-courses-controls,
+    .dashboard-container .main-dash-wrapper .finshed-courses,
+    .dashboard-container .main-dash-wrapper .remaing-courses,
+    .dashboard-container .main-dash-wrapper .finshed-hours {
+        grid-column: 1 / -1;
     }
 
     .dashboard-container .main-dash-wrapper .greatings-card {
@@ -575,17 +708,17 @@
 
     .dashboard-container .main-dash-wrapper .last-courses,
     .dashboard-container .main-dash-wrapper .last-courses-controls {
-        grid-column: span 12;
+        grid-column: 1 / -1;
     }
 
     .dashboard-container .main-dash-wrapper .right-dashboard-column {
-        grid-column: span 12;
-        grid-template-columns: repeat(12, 1fr);
+        grid-column: 1 / -1;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
         grid-auto-rows: minmax(40px, auto);
     }
 
     .dashboard-container .main-dash-wrapper .right-dashboard-column .search-wrapper {
-        grid-column: span 12;
+        grid-column: 1 / -1;
         min-height: 44px;
     }
 
@@ -610,6 +743,10 @@
     .dashboard-container .main-dash-wrapper .right-dashboard-column .learning-section {
         grid-template-columns: repeat(2, 1fr);
         gap: 14px;
+    }
+
+    .dashboard-container .main-dash-wrapper .learning-title {
+        grid-column: 1 / -1;
     }
 
     .dashboard-container .main-dash-wrapper .profile-wrapper {
@@ -650,6 +787,10 @@
     .dashboard-container .main-dash-wrapper .finshed-hours span {
         font-size: 15px;
         line-height: 1.3;
+    }
+
+    .dashboard-container .main-dash-wrapper .last-courses .featured-empty-state {
+        min-height: 180px;
     }
 }
 

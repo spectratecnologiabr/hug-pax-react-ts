@@ -3,6 +3,7 @@ import { listCourses } from "../controllers/course/admin/listCourses.controller"
 import { deleteCourse } from "../controllers/course/admin/deleteCourse.controller";
 import { listTeachingModalities } from "../controllers/education/listTeachingModalities.controller";
 import { listTeachingGrades } from "../controllers/education/listTeachingGrades.controller";
+import { COURSE_CATEGORY_OPTIONS, getCourseCategoryDescription, getCourseCategoryLabel, normalizeCourseCategory } from "../utils/courseCategory";
 
 import Menubar from "../components/admin/menubar";
 
@@ -11,6 +12,7 @@ import "../style/courses.css";
 type TCourse = {
     id: number,
     slug: string,
+    category: string,
     title: string,
     sub_title: string,
     cover: string,
@@ -34,6 +36,7 @@ function Courses() {
     const [courses, setCourses] = useState<TCourse[]>([]);
     const [search, setSearch] = useState('');
     const [statusFilter, setStatusFilter] = useState('');
+    const [categoryFilter, setCategoryFilter] = useState('');
     const [modalityFilter, setModalityFilter] = useState('');
     const [modalities, setModalities] = useState<TModality[]>([]);
     const [gradeIdsByModality, setGradeIdsByModality] = useState<Record<string, string[]>>({});
@@ -88,21 +91,21 @@ function Courses() {
     }, [feedback]);
 
     async function handleDeleteCourse(course: TCourse) {
-      const confirmed = window.confirm(`Excluir a trilha "${course.title}"? Essa ação não pode ser desfeita.`);
+      const confirmed = window.confirm(`Excluir o conteúdo "${course.title}"? Essa ação não pode ser desfeita.`);
       if (!confirmed) return;
 
       setDeletingCourseId(course.id);
       try {
         const response = await deleteCourse(course.id);
         if (response?.success === false) {
-          setFeedback({ type: "error", message: response?.message ?? "Não foi possível excluir a trilha." });
+          setFeedback({ type: "error", message: response?.message ?? "Não foi possível excluir o conteúdo." });
           return;
         }
 
-        setFeedback({ type: "success", message: "Trilha excluída com sucesso." });
+        setFeedback({ type: "success", message: "Conteúdo excluído com sucesso." });
         await loadCourses();
       } catch (error: any) {
-        const message = String(error?.response?.data?.message ?? "Não foi possível excluir a trilha.");
+        const message = String(error?.response?.data?.message ?? "Não foi possível excluir o conteúdo.");
         setFeedback({ type: "error", message });
       } finally {
         setDeletingCourseId(null);
@@ -120,7 +123,7 @@ function Courses() {
                             <span>Gerencie trilhas, aulas e materiais educacionais</span>
                         </div>
                         <div className="buttons-wrapper">
-                        <button className="new-course-button" onClick={() => window.location.href = `/admin/courses/add`}>+ Nova trilha</button>
+                        <button className="new-course-button" onClick={() => window.location.href = `/admin/courses/add`}>+ Novo conteúdo</button>
                     </div>
                     </div>
                     
@@ -142,6 +145,19 @@ function Courses() {
                           {modalities.map(modality => (
                             <option key={modality.id} value={modality.id}>
                                 {modality.name}
+                            </option>
+                          ))}
+                        </select>
+
+                        <select
+                          className="library-filter"
+                          value={categoryFilter}
+                          onChange={(e) => setCategoryFilter(e.target.value)}
+                        >
+                          <option value="">Todas as categorias</option>
+                          {COURSE_CATEGORY_OPTIONS.map(option => (
+                            <option key={option.value} value={option.value}>
+                              {option.label}
                             </option>
                           ))}
                         </select>
@@ -179,7 +195,11 @@ function Courses() {
                               ? (course.series || []).some((seriesId) => (gradeIdsByModality[modalityFilter] || []).includes(String(seriesId)))
                               : true;
 
-                            return matchesSearch && matchesStatus && matchesModality;
+                            const matchesCategory = categoryFilter
+                              ? normalizeCourseCategory(course.category) === categoryFilter
+                              : true;
+
+                            return matchesSearch && matchesStatus && matchesModality && matchesCategory;
                           })
                           .map(course => (
                             <div className="library-card" key={course.id}>
@@ -189,7 +209,7 @@ function Courses() {
                                             <path fill-rule="evenodd" clip-rule="evenodd" d="M2.30225 3.06955C2.09873 3.06955 1.90355 3.15039 1.75964 3.2943C1.61573 3.43821 1.53488 3.6334 1.53488 3.83692V12.5338C1.53488 12.7373 1.61573 12.9325 1.75964 13.0764C1.90355 13.2203 2.09873 13.3011 2.30225 13.3011H14.0686C14.2721 13.3011 14.4673 13.2203 14.6112 13.0764C14.7551 12.9325 14.8359 12.7373 14.8359 12.5338V4.86007C14.8359 4.65656 14.7551 4.46137 14.6112 4.31746C14.4673 4.17355 14.2721 4.09271 14.0686 4.09271H7.03788C6.68436 4.0927 6.33874 3.98804 6.04461 3.79192C6.04459 3.79191 6.04462 3.79193 6.04461 3.79192L5.15442 3.19846C5.02836 3.11441 4.88024 3.06955 4.72873 3.06955C4.72873 3.06955 4.72874 3.06955 4.72873 3.06955H2.30225ZM1.03615 2.57082C1.37194 2.23503 1.82737 2.04639 2.30225 2.04639H4.72873C5.08225 2.0464 5.42787 2.15105 5.722 2.34717C5.72199 2.34716 5.72202 2.34718 5.722 2.34717L6.61219 2.94063C6.73825 3.02468 6.88637 3.06954 7.03788 3.06955C7.03787 3.06955 7.03788 3.06955 7.03788 3.06955H14.0686C14.5435 3.06955 14.9989 3.25819 15.3347 3.59398C15.6705 3.92977 15.8591 4.3852 15.8591 4.86007V12.5338C15.8591 13.0086 15.6705 13.4641 15.3347 13.7999C14.9989 14.1357 14.5435 14.3243 14.0686 14.3243H2.30225C1.82737 14.3243 1.37194 14.1357 1.03615 13.7999C0.700363 13.4641 0.511719 13.0086 0.511719 12.5338V3.83692C0.511719 3.36204 0.700363 2.90661 1.03615 2.57082Z" fill="white"/>
                                             <path fill-rule="evenodd" clip-rule="evenodd" d="M0.511719 6.13902C0.511719 5.85649 0.740761 5.62744 1.0233 5.62744H15.3475C15.6301 5.62744 15.8591 5.85649 15.8591 6.13902C15.8591 6.42156 15.6301 6.6506 15.3475 6.6506H1.0233C0.740761 6.6506 0.511719 6.42156 0.511719 6.13902Z" fill="white"/>
                                         </svg>
-                                        Trilha 
+                                        {getCourseCategoryLabel(course.category)}
                                     </span>
                                 </div>
 
@@ -197,7 +217,7 @@ function Courses() {
                                 <div className="library-card-title-row">
                                     <h3>{course.title}</h3>
                                     <div className="library-card-actions">
-                                      <button className="library-edit-button" onClick={() => window.location.href = `/admin/courses/edit/${course.id}`} title="Editar trilha" >
+                                      <button className="library-edit-button" onClick={() => window.location.href = `/admin/courses/edit/${course.id}`} title="Editar conteúdo" >
                                           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                               <path d="M12 20h9" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
                                               <path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4 12.5-12.5z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -206,14 +226,14 @@ function Courses() {
                                       <button
                                         className="library-delete-button"
                                         onClick={() => void handleDeleteCourse(course)}
-                                        title="Excluir trilha"
+                                        title="Excluir conteúdo"
                                         disabled={deletingCourseId === course.id}
                                       >
                                         {deletingCourseId === course.id ? "..." : "Excluir"}
                                       </button>
                                     </div>
                                 </div>
-                                <p>{course.sub_title || 'Trilha completa de aprendizagem'}</p>
+                                <p>{course.sub_title || getCourseCategoryDescription(course.category)}</p>
 
                                 <div className="library-meta">
                                     <span className={course.is_active ? "status active" : "status draft"}>

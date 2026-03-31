@@ -5,7 +5,7 @@ export interface ICreateUserData {
     lastName: string
     email: string
     password: string
-    role?: 'educator' | 'consultant' | 'coordinator' | 'admin',
+    role?: 'educator' | 'student' | 'consultant' | 'coordinator' | 'admin',
     docType?: string,
     docId?: string,
     birthDate?: string,

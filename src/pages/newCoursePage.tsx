@@ -18,6 +18,7 @@ import { updateLessonAllowDownload, updateLessonCode, updateLessonExtUrl } from 
 import { deleteLesson } from "../controllers/course/admin/deleteLesson.controller";
 import { transcribeLesson } from "../controllers/course/admin/transcribeLesson.controller";
 import { createTag, createTagCategory, listTagCategories, listTags, listCourseTags, setCourseTags } from "../controllers/lessonTags/lessonTags.controller";
+import { COURSE_CATEGORY_OPTIONS } from "../utils/courseCategory";
 
 type TOverviewData = {
     completedCourses: number,
@@ -63,7 +64,7 @@ type TranscriptionReviewState = {
 };
 
 function NewCoursePage() {
-    const [ newCourseData, setNewCoursedata ] = useState<ICourseData>({slug: "", title: "", subTitle: "", cover: "", workload: 0, series: []})
+    const [ newCourseData, setNewCoursedata ] = useState<ICourseData>({slug: "", title: "", category: "course", subTitle: "", cover: "", workload: 0, series: []})
     const [isSegmentsOpen, setIsSegmentsOpen] = useState(false);
     const [isGradesOpen, setIsGradesOpen] = useState(false);
     const [createdCourseId, setCreatedCourseId] = useState<number | null>(null);
@@ -1020,16 +1021,16 @@ function NewCoursePage() {
                 <div className="admin-dashboard-wrapper">
                     <div className="form-container course-builder-container">
                         <div className="title-wrapper course-builder-header">
-                            <b>Cadastrar nova trilha</b>
+                            <b>Cadastrar novo conteúdo</b>
                             <button className="course-builder-back-button" onClick={() => {window.history.back()}}>Voltar</button>
                         </div>
                         <div className="form-wrapper course-builder-section">
                             <div className="title-wrapper course-builder-section-header">
-                                <b>Informações gerais da trilha</b>
+                                <b>Informações gerais do conteúdo</b>
                             </div>
                             <div className="form-grid">
                                 <div className="input-wrapper">
-                                    <label htmlFor="title">Nome da trilha:*</label>
+                                    <label htmlFor="title">Nome do conteúdo:*</label>
                                     <input
                                         type="text"
                                         id="title"
@@ -1046,7 +1047,7 @@ function NewCoursePage() {
                                     />
                                 </div>
                                 <div className="input-wrapper">
-                                    <label htmlFor="subtitle">Subtítulo da trilha:</label>
+                                    <label htmlFor="subtitle">Subtítulo do conteúdo:</label>
                                     <input
                                         type="text"
                                         id="subtitle"
@@ -1061,7 +1062,27 @@ function NewCoursePage() {
                                     />
                                 </div>
                                 <div className="input-wrapper">
-                                    <label htmlFor="cover">Capa da trilha:*</label>
+                                    <label htmlFor="courseCategory">Categoria:*</label>
+                                    <select
+                                        id="courseCategory"
+                                        name="courseCategory"
+                                        value={newCourseData.category}
+                                        onChange={e =>
+                                            setNewCoursedata(prev => ({
+                                                ...prev!,
+                                                category: e.target.value as ICourseData["category"],
+                                            }))
+                                        }
+                                    >
+                                        {COURSE_CATEGORY_OPTIONS.map(option => (
+                                            <option key={option.value} value={option.value}>
+                                                {option.label}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div className="input-wrapper">
+                                    <label htmlFor="cover">Capa do conteúdo:*</label>
                                     <input
                                         type="file"
                                         name="cover"
@@ -1182,7 +1203,7 @@ function NewCoursePage() {
                         </div>
                         <div className="form-wrapper course-builder-section">
                             <div className="title-wrapper course-builder-section-header">
-                                <b>Tags da trilha</b>
+                                <b>Tags do conteúdo</b>
                                 <div className="course-inline-actions">
                                     <button className="action-button" type="button" onClick={() => setShowCreateTagCategoryModal(true)}>
                                         Nova categoria

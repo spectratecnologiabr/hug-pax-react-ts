@@ -712,9 +712,13 @@ function Certificates() {
                     </div>
                     <div className="certificates-listing">
                       {certificates.length === 0 && (
-                        <span className="empty-message">
-                          Você ainda não possui certificados emitidos.
-                        </span>
+                        <div className="certificates-empty-state">
+                          <b>Nenhum certificado emitido ainda</b>
+                          <span>
+                            Assim que você concluir formações com emissão disponível,
+                            seus certificados vão aparecer aqui para download e impressão.
+                          </span>
+                        </div>
                       )}
 
                       {certificates.map(certificate => (

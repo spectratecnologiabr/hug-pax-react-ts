@@ -30,6 +30,9 @@ function HelpdeskWidget() {
     if (location.pathname.startsWith("/admin")) {
       return true;
     }
+    if (location.pathname.startsWith("/student")) {
+      return true;
+    }
     return false;
   }, [location.pathname]);
 

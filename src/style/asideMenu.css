@@ -60,6 +60,12 @@
     height: 25px;
 }
 
+.aside-container .menu-wrapper .menu-item .formation-menu-icon {
+    height: 29px;
+    width: 29px;
+    transform: translateY(1px);
+}
+
 .aside-container .menu-wrapper .menu-item:hover, .aside-container .menu-wrapper .menu-item.active {
     background-color: #5CADE0;
     transform: translateY(-1px);

@@ -3,10 +3,19 @@
     background-color: #FFF;
     display: flex;
     justify-content: center;
-    align-items: baseline;
+    align-items: center;
+    gap: 8px;
     padding: 10px;
     position: sticky;
     bottom: 0;
+}
+
+.footer-wrapper img {
+    height: 50px;
+    width: auto;
+    display: block;
+    object-fit: contain;
+    flex-shrink: 0;
 }
 
 .footer-wrapper span {
@@ -25,5 +34,9 @@
     .footer-wrapper span {
         font-size: 15px;
         line-height: 1.4;
+    }
+
+    .footer-wrapper img {
+        height: 40px;
     }
 }

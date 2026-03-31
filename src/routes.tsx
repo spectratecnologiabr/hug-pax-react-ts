@@ -12,6 +12,8 @@ import ResetPassword from './pages/resetPassword';
 import Dashboard from './pages/dashboard';
 import Course from './pages/course';
 import EducatorsRoom from './pages/educatorsRoom';
+import FormationCoursesPage from './pages/formationCoursesPage';
+import StudentMaterialsPage from './pages/studentMaterialsPage';
 import Profile from './pages/profile';
 import Notifications from './pages/notifications';
 import Certificates from './pages/certificatesPage';
@@ -70,8 +72,12 @@ function MyRoutes() {
 
                 <Route path='/dashboard' element={<ProtectedRoute><Dashboard/></ProtectedRoute>} />
                 <Route path='/courses' element={<ProtectedRoute><EducatorsRoom/></ProtectedRoute>} />
+                <Route path='/formations' element={<ProtectedRoute><FormationCoursesPage/></ProtectedRoute>} />
                 <Route path='/course/:courseSlug' element={<ProtectedRoute><Course /></ProtectedRoute>} />
                 <Route path='/course/:courseSlug/lesson/:lessonId' element={<ProtectedRoute><Course /></ProtectedRoute>} />
+                <Route path='/student/materials' element={<ProtectedRoute><StudentMaterialsPage/></ProtectedRoute>} />
+                <Route path='/student/course/:courseSlug' element={<ProtectedRoute><Course /></ProtectedRoute>} />
+                <Route path='/student/course/:courseSlug/lesson/:lessonId' element={<ProtectedRoute><Course /></ProtectedRoute>} />
                 <Route path='/profile' element={<ProtectedRoute><Profile/></ProtectedRoute>} />
                 <Route path='/notifications' element={<ProtectedRoute><Notifications/></ProtectedRoute>} />
                 <Route path='/certificates' element={<ProtectedRoute><Certificates/></ProtectedRoute>} />

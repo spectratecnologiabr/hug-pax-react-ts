@@ -376,6 +376,12 @@
   border-color: #bfdbfe;
 }
 
+.admin-users-page .sap-badge.aluno {
+  background: #ecfeff;
+  color: #0f766e;
+  border-color: #a5f3fc;
+}
+
 .admin-users-page .sap-badge.consultor {
   background: #fff7ed;
   color: #ea580c;

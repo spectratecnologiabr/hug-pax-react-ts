@@ -41,6 +41,7 @@ type TOverviewData = {
 type TCourseData = {
     id: number,
     slug: string,
+    category?: string,
     title: string,
     cover: string,
     subTitle: string,
@@ -137,12 +138,20 @@ type TSearchResult = {
     lessons: TSearchLesson[]
 }
 
+type TSessionUser = {
+    role?: string
+}
+
 function Course() {
     const initializedRef = React.useRef(false)
     const forceFirstPageOnNextNavRef = React.useRef(false)
     const [pendingSeek, setPendingSeek] = React.useState<number | null>(null)
     const { courseSlug, lessonId } = useParams();
     const navigate = useNavigate();
+    const isStudentRoute = window.location.pathname.startsWith("/student");
+    const userData = getCookies("userData") as TSessionUser | undefined;
+    const isStudent = userData?.role === "student" || isStudentRoute;
+    const courseBasePath = isStudentRoute ? "/student/course" : "/course";
     const profilePic = localStorage.getItem("profilePic") || alunoIcon;
     const [courseData, setCourseData] = useState<TCourseData | null>(null);
     const [courseModules, setCourseModules] = useState([] as Array<TCourseModule>)
@@ -219,6 +228,14 @@ function Course() {
 
         return orderedLessons[currentIndex + 1];
     }, [courseModules, lessonId]);
+
+    function buildCoursePath(slug?: string) {
+        return `${courseBasePath}/${slug || ""}`;
+    }
+
+    function buildLessonPath(slug?: string, targetLessonId?: number | string) {
+        return `${buildCoursePath(slug)}/lesson/${targetLessonId}`;
+    }
 
     function coerceBoolean(value: any): boolean | undefined {
         if (value === true || value === "true" || value === 1 || value === "1") return true;
@@ -508,6 +525,11 @@ function Course() {
     }, [volume]);
 
     React.useEffect(() => {
+        if (isStudent || !courseData?.category) return;
+        window.sessionStorage.setItem("educatorCourseSection", courseData.category === "teacher_material" ? "teacher_material" : "course");
+    }, [courseData?.category, isStudent]);
+
+    React.useEffect(() => {
         async function findCourse() {
             await getCourseWithProgress(courseSlug as string)
                     .then(async response => {
@@ -777,7 +799,7 @@ function Course() {
     function goToNextLesson() {
         if (!nextLesson) return;
         forceFirstPageOnNextNavRef.current = true;
-        navigate(`/course/${courseSlug}/lesson/${nextLesson.id}`);
+        navigate(buildLessonPath(courseSlug, nextLesson.id));
         window.scrollTo({ top: 0, behavior: "smooth" });
     }
 
@@ -1433,23 +1455,25 @@ function Course() {
                                     </section>
                                 )}
                                 
-                                <div className="avaliation-wrapper">
-                                    <div className="avaliation-title">
-                                        Avalie este conteúdo
-                                    </div>
+                                {!isStudent && (
+                                    <div className="avaliation-wrapper">
+                                        <div className="avaliation-title">
+                                            Avalie este conteúdo
+                                        </div>
 
-                                    <div className="stars-wrapper">
-                                        {[1, 2, 3, 4, 5].map((star) => (
-                                            <button
-                                                key={star}
-                                                className={`star-btn ${star <= lessionRate ? "active" : ""}`}
-                                                onClick={() => setRatedStar(star)}
-                                            >
-                                                ★
-                                            </button>
-                                        ))}
+                                        <div className="stars-wrapper">
+                                            {[1, 2, 3, 4, 5].map((star) => (
+                                                <button
+                                                    key={star}
+                                                    className={`star-btn ${star <= lessionRate ? "active" : ""}`}
+                                                    onClick={() => setRatedStar(star)}
+                                                >
+                                                    ★
+                                                </button>
+                                            ))}
+                                        </div>
                                     </div>
-                                </div>
+                                )}
 
                                 {(lessionData.type === "video" || lessionData.type === "audio" || lessionData.type === "pdf") && (
                                     <div className="media-accessibility-panel" aria-live="polite">
@@ -1502,27 +1526,29 @@ function Course() {
                                     </div>
                                 )}
 
-                                <div className="comments-wrapper">
-                                    <form className="comment-form" onSubmit={sendComment}>
-                                        <input type="text" name="comment" id="commentEl" placeholder="Adcione um comentário" />
-                                        <button type="submit">Comentar</button>
-                                    </form>
+                                {!isStudent && (
+                                    <div className="comments-wrapper">
+                                        <form className="comment-form" onSubmit={sendComment}>
+                                            <input type="text" name="comment" id="commentEl" placeholder="Adcione um comentário" />
+                                            <button type="submit">Comentar</button>
+                                        </form>
 
-                                    <div className="comments-list">
-                                        {
-                                            lessonComments.map(comment => (
-                                                <div className="comment-element">
-                                                    <div className="header">
-                                                        <b>{comment.creatorName}</b>
-                                                        <small>{formatDate(comment.createdAt)}</small>
+                                        <div className="comments-list">
+                                            {
+                                                lessonComments.map(comment => (
+                                                    <div className="comment-element">
+                                                        <div className="header">
+                                                            <b>{comment.creatorName}</b>
+                                                            <small>{formatDate(comment.createdAt)}</small>
+                                                        </div>
+                                                        <span>{comment.text}</span>
+                                                        <hr />
                                                     </div>
-                                                    <span>{comment.text}</span>
-                                                    <hr />
-                                                </div>
-                                            ))
-                                        }
+                                                ))
+                                            }
+                                        </div>
                                     </div>
-                                </div>
+                                )}
                             </React.Fragment>
 
                             : <React.Fragment>
@@ -1550,19 +1576,19 @@ function Course() {
                                         {isSearching && <span>Buscando...</span>}
 
                                         {searchResult.courses.map(course => (
-                                        <a key={`c-${course.id}`} href={`/course/${course.slug}`} className="search-item">
+                                        <a key={`c-${course.id}`} href={buildCoursePath(course.slug)} className="search-item">
                                             📘 {course.title}
                                         </a>
                                         ))}
 
                                         {searchResult.modules.map(module => (
-                                        <a key={`m-${module.id}`} href={`/course/${module.course_slug}`} className="search-item">
+                                        <a key={`m-${module.id}`} href={buildCoursePath(module.course_slug)} className="search-item">
                                             📦 {module.course_title} • {module.title}
                                         </a>
                                         ))}
 
                                         {searchResult.lessons.map(lesson => (
-                                        <a key={`l-${lesson.id}`} href={`/course/${lesson.course_slug}/lesson/${lesson.id}`} className="search-item">
+                                        <a key={`l-${lesson.id}`} href={buildLessonPath(lesson.course_slug, lesson.id)} className="search-item">
                                             🎬 {lesson.course_title} • {lesson.module_title} • {lesson.title}
                                         </a>
                                         ))}
@@ -1570,14 +1596,16 @@ function Course() {
                                 )}
                             </div>
                         </div>
-                        <div className="profile-wrapper">
-                            <button className="profile-button" onClick={() => window.location.pathname = "/profile"}>
-                                <div className="profile-photo" style={{ backgroundImage: profilePic ? `url("${profilePic}")` : "none" }}></div>
-                                <svg xmlns="http://www.w3.org/2000/svg" width="8" height="5" viewBox="0 0 8 5" fill="none">
-                                    <path d="M4.02125 4.02116L6.99829 1.04411C7.17993 0.862473 7.17993 0.567893 6.99829 0.386256C6.81662 0.204581 6.52211 0.204581 6.34044 0.386256L4.15748 2.56921C4.15748 2.56921 3.93782 2.81522 3.69409 2.81006C3.45622 2.80502 3.22716 2.56921 3.22716 2.56921L1.0442 0.38633C0.862523 0.204656 0.568018 0.204656 0.386343 0.38633C0.295581 0.47713 0.250107 0.596212 0.250107 0.715257C0.250107 0.834301 0.295581 0.953347 0.386343 1.04418L3.36339 4.02116C3.54507 4.20283 3.83957 4.20283 4.02125 4.02116Z" fill="black" stroke="black" stroke-width="0.5"/>
-                                </svg>
-                            </button>
-                        </div>
+                        {!isStudent && (
+                            <div className="profile-wrapper">
+                                <button className="profile-button" onClick={() => window.location.pathname = "/profile"}>
+                                    <div className="profile-photo" style={{ backgroundImage: profilePic ? `url("${profilePic}")` : "none" }}></div>
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="8" height="5" viewBox="0 0 8 5" fill="none">
+                                        <path d="M4.02125 4.02116L6.99829 1.04411C7.17993 0.862473 7.17993 0.567893 6.99829 0.386256C6.81662 0.204581 6.52211 0.204581 6.34044 0.386256L4.15748 2.56921C4.15748 2.56921 3.93782 2.81522 3.69409 2.81006C3.45622 2.80502 3.22716 2.56921 3.22716 2.56921L1.0442 0.38633C0.862523 0.204656 0.568018 0.204656 0.386343 0.38633C0.295581 0.47713 0.250107 0.596212 0.250107 0.715257C0.250107 0.834301 0.295581 0.953347 0.386343 1.04418L3.36339 4.02116C3.54507 4.20283 3.83957 4.20283 4.02125 4.02116Z" fill="black" stroke="black" strokeWidth="0.5"/>
+                                    </svg>
+                                </button>
+                            </div>
+                        )}
                     </div>
                     <div className="steps-list">
                         {
@@ -1635,7 +1663,7 @@ function Course() {
                                                         ))
                                                     ) : (
                                                         <a
-                                                            href={`/course/${courseSlug}/lesson/${lesson.id}`}
+                                                            href={buildLessonPath(courseSlug, lesson.id)}
                                                             className="lesson-action-link"
                                                         >
                                                             {lesson.type === "video" ? "Assistir" : lesson.type === "audio" ? "Ouvir" : "Ler"}

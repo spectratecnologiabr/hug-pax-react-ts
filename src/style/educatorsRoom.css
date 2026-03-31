@@ -65,6 +65,76 @@
     gap: 20px;
 }
 
+.educators-room-element .grid-wrapper .empty-grid-state {
+    grid-column: 1 / -1;
+    min-height: 240px;
+    border-radius: 24px;
+    padding: 28px;
+    background:
+        radial-gradient(circle at top left, rgba(54, 150, 211, 0.16), transparent 34%),
+        linear-gradient(135deg, #f8fbfd 0%, #f2f6f8 100%);
+    border: 1px solid #d9e6ef;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    gap: 12px;
+}
+
+.educators-room-element .grid-wrapper .empty-grid-state .empty-grid-state-icon {
+    position: relative;
+    width: 88px;
+    height: 64px;
+}
+
+.educators-room-element .grid-wrapper .empty-grid-state .empty-grid-state-icon span {
+    position: absolute;
+    border-radius: 14px;
+    background: linear-gradient(180deg, #ffffff 0%, #dfeef8 100%);
+    border: 1px solid #bed9ea;
+    box-shadow: 0 10px 24px rgba(54, 150, 211, 0.12);
+}
+
+.educators-room-element .grid-wrapper .empty-grid-state .empty-grid-state-icon span:nth-child(1) {
+    width: 40px;
+    height: 50px;
+    left: 0;
+    bottom: 6px;
+    transform: rotate(-10deg);
+}
+
+.educators-room-element .grid-wrapper .empty-grid-state .empty-grid-state-icon span:nth-child(2) {
+    width: 44px;
+    height: 56px;
+    left: 22px;
+    top: 0;
+    background: linear-gradient(180deg, #ffffff 0%, #ffe7d1 100%);
+    border-color: #f6cda8;
+}
+
+.educators-room-element .grid-wrapper .empty-grid-state .empty-grid-state-icon span:nth-child(3) {
+    width: 40px;
+    height: 50px;
+    right: 0;
+    bottom: 6px;
+    transform: rotate(10deg);
+}
+
+.educators-room-element .grid-wrapper .empty-grid-state b {
+    font-family: 'SF UI Display Semibold';
+    font-size: 28px;
+    color: #15202b;
+}
+
+.educators-room-element .grid-wrapper .empty-grid-state span {
+    max-width: 520px;
+    font-family: 'SF UI Display Medium';
+    font-size: 16px;
+    line-height: 1.5;
+    color: #4a6072;
+}
+
 .educators-room-element .grid-wrapper .course-card-link {
     text-decoration: none;
     color: inherit;
@@ -86,6 +156,18 @@
     width: 100%;
     border-radius: 20px;
     display: block;
+}
+
+.educators-room-element .grid-wrapper .course-item .course-category-badge {
+    align-self: flex-start;
+    margin: 12px 12px 0;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: #DDEFF9;
+    color: #1A5F87;
+    font-family: 'SF UI Display Medium';
+    font-size: 12px;
+    line-height: 1.2;
 }
 
 .educators-room-element .grid-wrapper .course-item .description {
@@ -200,6 +282,19 @@
     .educators-room-element .grid-wrapper {
         grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 14px;
+    }
+
+    .educators-room-element .grid-wrapper .empty-grid-state {
+        min-height: 220px;
+        padding: 22px;
+    }
+
+    .educators-room-element .grid-wrapper .empty-grid-state b {
+        font-size: 24px;
+    }
+
+    .educators-room-element .grid-wrapper .empty-grid-state span {
+        font-size: 15px;
     }
 
     .educators-room-element .header-wrapper .filters-wrapper {

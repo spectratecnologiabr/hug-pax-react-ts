@@ -47,6 +47,7 @@ type TUser = {
 type TCourse = {
     id: number,
     slug: string,
+    category?: string,
     title: string,
     cover: string,
     subTitle: string,
@@ -104,7 +105,8 @@ function Dashboard() {
             c.playback?.last?.lessonId ?? null
         ])
     );
-    const [courses, setCourses] = useState<TCourse[]>([]);
+    const [formationCourses, setFormationCourses] = useState<TCourse[]>([]);
+    const [teacherMaterials, setTeacherMaterials] = useState<TCourse[]>([]);
     const [ overviewData, setOverviewData ] = useState<TOverviewData | null>(null);
     const storedProfilePic = localStorage.getItem("profilePic");
     const [search, setSearch] = useState("");
@@ -132,16 +134,26 @@ function Dashboard() {
             }
         }
 
-        async function fetchCourses() {
+        async function fetchFormationCourses() {
             try {
-                const coursesList = await listCourses();
-                setCourses(coursesList);
+                const coursesList = await listCourses({ category: "course" });
+                setFormationCourses(Array.isArray(coursesList) ? coursesList : coursesList?.items || []);
             } catch (error) {
-                console.error("Error fetching courses:", error);
+                console.error("Error fetching formation courses:", error);
             }
         }
 
-        fetchCourses();
+        async function fetchTeacherMaterials() {
+            try {
+                const coursesList = await listCourses({ category: "teacher_material" });
+                setTeacherMaterials(Array.isArray(coursesList) ? coursesList : coursesList?.items || []);
+            } catch (error) {
+                console.error("Error fetching teacher materials:", error);
+            }
+        }
+
+        fetchFormationCourses();
+        fetchTeacherMaterials();
         fetchOverviewData();
     }, []);
 
@@ -217,6 +229,10 @@ function Dashboard() {
             : `/course/${course.slug}`
     }
 
+    function rememberCourseSection(section: "course" | "teacher_material") {
+        window.sessionStorage.setItem("educatorCourseSection", section);
+    }
+
     return (
         <React.Fragment>
         <div className="dashboard-container">
@@ -287,7 +303,7 @@ function Dashboard() {
 
                         <div className="learning-section">
                             <div className="learning-title">
-                                <h2>Meus Aprendizados</h2>
+                                <h2>Minhas Formações</h2>
                             </div>
 
                             <div className="finshed-courses">
@@ -307,11 +323,14 @@ function Dashboard() {
                         </div>
                     </div>
 
-                    <div className="last-courses" id="last-courses-swiper">
+                    <div className="learning-title featured-learning-title">
+                        <h2>Formações em Destaque</h2>
+                    </div>
+                    <div className={`last-courses ${formationCourses.length === 0 ? 'is-empty' : ''}`} id="last-courses-swiper">
                         {
-                            courses.map((course, index) => (
+                            formationCourses.length > 0 ? formationCourses.map((course, index) => (
                                 <div key={course.id} className={`course-item ${index === 0 ? 'active' : ''}`}>
-                                    <img loading="lazy" src={course.cover} className="course-img" />
+                                    <img loading="lazy" src={course.cover} className="course-img" alt="" />
                                     <b>{course.title}</b>
                                     <div style={{ height: "100%", display: "flex", alignItems: "center" }}>
                                         <CircularProgressbar
@@ -321,12 +340,13 @@ function Dashboard() {
                                                 trailColor: '#d7d7da',
                                                 backgroundColor: '#3e98c7'
                                             })}
-                                            value={course.progressPercentage} // Random progress for demo
+                                            value={course.progressPercentage}
                                             text={`${course.progressPercentage}%`}
                                             className="course-progress"/>
                                     </div>
                                     <a
                                         className="open-course"
+                                        onClick={() => rememberCourseSection("course")}
                                         href={
                                             playbackMap.get(course.id)
                                                 ? `/course/${course.slug}/lesson/${playbackMap.get(course.id)}`
@@ -336,27 +356,40 @@ function Dashboard() {
                                         {playbackMap.get(course.id) ? 'Continuar' : 'Iniciar'}
                                     </a>
                                 </div>
-                            ))
+                            )) : (
+                                <div className="featured-empty-state">
+                                    <b>Nenhuma formação em destaque ainda</b>
+                                    <span>Quando novas formações forem disponibilizadas para você, elas vão aparecer aqui com prioridade.</span>
+                                </div>
+                            )
                         }
                     </div>
 
-                    <div className="last-courses-controls">
-                        <button className="control-button" data-direction="previous" onClick={swipeCourses}>
-                            <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <rect x="39" y="1" width="38" height="38" rx="19" transform="rotate(90 39 1)" stroke="black" stroke-width="2"/>
-                                <path d="M17.7239 24.8114C17.6354 24.8999 17.4911 24.8999 17.4026 24.8114L12.7522 20.16C12.6637 20.0714 12.6637 19.9282 12.7522 19.8397L17.4026 15.1893C17.447 15.1449 17.5042 15.123 17.5627 15.1229C17.6214 15.1229 17.6795 15.1449 17.7239 15.1893L17.7249 15.1893C17.8124 15.2779 17.812 15.4214 17.7239 15.5096L14.3127 18.9198L13.4592 19.7733L27.0881 19.7733C27.2131 19.7734 27.3146 19.8749 27.3147 19.9999C27.3147 20.125 27.2132 20.2263 27.0881 20.2264L13.4592 20.2264L17.7239 24.4911C17.8121 24.5796 17.8122 24.7229 17.7239 24.8114Z" fill="black" stroke="black"/>
-                            </svg>
-                        </button>
-                        <button className="control-button" data-direction="next" onClick={swipeCourses}>
-                            <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <rect x="1" y="39" width="38" height="38" rx="19" transform="rotate(-90 1 39)" stroke="black" stroke-width="2"/>
-                                <path d="M22.2761 15.1886C22.3646 15.1001 22.5089 15.1001 22.5974 15.1886L27.2478 19.84C27.3363 19.9285 27.3363 20.0717 27.2478 20.1603L22.5974 24.8107C22.553 24.8551 22.4958 24.877 22.4373 24.8771C22.3786 24.8771 22.3205 24.8551 22.2761 24.8107H22.2751C22.1876 24.7221 22.188 24.5786 22.2761 24.4904L25.6873 21.0802L26.5408 20.2267H12.9119C12.7869 20.2266 12.6854 20.1251 12.6853 20.0001C12.6853 19.875 12.7868 19.7736 12.9119 19.7736H26.5408L22.2761 15.5089C22.1879 15.4204 22.1878 15.2771 22.2761 15.1886Z" fill="black" stroke="black"/>
-                            </svg>
-                        </button>
-                    </div>
+                    {formationCourses.length > 0 && (
+                        <div className="last-courses-controls">
+                            <button className="control-button" data-direction="previous" onClick={swipeCourses}>
+                                <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <rect x="39" y="1" width="38" height="38" rx="19" transform="rotate(90 39 1)" stroke="black" stroke-width="2"/>
+                                    <path d="M17.7239 24.8114C17.6354 24.8999 17.4911 24.8999 17.4026 24.8114L12.7522 20.16C12.6637 20.0714 12.6637 19.9282 12.7522 19.8397L17.4026 15.1893C17.447 15.1449 17.5042 15.123 17.5627 15.1229C17.6214 15.1229 17.6795 15.1449 17.7239 15.1893L17.7249 15.1893C17.8124 15.2779 17.812 15.4214 17.7239 15.5096L14.3127 18.9198L13.4592 19.7733L27.0881 19.7733C27.2131 19.7734 27.3146 19.8749 27.3147 19.9999C27.3147 20.125 27.2132 20.2263 27.0881 20.2264L13.4592 20.2264L17.7239 24.4911C17.8121 24.5796 17.8122 24.7229 17.7239 24.8114Z" fill="black" stroke="black"/>
+                                </svg>
+                            </button>
+                            <button className="control-button" data-direction="next" onClick={swipeCourses}>
+                                <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <rect x="1" y="39" width="38" height="38" rx="19" transform="rotate(-90 1 39)" stroke="black" stroke-width="2"/>
+                                    <path d="M22.2761 15.1886C22.3646 15.1001 22.5089 15.1001 22.5974 15.1886L27.2478 19.84C27.3363 19.9285 27.3363 20.0717 27.2478 20.1603L22.5974 24.8107C22.553 24.8551 22.4958 24.877 22.4373 24.8771C22.3786 24.8771 22.3205 24.8551 22.2761 24.8107H22.2751C22.1876 24.7221 22.188 24.5786 22.2761 24.4904L25.6873 21.0802L26.5408 20.2267H12.9119C12.7869 20.2266 12.6854 20.1251 12.6853 20.0001C12.6853 19.875 12.7868 19.7736 12.9119 19.7736H26.5408L22.2761 15.5089C22.1879 15.4204 22.1878 15.2771 22.2761 15.1886Z" fill="black" stroke="black"/>
+                                </svg>
+                            </button>
+                        </div>
+                    )}
 
                 </div>
-                <EducatorsRoom courses={courses} getCourseLink={getCourseLink}/>
+                <EducatorsRoom
+                    courses={teacherMaterials}
+                    getCourseLink={getCourseLink}
+                    title="Materiais Pedagógicos"
+                    searchPlaceholder="Pesquisar materiais pedagogicos"
+                    section="teacher_material"
+                />
             </div>
             <Feed/>
         </div>

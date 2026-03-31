@@ -67,6 +67,8 @@ function Login() {
                             redirectUrl = "/coordinator";
                         } else if (userWithoutPic.role === "admin") {
                             redirectUrl = "/admin";
+                        } else if (userWithoutPic.role === "student") {
+                            redirectUrl = "/student/materials";
                         } else if (userWithoutPic.role === "educator") {
                             redirectUrl = "/dashboard";
                         }

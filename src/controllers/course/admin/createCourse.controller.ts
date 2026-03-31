@@ -1,9 +1,11 @@
 import axios from "axios";
 import { getCookies } from "../../misc/cookies.controller";
+import { CourseCategory } from "../../../utils/courseCategory";
 
 export interface ICourseData {
 	slug: string,
 	title: string,
+	category: CourseCategory,
 	subTitle?: string,
 	cover: string,
 	workload: number,

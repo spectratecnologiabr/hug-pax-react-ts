@@ -47,7 +47,7 @@ type User = {
   name: string;
   email: string;
   role: AdminUserRole;
-  profile: "Administrador" | "Educador" | "Consultor" | "Coordenador" | "Consultor especialista";
+  profile: "Administrador" | "Educador" | "Aluno" | "Consultor" | "Coordenador" | "Consultor especialista";
   status: AdminUserStatus;
   isActive?: boolean;
   isBlocked?: boolean;
@@ -100,6 +100,8 @@ function roleLabel(role: AdminUserRole): User["profile"] {
       return "Administrador";
     case "educator":
       return "Educador";
+    case "student":
+      return "Aluno";
     case "consultant":
       return "Consultor";
     case "coordinator":
@@ -107,6 +109,10 @@ function roleLabel(role: AdminUserRole): User["profile"] {
     case "specialist_consultant":
       return "Consultor especialista";
   }
+}
+
+function supportsCollegeStructure(role: AdminUserRole) {
+  return role === "educator" || role === "student";
 }
 
 function formatLastAccess(lastAccessAt?: string | null) {
@@ -981,11 +987,12 @@ function AdminUsersPage() {
     const gender = userForm.gender?.trim() || undefined;
     const phone = userForm.phone?.trim() || undefined;
     const language = userForm.language?.trim() || undefined;
-    const collegeId = role === "educator" ? (userForm.collegeId === "" ? null : userForm.collegeId) : undefined;
-    const collegeSegment = role === "educator"
+    const hasCollegeStructure = supportsCollegeStructure(role);
+    const collegeId = hasCollegeStructure ? (userForm.collegeId === "" ? null : userForm.collegeId) : undefined;
+    const collegeSegment = hasCollegeStructure
       ? (Array.isArray(userForm.collegeSegment) && userForm.collegeSegment.length ? userForm.collegeSegment : null)
       : undefined;
-    const collegeSeries = role === "educator"
+    const collegeSeries = hasCollegeStructure
       ? (Array.isArray(userForm.collegeSeries) && userForm.collegeSeries.length ? userForm.collegeSeries : null)
       : undefined;
     const management = userForm.management?.trim() || null;
@@ -1000,8 +1007,8 @@ function AdminUsersPage() {
       return;
     }
 
-    if (role === "educator" && collegeId && availableCollegeSegments.length > 0 && (!collegeSegment || collegeSegment.length === 0)) {
-      setUserModalError("Selecione ao menos um segmento escolar do educador.");
+    if (hasCollegeStructure && collegeId && availableCollegeSegments.length > 0 && (!collegeSegment || collegeSegment.length === 0)) {
+      setUserModalError("Selecione ao menos um segmento escolar.");
       return;
     }
 
@@ -1142,7 +1149,7 @@ function AdminUsersPage() {
   }, [gradesBySegment, userForm.collegeSegment]);
 
   useEffect(() => {
-    if (userForm.role !== "educator") return;
+    if (!supportsCollegeStructure(userForm.role)) return;
 
     const collegeId = Number(userForm.collegeId);
     if (Number.isFinite(collegeId) && collegeId > 0) {
@@ -1162,7 +1169,7 @@ function AdminUsersPage() {
   }, [collegesById, userForm.collegeId, userForm.contractId, userForm.role]);
 
   useEffect(() => {
-    if (userForm.role !== "educator") return;
+    if (!supportsCollegeStructure(userForm.role)) return;
 
     const selectedContractId = Number(userForm.contractId);
     if (!Number.isFinite(selectedContractId) || selectedContractId <= 0) return;
@@ -1177,7 +1184,7 @@ function AdminUsersPage() {
   }, [collegesById, userForm.contractId, userForm.collegeId, userForm.role]);
 
   useEffect(() => {
-    if (userForm.role !== "educator") {
+    if (!supportsCollegeStructure(userForm.role)) {
       const hasSegments = Array.isArray(userForm.collegeSegment) && userForm.collegeSegment.length > 0;
       const hasSeries = Array.isArray(userForm.collegeSeries) && userForm.collegeSeries.length > 0;
       if (hasSegments || hasSeries) {
@@ -1196,7 +1203,7 @@ function AdminUsersPage() {
   }, [availableCollegeSegments, userForm.collegeSegment, userForm.collegeSeries, userForm.role]);
 
   useEffect(() => {
-    if (userForm.role !== "educator") return;
+    if (!supportsCollegeStructure(userForm.role)) return;
     const current = Array.isArray(userForm.collegeSeries) ? userForm.collegeSeries : [];
     if (!current.length) return;
     const allowed = new Set(availableCollegeSeries.map((item) => item.value));
@@ -1337,6 +1344,7 @@ function AdminUsersPage() {
               <option value="coordinator">Coordenador</option>
               <option value="specialist_consultant">Consultor especialista</option>
               <option value="educator">Educador</option>
+              <option value="student">Aluno</option>
               <option value="consultant">Consultor</option>
             </select>
           </div>
@@ -1996,10 +2004,10 @@ function AdminUsersPage() {
                           setUserForm(s => ({
                             ...s,
                             role,
-                            contractId: role === "educator" ? s.contractId : "",
-                            collegeId: role === "educator" ? s.collegeId : "",
-                            collegeSegment: role === "educator" ? s.collegeSegment : [],
-                            collegeSeries: role === "educator" ? s.collegeSeries : [],
+                            contractId: supportsCollegeStructure(role) ? s.contractId : "",
+                            collegeId: supportsCollegeStructure(role) ? s.collegeId : "",
+                            collegeSegment: supportsCollegeStructure(role) ? s.collegeSegment : [],
+                            collegeSeries: supportsCollegeStructure(role) ? s.collegeSeries : [],
                           }));
                         }}
                         disabled={userModal.mode === "view" || userModalSubmitting || userModalDetailsLoading}
@@ -2008,11 +2016,12 @@ function AdminUsersPage() {
                         <option value="coordinator">Coordenador</option>
                         <option value="specialist_consultant">Consultor especialista</option>
                         <option value="educator">Educador</option>
+                        <option value="student">Aluno</option>
                         <option value="consultant">Consultor</option>
                       </select>
                     </label>
 
-                    {userForm.role === "educator" && (
+                    {supportsCollegeStructure(userForm.role) && (
                       <label className="sap-user-field">
                         <span>Contrato</span>
                         <select
@@ -2040,7 +2049,7 @@ function AdminUsersPage() {
                       </label>
                     )}
 
-                    {userForm.role === "educator" && (
+                    {supportsCollegeStructure(userForm.role) && (
                       <div className="sap-user-field sap-user-multiselect" ref={collegeSelectRef}>
                         <span>Escola</span>
                         <button
@@ -2106,7 +2115,7 @@ function AdminUsersPage() {
                       </div>
                     )}
 
-                    {userForm.role === "educator" && (
+                    {supportsCollegeStructure(userForm.role) && (
                       <div className="sap-user-field sap-user-multiselect" ref={segmentMultiselectRef}>
                         <span>Segmento Escolar</span>
                         <button
@@ -2150,7 +2159,7 @@ function AdminUsersPage() {
                       </div>
                     )}
 
-                    {userForm.role === "educator" && (
+                    {supportsCollegeStructure(userForm.role) && (
                       <div className="sap-user-field sap-user-multiselect" ref={seriesMultiselectRef}>
                         <span>Séries</span>
                         <button
@@ -2198,7 +2207,7 @@ function AdminUsersPage() {
                       </div>
                     )}
 
-                    {(userForm.role === "coordinator" || userForm.role === "specialist_consultant" || userForm.role === "consultant" || userForm.role === "educator") && (
+                    {(userForm.role === "coordinator" || userForm.role === "specialist_consultant" || userForm.role === "consultant" || userForm.role === "educator" || userForm.role === "student") && (
                       <label className="sap-user-field">
                         <span>Gerência</span>
                         <input

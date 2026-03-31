@@ -4,8 +4,8 @@ import { checkSession } from "../controllers/user/checkSession.controller";
 
 import "../style/pageSelector.css";
 
-type TRole = "educator" | "consultant" | "coordinator" | "specialist_consultant" | "admin";
-type TModuleKey = "educator" | "consultant" | "coordinator" | "admin";
+type TRole = "educator" | "student" | "consultant" | "coordinator" | "specialist_consultant" | "admin";
+type TModuleKey = "educator" | "student" | "consultant" | "coordinator" | "admin";
 
 const MODULE_OPTIONS: Array<{
     key: TModuleKey;
@@ -21,7 +21,15 @@ const MODULE_OPTIONS: Array<{
         description: "Ambiente do educador",
         icon: "🎓",
         path: "/dashboard",
-        allowedRoles: ["consultant", "coordinator", "specialist_consultant", "admin"]
+        allowedRoles: ["educator", "consultant", "coordinator", "specialist_consultant", "admin"]
+    },
+    {
+        key: "student",
+        label: "AVA Aluno",
+        description: "Ambiente do aluno",
+        icon: "📘",
+        path: "/student/materials",
+        allowedRoles: ["student", "educator", "consultant", "coordinator", "specialist_consultant", "admin"]
     },
     {
         key: "consultant",
@@ -146,13 +154,14 @@ function PageSelector(props: {title?: boolean}) {
     const availableModules = MODULE_OPTIONS.filter(option =>
         activeRole ? option.allowedRoles.includes(activeRole) : false
     );
+    const shouldRenderSelector = availableModules.length > 1;
 
     function handleRedirect(path: string) {
         window.location.href = path;
     }
 
     return (
-        user.role !== "educator" ?
+        shouldRenderSelector ?
         <div className="page-selector" ref={containerRef}>
             <button className="page-selector-btn" onClick={() => setOpen(prev => !prev)} title="Mudar Módulo">
                 <svg width="20" height="18" viewBox="0 0 20 18" fill="none" xmlns="http://www.w3.org/2000/svg">

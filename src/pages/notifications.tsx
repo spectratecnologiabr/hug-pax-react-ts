@@ -114,7 +114,11 @@ function Notifications() {
                                     </div>
                                 )
                             : <div className="no-content-container">
-                                <span>Nenhuma nova notificação no momento</span>
+                                <b>Nenhuma notificação nova por aqui</b>
+                                <span>
+                                    Quando houver novidades, avisos ou atualizações importantes,
+                                    elas vão aparecer nesta central.
+                                </span>
                             </div>
                         }
                         

@@ -1,5 +1,6 @@
 import axios from "axios";
 import { getCookies } from "../misc/cookies.controller";
+import { CourseCategory } from "../../utils/courseCategory";
 
 type ListCoursesQuery = {
     page?: number
@@ -7,6 +8,7 @@ type ListCoursesQuery = {
     search?: string
     status?: string
     order?: string
+    category?: CourseCategory
 }
 
 export async function listCourses(query?: ListCoursesQuery) {

@@ -7,6 +7,18 @@ interface ProtectedRouteProps {
     children: React.ReactElement;
 }
 
+function resolveDefaultProtectedPath(role?: string) {
+    if (role === "student") return "/student/materials";
+    if (role === "consultant") return "/consultant";
+    if (role === "coordinator" || role === "specialist_consultant") return "/coordinator";
+    if (role === "admin") return "/admin";
+    return "/dashboard";
+}
+
+function canAccessStudentModule(role?: string) {
+    return role === "student" || role === "educator" || role === "consultant" || role === "coordinator" || role === "specialist_consultant" || role === "admin";
+}
+
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     const location = useLocation();
     const [status, setStatus] = useState<"loading" | "ok" | "unauth" | "terms" | "vacation">( "loading");
@@ -56,9 +68,23 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
 
     try {
         const userDataRaw = getCookies("userData");
-        const userData = userDataRaw ? JSON.parse(userDataRaw) : null;
+        const userData = typeof userDataRaw === "string"
+            ? JSON.parse(userDataRaw)
+            : userDataRaw;
         if (userData?.mustChangePassword && location.pathname !== "/profile") {
             return <Navigate to="/profile?forcePassword=1" replace />;
+        }
+
+        const isStudentRoute = location.pathname.startsWith("/student");
+        const isStudent = userData?.role === "student";
+        const hasStudentModuleAccess = canAccessStudentModule(userData?.role);
+
+        if (isStudent && !isStudentRoute) {
+            return <Navigate to="/student/materials" replace />;
+        }
+
+        if (!hasStudentModuleAccess && isStudentRoute) {
+            return <Navigate to={resolveDefaultProtectedPath(userData?.role)} replace />;
         }
     } catch {
         // ignore parse errors and keep regular flow
