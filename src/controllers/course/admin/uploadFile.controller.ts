@@ -3,6 +3,17 @@
 import axios from "axios";
 import { getCookies } from "../../misc/cookies.controller";
 
+export type UploadedLessonFileAsset = {
+  id?: string;
+  fileKey?: string;
+  key?: string;
+  path?: string;
+  url?: string;
+  mimeType?: string | null;
+  size?: number | null;
+  originalName?: string | null;
+};
+
 export async function uploadLessonFileController(file: File) {
   const formData = new FormData();
   formData.append("file", file);
@@ -17,5 +28,5 @@ export async function uploadLessonFileController(file: File) {
     }
   );
 
-  return uploadResponse.data.file;
+  return (uploadResponse.data?.file ?? uploadResponse.data?.data ?? uploadResponse.data) as UploadedLessonFileAsset;
 }

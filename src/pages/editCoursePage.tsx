@@ -558,17 +558,34 @@ function EditCoursePage() {
             .replace(/-+/g, "-");
     };
 
+    const resolveUploadedFileKey = (fileMeta: any): string => {
+        const candidates = [
+            fileMeta?.fileKey,
+            fileMeta?.key,
+            fileMeta?.path,
+            fileMeta?.id,
+        ];
+
+        for (const candidate of candidates) {
+            const value = String(candidate ?? "").trim();
+            if (value) return value;
+        }
+
+        throw new Error("Upload sem fileKey válido.");
+    };
+
     async function uploadAttachmentsForLesson(lessonId: number, files: File[]) {
         if (!createdCourseId || !files.length) return [];
 
         const uploaded: LessonAttachment[] = [];
         for (const file of files) {
             const fileMeta = await uploadLessonFileController(file);
+            const uploadedFileKey = resolveUploadedFileKey(fileMeta);
             const created = await createFile({
                 lessonId,
                 courseId: createdCourseId,
                 title: file.name,
-                fileKey: fileMeta.id,
+                fileKey: uploadedFileKey,
                 fileType: "attachment",
                 mimeType: file.type,
                 size: file.size,
@@ -577,7 +594,7 @@ function EditCoursePage() {
             uploaded.push({
                 id: Number(created.id),
                 title: created.title ?? file.name,
-                fileKey: created.fileKey ?? fileMeta.id,
+                fileKey: created.fileKey ?? uploadedFileKey,
                 fileType: created.fileType ?? "attachment",
                 mimeType: created.mimeType ?? file.type,
                 size: created.size ?? file.size,
@@ -1053,18 +1070,19 @@ function EditCoursePage() {
             // 2️⃣ Se tiver arquivo, faz upload no CDN
             if (newLessonData.file) {
                 const fileMeta = await uploadLessonFileController(newLessonData.file);
+                const uploadedFileKey = resolveUploadedFileKey(fileMeta);
                 // 3️⃣ Cria registro na tabela files com lessonId correto
                 await createFile({
                   lessonId,
                   courseId: createdCourseId!,
-                  fileKey: fileMeta.id,
+                  fileKey: uploadedFileKey,
                   fileType: newLessonData.type,
                   mimeType: newLessonData.file.type,
                   size: newLessonData.file.size,
                 });
                 // 4️⃣ Atualiza a aula via PUT em /lessons/:id para setar extUrl = id do CDN
-                await updateLessonExtUrl(lessonId, fileMeta.id);
-                extUrlFromFileId = fileMeta.id;
+                await updateLessonExtUrl(lessonId, uploadedFileKey);
+                extUrlFromFileId = uploadedFileKey;
             }
 
             const uploadedAttachments = await uploadAttachmentsForLesson(lessonId, newLessonData.attachmentFiles ?? []);

@@ -1,8 +1,6 @@
 import React, { useState } from "react";
-import '../lib/pdf';
 import { useNavigate, useParams } from "react-router-dom";
-import * as pdfjsLib from "pdfjs-dist";
-import { GlobalWorkerOptions } from "pdfjs-dist";
+import { Document, Page, pdfjs as reactPdfJs } from "react-pdf";
 import { CircularProgressbar, buildStyles } from 'react-circular-progressbar';
 import { getCourseWithProgress } from "../controllers/course/getCourseWithProgress.controller";
 import { getCourseModules } from "../controllers/course/getCourseModules.controller";
@@ -29,7 +27,7 @@ import "../style/course.css";
 import 'react-pdf/dist/Page/TextLayer.css';
 import 'react-pdf/dist/Page/AnnotationLayer.css';
 
-GlobalWorkerOptions.workerSrc = `${process.env.PUBLIC_URL}/pdf.worker.min.js`;
+reactPdfJs.GlobalWorkerOptions.workerSrc = `${process.env.PUBLIC_URL}/pdf.worker.react-pdf.min.mjs`;
 
 type TOverviewData = {
     completedCourses: number,
@@ -157,10 +155,7 @@ function Course() {
     const [courseModules, setCourseModules] = useState([] as Array<TCourseModule>)
     const [lessionData, setLessionData] = useState<TLesson | null>(null)
     const [lessonComments, setLessonComments] = useState([] as Array<TComment>)
-    const canvasRef = React.useRef<HTMLCanvasElement | null>(null);
-    const renderTaskRef = React.useRef<any>(null);
-    const ocrWorkerRef = React.useRef<any>(null);
-    const ocrRequestIdRef = React.useRef(0);
+    const pdfViewerRef = React.useRef<HTMLDivElement | null>(null);
     const [search, setSearch] = useState("");
     const [isSearching, setIsSearching] = useState(false);
     const [searchResult, setSearchResult] = useState<TSearchResult>()
@@ -209,9 +204,8 @@ function Course() {
     const [isError, setIsError] = React.useState(false);
     const [modalErrorOpen, setModalErrorOpen] = React.useState(false);
     const [message, setMessage] = React.useState("");
-    const [pdfAccessibleText, setPdfAccessibleText] = React.useState("");
-    const [isPdfOcrRunning, setIsPdfOcrRunning] = React.useState(false);
-    const [pdfTextSource, setPdfTextSource] = React.useState<"pdfjs" | "pdfjs-cleaned" | "ocr" | "none">("none");
+    const [pdfViewerWidth, setPdfViewerWidth] = React.useState(0);
+    const pdfPageAspectRatioRef = React.useRef(1.414);
 
     const nextLesson = React.useMemo(() => {
         const currentLessonId = Number(lessonId);
@@ -296,6 +290,19 @@ function Course() {
         }
         return undefined;
     }
+
+    const pdfDocumentSource = React.useMemo(() => {
+        if (!lessionData || lessionData.type !== "pdf" || !lessionData.extUrl) {
+            return null;
+        }
+
+        const url = toApiStreamUrl(lessionData.extUrl);
+
+        return {
+            url,
+            httpHeaders: buildStreamHeaders(url),
+        };
+    }, [lessionData]);
 
     function toCamelCase(str: string) {
         return str.replace(/_([a-z])/g, (g) => g[1].toUpperCase());
@@ -401,60 +408,6 @@ function Course() {
         return chunks;
     }
 
-    function normalizeExtractedPdfText(value?: string): string {
-        return String(value || "")
-            .replace(/\u00AD/g, "") // soft hyphen
-            .replace(/-\s+/g, "") // broken words across line breaks
-            .replace(/\s+/g, " ")
-            .trim();
-    }
-
-    function hasPrivateUseCodepoint(value: string): boolean {
-        for (const ch of value) {
-            const cp = ch.codePointAt(0) || 0;
-            const isBmpPua = cp >= 0xe000 && cp <= 0xf8ff;
-            const isSupPua1 = cp >= 0xf0000 && cp <= 0xffffd;
-            const isSupPua2 = cp >= 0x100000 && cp <= 0x10fffd;
-            if (isBmpPua || isSupPua1 || isSupPua2) return true;
-        }
-        return false;
-    }
-
-    function isCorruptedToken(token: string): boolean {
-        if (!token) return false;
-        if (/[�□■▮█]/.test(token)) return true;
-        if (hasPrivateUseCodepoint(token)) return true;
-        if (/(?:Ã.|Â.|â.|Ð.|Ñ.|¤|¦)/.test(token)) return true;
-        return false;
-    }
-
-    function analyzePdfTextQuality(value?: string) {
-        const text = normalizeExtractedPdfText(value);
-        const total = text.length || 1;
-        const letterOrDigitCount = (text.match(/[A-Za-zÀ-ÖØ-öø-ÿ0-9]/g) || []).length;
-        const readableRatio = letterOrDigitCount / total;
-        const tokens = text.split(/\s+/).filter(Boolean);
-        const corruptedTokens = tokens.filter((token) => isCorruptedToken(token)).length;
-        const corruptedTokenRatio = corruptedTokens / Math.max(1, tokens.length);
-
-        return {
-            text,
-            readableRatio,
-            tokenCount: tokens.length,
-            corruptedTokens,
-            corruptedTokenRatio,
-        };
-    }
-
-    function cleanCorruptedPdfText(value?: string): string {
-        const text = normalizeExtractedPdfText(value);
-        if (!text) return "";
-
-        const tokens = text.split(/\s+/).filter(Boolean);
-        const cleaned = tokens.filter((token) => !isCorruptedToken(token)).join(" ");
-        return normalizeExtractedPdfText(cleaned);
-    }
-
     function handleModalMessage(data: { isError: boolean; message: string }) {
         const messageElement = document.getElementById("warning-message") as HTMLSpanElement;
 
@@ -485,6 +438,38 @@ function Course() {
     }, []);
 
     React.useEffect(() => {
+        if (lessionData?.type !== "pdf") {
+            setPdfViewerWidth(0);
+            return;
+        }
+
+        const element = pdfViewerRef.current;
+        if (!element) return;
+
+        const updateWidth = () => {
+            const horizontalPadding = isPdfFullscreen ? 48 : 32;
+            const widthByContainer = Math.max(260, Math.floor(element.clientWidth - horizontalPadding));
+            const widthByHeight = isPdfFullscreen
+                ? Math.max(260, Math.floor((window.innerHeight - 160) * pdfPageAspectRatioRef.current))
+                : widthByContainer;
+            const nextWidth = Math.min(widthByContainer, widthByHeight);
+            setPdfViewerWidth(nextWidth);
+        };
+
+        updateWidth();
+
+        if (typeof ResizeObserver === "undefined") {
+            window.addEventListener("resize", updateWidth);
+            return () => window.removeEventListener("resize", updateWidth);
+        }
+
+        const observer = new ResizeObserver(() => updateWidth());
+        observer.observe(element);
+
+        return () => observer.disconnect();
+    }, [lessionData?.id, lessionData?.type, isPdfFullscreen]);
+
+    React.useEffect(() => {
         if (!search.trim()) {
             setSearchResult(undefined);
             return;
@@ -504,16 +489,6 @@ function Course() {
 
         return () => clearTimeout(delay);
     }, [search]);
-
-    React.useEffect(() => {
-        return () => {
-            const worker = ocrWorkerRef.current;
-            if (worker?.terminate) {
-                worker.terminate().catch(() => undefined);
-            }
-            ocrWorkerRef.current = null;
-        };
-    }, []);
 
     React.useEffect(() => {
         if (videoRef.current) {
@@ -815,146 +790,6 @@ function Course() {
 
         return `${dia}/${mes}/${ano} - ${hora}:${minuto}`;
     };
-
-    React.useEffect(() => {
-        // Só processa se for PDF e tiver extUrl definido
-        if (!lessionData || lessionData.type !== "pdf" || !lessionData.extUrl) {
-            setPdfAccessibleText("");
-            setPdfTextSource("none");
-            setIsPdfOcrRunning(false);
-            return;
-        }
-
-        let active = true;
-
-        const renderPdf = async () => {
-            const requestId = ++ocrRequestIdRef.current;
-
-            // Cancela render anterior
-            if (renderTaskRef.current) {
-                try {
-                    renderTaskRef.current.cancel();
-                } catch {}
-            }
-
-            const pdfUrl = toApiStreamUrl(lessionData.extUrl);
-
-            const pdf = await pdfjsLib.getDocument({
-                url: pdfUrl,
-                httpHeaders: buildStreamHeaders(pdfUrl)
-            }).promise;
-            if (!active) return;
-
-            const totalPages = Math.max(1, Number(pdf.numPages) || 1);
-            setNumPages(totalPages);
-
-            const safePage = Math.min(Math.max(pageNumber, 1), totalPages);
-            if (safePage !== pageNumber) {
-                setPageNumber(safePage);
-            }
-
-            const page = await pdf.getPage(safePage);
-            if (!active) return;
-
-            const textContent = await page.getTextContent();
-            if (!active) return;
-            const extractedText = textContent.items
-                .map((item: any) => ("str" in item ? item.str : ""))
-                .join(" ")
-                .replace(/\s+/g, " ")
-                .trim();
-            const normalizedExtractedText = normalizeExtractedPdfText(extractedText);
-
-            const viewport = page.getViewport({ scale: isPdfFullscreen ? 1.2 : 1 });
-            const canvas = canvasRef.current;
-            if (!canvas) return;
-
-            const context = canvas.getContext("2d")!;
-            canvas.width = viewport.width;
-            canvas.height = viewport.height;
-
-            const task = page.render({ canvasContext: context, viewport, canvas });
-            renderTaskRef.current = task;
-
-            try {
-                await task.promise;
-            } catch (err: any) {
-                if (err?.name !== "RenderingCancelledException") {
-                    console.error(err);
-                }
-                return;
-            }
-
-            if (!active || requestId !== ocrRequestIdRef.current) return;
-
-            const quality = analyzePdfTextQuality(normalizedExtractedText);
-            const cleanedExtractedText = cleanCorruptedPdfText(normalizedExtractedText);
-
-            if (quality.corruptedTokens === 0 && quality.readableRatio >= 0.5) {
-                setPdfAccessibleText(normalizedExtractedText);
-                setPdfTextSource("pdfjs");
-                setIsPdfOcrRunning(false);
-                return;
-            }
-
-            // For low/medium corruption, keep PDF native order and drop broken tokens.
-            const cleanedLooksUsable =
-                cleanedExtractedText.length >= 80 &&
-                cleanedExtractedText.length >= normalizedExtractedText.length * 0.55 &&
-                quality.corruptedTokenRatio <= 0.18;
-
-            if (cleanedLooksUsable) {
-                setPdfAccessibleText(cleanedExtractedText);
-                setPdfTextSource("pdfjs-cleaned");
-                setIsPdfOcrRunning(false);
-                return;
-            }
-
-            setIsPdfOcrRunning(true);
-            try {
-                const { createWorker } = await import("tesseract.js");
-                let worker = ocrWorkerRef.current;
-
-                if (!worker) {
-                    worker = await createWorker("por+eng");
-                    ocrWorkerRef.current = worker;
-                }
-
-                const { data } = await worker.recognize(canvas);
-                if (!active || requestId !== ocrRequestIdRef.current) return;
-
-                const ocrText = normalizeExtractedPdfText(String(data?.text || ""));
-                if (ocrText) {
-                    setPdfAccessibleText(ocrText);
-                    setPdfTextSource("ocr");
-                } else {
-                    setPdfAccessibleText(normalizedExtractedText);
-                    setPdfTextSource("pdfjs");
-                }
-            } catch (error) {
-                console.error("OCR fallback failed:", error);
-                if (!active || requestId !== ocrRequestIdRef.current) return;
-                setPdfAccessibleText(normalizedExtractedText);
-                setPdfTextSource("pdfjs");
-            } finally {
-                if (active && requestId === ocrRequestIdRef.current) {
-                    setIsPdfOcrRunning(false);
-                }
-            }
-        };
-
-        renderPdf();
-
-        return () => {
-            active = false;
-            if (renderTaskRef.current) {
-                try {
-                    renderTaskRef.current.cancel();
-                } catch {}
-            }
-            setIsPdfOcrRunning(false);
-        };
-    }, [lessionData, pageNumber, isPdfFullscreen]);
 
     async function sendComment(event: React.FormEvent) {
         event.preventDefault();
@@ -1351,8 +1186,47 @@ function Course() {
                                 {
                                     (lessionData.type === "pdf") ? (
                                         <div className="lession-document-wrapper active">
-                                            <div className="pdf-page-wrapper">
-                                            <canvas ref={canvasRef} />
+                                            <div className="pdf-page-wrapper" role="group" aria-label={`Leitor do PDF ${lessionData.title}`}>
+                                            <div className="pdf-page-viewer" ref={pdfViewerRef}>
+                                                {pdfDocumentSource && (
+                                                    <Document
+                                                        file={pdfDocumentSource}
+                                                        loading={<div className="pdf-loading-state">Carregando livro...</div>}
+                                                        error={<div className="pdf-loading-state">Nao foi possivel carregar este PDF.</div>}
+                                                        onLoadError={(error) => {
+                                                            console.error("react-pdf load error:", error);
+                                                        }}
+                                                        onLoadSuccess={({ numPages: totalPages }) => {
+                                                            const safeTotalPages = Math.max(1, Number(totalPages) || 1);
+                                                            setNumPages(safeTotalPages);
+                                                            setPageNumber((current) => Math.min(Math.max(current, 1), safeTotalPages));
+                                                        }}
+                                                    >
+                                                        {pdfViewerWidth > 0 && (
+                                                        <Page
+                                                            pageNumber={pageNumber}
+                                                            width={pdfViewerWidth}
+                                                            renderTextLayer
+                                                            renderAnnotationLayer
+                                                            onLoadSuccess={(page) => {
+                                                                const viewport = page.getViewport({ scale: 1 });
+                                                                if (viewport.width > 0 && viewport.height > 0) {
+                                                                    const ratio = viewport.width / viewport.height;
+                                                                    pdfPageAspectRatioRef.current = ratio;
+                                                                    if (isPdfFullscreen && pdfViewerRef.current) {
+                                                                        const el = pdfViewerRef.current;
+                                                                        const widthByContainer = Math.max(260, Math.floor(el.clientWidth - 48));
+                                                                        const widthByHeight = Math.max(260, Math.floor((window.innerHeight - 160) * ratio));
+                                                                        setPdfViewerWidth(Math.min(widthByContainer, widthByHeight));
+                                                                    }
+                                                                }
+                                                            }}
+                                                            loading={<div className="pdf-loading-state">Carregando pagina...</div>}
+                                                        />
+                                                        )}
+                                                    </Document>
+                                                )}
+                                            </div>
 
                                             <div className={`pdf-controls ${isPdfFullscreen ? "inside-fs" : ""}`}>
                                                 <div className="left">
@@ -1475,54 +1349,29 @@ function Course() {
                                     </div>
                                 )}
 
-                                {(lessionData.type === "video" || lessionData.type === "audio" || lessionData.type === "pdf") && (
+                                {(lessionData.type === "video" || lessionData.type === "audio") && (
                                     <div className="media-accessibility-panel" aria-live="polite">
                                         <b>
                                             {lessionData.type === "video"
                                                 ? "Texto para tradução em Libras (aula em vídeo)"
-                                                : lessionData.type === "audio"
-                                                ? "Texto para tradução em Libras (aula em áudio)"
-                                                : "Texto para tradução em Libras (PDF)"}
+                                                : "Texto para tradução em Libras (aula em áudio)"}
                                         </b>
-                                        {(lessionData.type === "video" || lessionData.type === "audio") ? (
-                                            <>
-                                                <p>{`${lessionData.type === "audio" ? "Aula em áudio" : "Aula em vídeo"}: ${lessionData.title}.`}</p>
-                                                {lessionData.subTitle && <p>{`Subtítulo: ${lessionData.subTitle}.`}</p>}
-                                                {(() => {
-                                                    const transcriptChunks = splitAccessibleText(htmlToPlainText(lessionData.code));
-                                                    if (transcriptChunks.length === 0) {
-                                                        return <p>Transcrição textual não disponível para este vídeo.</p>;
-                                                    }
+                                        <>
+                                            <p>{`${lessionData.type === "audio" ? "Aula em áudio" : "Aula em vídeo"}: ${lessionData.title}.`}</p>
+                                            {lessionData.subTitle && <p>{`Subtítulo: ${lessionData.subTitle}.`}</p>}
+                                            {(() => {
+                                                const transcriptChunks = splitAccessibleText(htmlToPlainText(lessionData.code));
+                                                if (transcriptChunks.length === 0) {
+                                                    return <p>Transcrição textual não disponível para este vídeo.</p>;
+                                                }
 
-                                                    return transcriptChunks.map((chunk, idx) => (
-                                                        <p key={`video-transcript-chunk-${idx}`}>
-                                                            {chunk}
-                                                        </p>
-                                                    ));
-                                                })()}
-                                            </>
-                                        ) : (
-                                            <>
-                                                <p>{`PDF "${lessionData.title}". Página ${pageNumber} de ${numPages || 1}.`}</p>
-                                                {isPdfOcrRunning && <p>Detectando texto com OCR para melhorar leitura da página...</p>}
-                                                {!isPdfOcrRunning && pdfTextSource === "ocr" && <p>Texto obtido por OCR (fonte diferenciada detectada).</p>}
-                                                {!isPdfOcrRunning && pdfTextSource === "pdfjs-cleaned" && <p>Texto obtido do PDF com limpeza automática de caracteres corrompidos.</p>}
-                                                {(() => {
-                                                    const pdfChunks = splitAccessibleText(pdfAccessibleText, 420, {
-                                                        normalizeRandomCase: true,
-                                                    });
-                                                    if (pdfChunks.length === 0) {
-                                                        return <p>Sem texto detectável nesta página.</p>;
-                                                    }
-
-                                                    return pdfChunks.map((chunk, idx) => (
-                                                        <p key={`pdf-text-chunk-${pageNumber}-${idx}`}>
-                                                            {chunk}
-                                                        </p>
-                                                    ));
-                                                })()}
-                                            </>
-                                        )}
+                                                return transcriptChunks.map((chunk, idx) => (
+                                                    <p key={`video-transcript-chunk-${idx}`}>
+                                                        {chunk}
+                                                    </p>
+                                                ));
+                                            })()}
+                                        </>
                                     </div>
                                 )}
 
