@@ -32,7 +32,7 @@ function Login() {
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
-        const email = (document.getElementById("emailEl") as HTMLInputElement).value;
+        const email = (document.getElementById("emailEl") as HTMLInputElement).value.trim();
         const password = (document.getElementById("passwordEl") as HTMLInputElement).value;
         await authenticate(email, password)
                 .then((data) => {
